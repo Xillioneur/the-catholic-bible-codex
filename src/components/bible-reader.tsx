@@ -132,6 +132,33 @@ export function BibleReader({ initialTranslationId }: BibleReaderProps) {
     );
   }
 
+  const renderVerseText = (verse: any, isPrimary: boolean = true) => {
+    if (!verse) return <span className="italic opacity-50">Translation unavailable</span>;
+    
+    const hasHighlight = localHighlights.find(h => h.verseId === verse.id);
+    const isFirstVerse = verse.verse === 1;
+    const text = verse.text;
+
+    return (
+      <p className={cn(
+        "text-xl md:text-2xl font-serif leading-[1.8] tracking-tight transition-colors",
+        !isPrimary && "text-base md:text-lg text-zinc-600 dark:text-zinc-400",
+        hasHighlight ? "bg-yellow-100/50 dark:bg-yellow-900/20 rounded-lg px-1 -mx-1" : "text-zinc-800 dark:text-zinc-200"
+      )}>
+        {isFirstVerse ? (
+          <>
+            <span className="float-left text-[3.5em] leading-[0.8] font-black text-blue-600 mr-2 mt-[-0.1em] font-serif">
+              {text.charAt(0)}
+            </span>
+            {text.slice(1)}
+          </>
+        ) : (
+          text
+        )}
+      </p>
+    );
+  };
+
   return (
     <>
       <div
@@ -151,7 +178,6 @@ export function BibleReader({ initialTranslationId }: BibleReaderProps) {
             const row = allRows[virtualRow.index];
             const verse = isParallelView ? (row as any)?.primary : row;
             
-            const hasHighlight = localHighlights.find(h => h.verseId === verse?.id);
             const hasBookmark = localBookmarks.find(b => b.verseId === verse?.id);
             const hasNote = localNotes.find(n => n.verseId === verse?.id);
 
@@ -197,18 +223,15 @@ export function BibleReader({ initialTranslationId }: BibleReaderProps) {
                           </div>
                         </div>
                         <div className="relative">
-                          <span className={cn(
-                            "absolute -left-8 md:-left-12 top-1.5 text-[10px] font-bold select-none transition-colors",
-                            hasBookmark ? "text-blue-600" : "text-zinc-300 group-hover:text-blue-600"
-                          )}>
-                            {verse.verse}
-                          </span>
-                          <p className={cn(
-                            "text-xl md:text-2xl font-serif leading-[1.8] tracking-tight transition-colors",
-                            hasHighlight ? "bg-yellow-100/50 dark:bg-yellow-900/20 rounded-lg px-1 -mx-1" : "text-zinc-800 dark:text-zinc-200"
-                          )}>
-                            {verse.text}
-                          </p>
+                          {verse.verse !== 1 && (
+                            <span className={cn(
+                              "absolute -left-8 md:-left-12 top-1.5 text-[10px] font-bold select-none transition-colors",
+                              hasBookmark ? "text-blue-600" : "text-zinc-300 group-hover:text-blue-600"
+                            )}>
+                              {verse.verse}
+                            </span>
+                          )}
+                          {renderVerseText(verse, true)}
                         </div>
                       </>
                     ) : (
@@ -221,20 +244,13 @@ export function BibleReader({ initialTranslationId }: BibleReaderProps) {
                             </span>
                             {hasBookmark && <Bookmark className="h-2.5 w-2.5 text-blue-600 fill-blue-600" />}
                           </div>
-                          <p className={cn(
-                            "text-base md:text-lg font-serif leading-relaxed",
-                            hasHighlight ? "bg-yellow-100/50 dark:bg-yellow-900/20 rounded-lg px-1 -mx-1" : "text-zinc-800 dark:text-zinc-200"
-                          )}>
-                            {verse.text}
-                          </p>
+                          {renderVerseText(verse, true)}
                         </div>
                         <div className="flex flex-col gap-2 border-l border-zinc-100 dark:border-zinc-800 pl-8 md:pl-12">
                           <span className="text-[8px] font-black uppercase tracking-widest text-zinc-400">
                             {parallelTranslationSlug?.toUpperCase()}
                           </span>
-                          <p className="text-base md:text-lg font-serif leading-relaxed text-zinc-600 dark:text-zinc-400">
-                            {(row as any).parallel?.text ?? <span className="italic opacity-50">Translation unavailable</span>}
-                          </p>
+                          {renderVerseText((row as any).parallel, false)}
                         </div>
                       </div>
                     )}

@@ -2,7 +2,15 @@ import { z } from "zod";
 
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 
+import { getLiturgicalInfoServer } from "~/server/liturgical";
+
 export const bibleRouter = createTRPCRouter({
+  getLiturgicalInfo: publicProcedure
+    .input(z.object({ date: z.date().optional() }))
+    .query(async ({ input }) => {
+      return await getLiturgicalInfoServer(input.date);
+    }),
+
   getVerses: publicProcedure
     .input(
       z.object({
