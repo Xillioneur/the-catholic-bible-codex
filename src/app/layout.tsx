@@ -4,6 +4,7 @@ import { type Metadata } from "next";
 import { Geist, Ibarra_Real_Nova } from "next/font/google";
 
 import { TRPCReactProvider } from "~/trpc/react";
+import { LiturgicalProvider } from "~/components/liturgical-provider";
 
 export const metadata: Metadata = {
   title: "Catholic Bible Codex – The Catholic Bible",
@@ -27,7 +28,11 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${geist.variable} ${ibarra.variable}`} suppressHydrationWarning>
       <body suppressHydrationWarning>
-        <TRPCReactProvider>{children}</TRPCReactProvider>
+        <TRPCReactProvider>
+          <LiturgicalProvider>
+            {children}
+          </LiturgicalProvider>
+        </TRPCReactProvider>
       </body>
     </html>
   );

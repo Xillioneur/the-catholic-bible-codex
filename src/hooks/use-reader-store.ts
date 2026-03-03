@@ -9,6 +9,12 @@ interface ReaderState {
   setCurrentChapter: (chapter: number | null) => void;
   scrollToOrder: number | null;
   setScrollToOrder: (order: number | null) => void;
+  startOrder: number;
+  setStartOrder: (order: number) => void;
+  isParallelView: boolean;
+  setIsParallelView: (isParallel: boolean) => void;
+  parallelTranslationSlug: string | null;
+  setParallelTranslationSlug: (slug: string | null) => void;
 }
 
 export const useReaderStore = create<ReaderState>((set) => ({
@@ -20,4 +26,10 @@ export const useReaderStore = create<ReaderState>((set) => ({
   setCurrentChapter: (chapter) => set({ currentChapter: chapter }),
   scrollToOrder: null,
   setScrollToOrder: (order) => set({ scrollToOrder: order }),
+  startOrder: 1,
+  setStartOrder: (order) => set({ startOrder: order }),
+  isParallelView: false,
+  setIsParallelView: (isParallel) => set({ isParallelView: isParallel }),
+  parallelTranslationSlug: "webbe",
+  setParallelTranslationSlug: (slug) => set({ parallelTranslationSlug: slug }),
 }));

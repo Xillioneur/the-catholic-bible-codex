@@ -27,7 +27,7 @@ const DR_BOOK_MAPPING: Record<string, string> = {
   "Psalms": "psalms",
   "Proverbs": "proverbs",
   "Ecclesiastes": "ecclesiastes",
-  "Canticle of Canticles": "song-of-solomon",
+  "Canticles": "song-of-solomon",
   "Wisdom": "wisdom",
   "Ecclesiasticus": "sirach",
   "Isaias": "isaiah",
@@ -79,83 +79,71 @@ const DR_BOOK_MAPPING: Record<string, string> = {
   "Apocalypse": "revelation",
 };
 
-async function ingestBook(drBookName: string, translationSlug: string, startOrder: number) {
-  const slug = DR_BOOK_MAPPING[drBookName];
-  if (!slug) {
-    console.error(`No mapping for DR book: ${drBookName}`);
-    return startOrder;
+async function main() {
+  const url = "https://raw.githubusercontent.com/xxruyle/Bible-DouayRheims/master/EntireBible-DR.json";
+  console.log("Fetching entire Douay-Rheims Bible...");
+  const response = await axios.get(url);
+  const entireBible = response.data;
+
+  const translation = await prisma.translation.findUnique({ where: { slug: "drb" } });
+  if (!translation) {
+    console.error("Translation 'drb' not found.");
+    return;
   }
 
-  const url = `https://raw.githubusercontent.com/xxruyle/Bible-DouayRheims/master/Douay-Rheims/${encodeURIComponent(drBookName)}.json`;
-  
-  try {
-    const response = await axios.get(url);
-    const data = response.data; // Object: { "chapter": { "verse": "text" } }
-    
-    const translation = await prisma.translation.findUnique({ where: { slug: translationSlug } });
-    const book = await prisma.book.findUnique({ where: { slug } });
+  const allBooks = await prisma.book.findMany();
+  const bookMap = new Map(allBooks.map(b => [b.slug, b.id]));
 
-    if (!translation || !book) {
-      console.error(`Translation (${translationSlug}) or Book (${slug}) not found.`);
-      return startOrder;
+  console.log("Starting ingestion of all 73 books...");
+  let globalOrder = 1;
+
+  for (const drBookName in entireBible) {
+    const slug = DR_BOOK_MAPPING[drBookName];
+    if (!slug) {
+      console.warn(`No mapping for: ${drBookName}`);
+      continue;
     }
 
-    console.log(`Ingesting ${drBookName} (${slug})...`);
-    let order = startOrder;
+    const bookId = bookMap.get(slug);
+    if (!bookId) {
+      console.error(`Book ID not found for slug: ${slug}`);
+      continue;
+    }
+
+    console.log(`Ingesting ${drBookName}...`);
+    const bookData = entireBible[drBookName];
     
-    for (const chapterNum in data) {
-      const verses = data[chapterNum];
-      for (const verseNum in verses) {
-        const text = verses[verseNum];
+    for (const chapterNum in bookData) {
+      const chapterData = bookData[chapterNum];
+      for (const verseNum in chapterData) {
+        const text = chapterData[verseNum];
         await prisma.verse.upsert({
           where: {
             translationId_bookId_chapter_verse: {
               translationId: translation.id,
-              bookId: book.id,
+              bookId,
               chapter: parseInt(chapterNum),
               verse: parseInt(verseNum),
             },
           },
-          update: { text, globalOrder: order },
+          update: { text, globalOrder },
           create: {
             translationId: translation.id,
-            bookId: book.id,
+            bookId,
             chapter: parseInt(chapterNum),
             verse: parseInt(verseNum),
             text,
-            globalOrder: order,
+            globalOrder,
           },
         });
-        order++;
+        globalOrder++;
       }
     }
-    
-    console.log(`Finished ${drBookName}. Next order start: ${order}`);
-    return order;
-  } catch (error) {
-    console.error(`Failed to ingest ${drBookName}:`, error);
-    return startOrder;
-  }
-}
-
-async function main() {
-  const booksToIngest = Object.keys(DR_BOOK_MAPPING);
-  let currentOrder = 1;
-
-  console.log("Starting full 73-book Catholic Bible (Douay-Rheims) ingestion...");
-  
-  for (const bookName of booksToIngest) {
-    currentOrder = await ingestBook(bookName, "drb", currentOrder);
   }
 
   console.log("Full Bible ingestion complete.");
 }
 
 main()
-  .catch((e) => {
-    console.error(e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+  .catch(e => console.error(e))
+  .finally(() => prisma.$disconnect());

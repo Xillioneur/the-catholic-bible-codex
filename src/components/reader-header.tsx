@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { api } from "~/trpc/react";
 import { LiturgicalCard } from "./liturgical-card";
-import { CalendarDays, ChevronDown, Menu, Search } from "lucide-react";
+import { CalendarDays, ChevronDown, Menu, Search, Columns } from "lucide-react";
 import { useReaderStore } from "~/hooks/use-reader-store";
 import { cn } from "~/lib/utils";
 
@@ -18,6 +18,11 @@ export function ReaderHeader() {
   const setScrollToOrder = useReaderStore((state) => state.setScrollToOrder);
   const currentBookId = useReaderStore((state) => state.currentBookId);
   const currentChapter = useReaderStore((state) => state.currentChapter);
+  const setStartOrder = useReaderStore((state) => state.setStartOrder);
+  const isParallelView = useReaderStore((state) => state.isParallelView);
+  const setIsParallelView = useReaderStore((state) => state.setIsParallelView);
+  const parallelTranslationSlug = useReaderStore((state) => state.parallelTranslationSlug);
+  const setParallelTranslationSlug = useReaderStore((state) => state.setParallelTranslationSlug);
 
   const utils = api.useUtils();
 
@@ -28,6 +33,7 @@ export function ReaderHeader() {
       bookSlug,
     });
     if (order !== null) {
+      setStartOrder(order);
       setScrollToOrder(order);
     }
   };
@@ -47,7 +53,7 @@ export function ReaderHeader() {
             </span>
           </div>
 
-          <nav className="hidden md:flex items-center gap-1">
+          <nav className="hidden lg:flex items-center gap-1">
             <button 
               onClick={() => handleBookChange("genesis")}
               className={cn(
@@ -92,7 +98,53 @@ export function ReaderHeader() {
             <ChevronDown className="absolute right-2 h-3 w-3 pointer-events-none text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-zinc-100 transition-colors" />
           </div>
 
-          <div className="h-4 w-px bg-zinc-200 dark:bg-zinc-800" />
+          <div className="h-4 w-px bg-zinc-200 dark:bg-zinc-800 mx-1" />
+
+          <button 
+            onClick={() => setIsParallelView(!isParallelView)}
+            className={cn(
+              "flex h-9 w-9 items-center justify-center rounded-full transition-all",
+              isParallelView 
+                ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20" 
+                : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-900 dark:text-zinc-400"
+            )}
+            title="Toggle Parallel View"
+          >
+            <Columns className="h-4 w-4" />
+          </button>
+
+          <div className="flex items-center bg-zinc-100 dark:bg-zinc-900 rounded-lg px-1">
+             <select 
+              value={translationSlug}
+              onChange={(e) => setTranslationSlug(e.target.value)}
+              className="appearance-none bg-transparent px-3 py-1.5 text-[9px] font-black uppercase tracking-tighter focus:outline-none cursor-pointer text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
+            >
+              {translations?.map((t) => (
+                <option key={t.id} value={t.slug}>
+                  {t.abbreviation}
+                </option>
+              ))}
+            </select>
+            
+            {isParallelView && (
+              <>
+                <div className="h-3 w-px bg-zinc-300 dark:bg-zinc-700 mx-1" />
+                <select 
+                  value={parallelTranslationSlug ?? ""}
+                  onChange={(e) => setParallelTranslationSlug(e.target.value)}
+                  className="appearance-none bg-transparent px-3 py-1.5 text-[9px] font-black uppercase tracking-tighter focus:outline-none cursor-pointer text-blue-600 hover:text-blue-700 transition-colors"
+                >
+                  {translations?.map((t) => (
+                    <option key={t.id} value={t.slug}>
+                      {t.abbreviation}
+                    </option>
+                  ))}
+                </select>
+              </>
+            )}
+          </div>
+
+          <div className="h-4 w-px bg-zinc-200 dark:bg-zinc-800 mx-1" />
 
           <button 
             onClick={() => setShowDaily(!showDaily)}
@@ -104,35 +156,17 @@ export function ReaderHeader() {
             )}
           >
             <CalendarDays className="h-3.5 w-3.5" />
-            Daily Bread
+            <span className="hidden md:inline">Daily Bread</span>
           </button>
 
           {showDaily && (
-            <div className="absolute top-20 right-6 w-80 animate-in fade-in slide-in-from-top-2 duration-300">
+            <div className="absolute top-20 right-6 w-80 animate-in fade-in slide-in-from-top-2 duration-300 z-[100]">
               <LiturgicalCard />
             </div>
           )}
-
-          <div className="relative flex items-center">
-             <select 
-              value={translationSlug}
-              onChange={(e) => setTranslationSlug(e.target.value)}
-              className="appearance-none bg-zinc-100 dark:bg-zinc-900 px-3 py-1.5 rounded-md text-[9px] font-black uppercase tracking-tighter focus:outline-none cursor-pointer text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
-            >
-              {translations?.map((t) => (
-                <option key={t.id} value={t.slug}>
-                  {t.abbreviation}
-                </option>
-              ))}
-            </select>
-          </div>
           
           <button className="flex h-9 w-9 items-center justify-center rounded-full text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors">
             <Search className="h-4 w-4" />
-          </button>
-          
-          <button className="flex h-9 w-9 items-center justify-center rounded-full text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors md:hidden">
-            <Menu className="h-4 w-4" />
           </button>
         </div>
       </div>
