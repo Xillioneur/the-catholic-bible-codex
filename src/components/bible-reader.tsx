@@ -5,6 +5,10 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { api } from "~/trpc/react";
 import { useReaderStore } from "~/hooks/use-reader-store";
 import { VerseOverlay } from "./verse-overlay";
+import { db } from "~/lib/db";
+import { useLiveQuery } from "dexie-react-hooks";
+import { Bookmark, MessageSquare } from "lucide-react";
+import { cn } from "~/lib/utils";
 
 interface BibleReaderProps {
   initialTranslationId?: string;
@@ -25,6 +29,11 @@ export function BibleReader({ initialTranslationId }: BibleReaderProps) {
   const startOrder = useReaderStore((state) => state.startOrder);
 
   const [activeVerse, setActiveVerse] = useState<any | null>(null);
+
+  // Local user data
+  const localHighlights = useLiveQuery(() => db.highlights.toArray()) ?? [];
+  const localBookmarks = useLiveQuery(() => db.bookmarks.toArray()) ?? [];
+  const localNotes = useLiveQuery(() => db.notes.toArray()) ?? [];
 
   const { data: translations } = api.bible.getTranslations.useQuery();
   const currentTranslation = translations?.find(t => t.slug === translationSlug);
@@ -140,6 +149,11 @@ export function BibleReader({ initialTranslationId }: BibleReaderProps) {
           {virtualRows.map((virtualRow) => {
             const isLoaderRow = virtualRow.index > allRows.length - 1;
             const row = allRows[virtualRow.index];
+            const verse = isParallelView ? (row as any)?.primary : row;
+            
+            const hasHighlight = localHighlights.find(h => h.verseId === verse?.id);
+            const hasBookmark = localBookmarks.find(b => b.verseId === verse?.id);
+            const hasNote = localNotes.find(n => n.verseId === verse?.id);
 
             return (
               <div
@@ -155,7 +169,6 @@ export function BibleReader({ initialTranslationId }: BibleReaderProps) {
                 className="px-6 md:px-12 py-8 group cursor-pointer"
                 onClick={() => {
                   if (!isLoaderRow) {
-                    const verse = isParallelView ? (row as any).primary : row;
                     setActiveVerse(verse);
                   }
                 }}
@@ -175,16 +188,26 @@ export function BibleReader({ initialTranslationId }: BibleReaderProps) {
                       <>
                         <div className="flex items-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
                           <span className="text-[9px] font-black uppercase tracking-widest text-blue-600/60">
-                            {(row as any).book.name} {(row as any).chapter}:{(row as any).verse}
+                            {verse.book.name} {verse.chapter}:{verse.verse}
                           </span>
                           <div className="h-[1px] flex-1 bg-gradient-to-r from-blue-600/20 to-transparent" />
+                          <div className="flex gap-2">
+                            {hasBookmark && <Bookmark className="h-3 w-3 text-blue-600 fill-blue-600" />}
+                            {hasNote && <MessageSquare className="h-3 w-3 text-blue-600" />}
+                          </div>
                         </div>
                         <div className="relative">
-                          <span className="absolute -left-8 md:-left-12 top-1.5 text-[10px] font-bold text-zinc-300 select-none group-hover:text-blue-600 transition-colors">
-                            {(row as any).verse}
+                          <span className={cn(
+                            "absolute -left-8 md:-left-12 top-1.5 text-[10px] font-bold select-none transition-colors",
+                            hasBookmark ? "text-blue-600" : "text-zinc-300 group-hover:text-blue-600"
+                          )}>
+                            {verse.verse}
                           </span>
-                          <p className="text-xl md:text-2xl font-serif leading-[1.8] text-zinc-800 dark:text-zinc-200 tracking-tight">
-                            {(row as any).text}
+                          <p className={cn(
+                            "text-xl md:text-2xl font-serif leading-[1.8] tracking-tight transition-colors",
+                            hasHighlight ? "bg-yellow-100/50 dark:bg-yellow-900/20 rounded-lg px-1 -mx-1" : "text-zinc-800 dark:text-zinc-200"
+                          )}>
+                            {verse.text}
                           </p>
                         </div>
                       </>
@@ -192,14 +215,20 @@ export function BibleReader({ initialTranslationId }: BibleReaderProps) {
                       // Parallel View
                       <div className="grid grid-cols-2 gap-8 md:gap-12">
                         <div className="flex flex-col gap-2">
-                          <span className="text-[8px] font-black uppercase tracking-widest text-zinc-400">
-                            {(row as any).primary.book.abbreviation} {(row as any).primary.chapter}:{(row as any).primary.verse}
-                          </span>
-                          <p className="text-base md:text-lg font-serif leading-relaxed text-zinc-800 dark:text-zinc-200">
-                            {(row as any).primary.text}
+                          <div className="flex items-center justify-between">
+                            <span className="text-[8px] font-black uppercase tracking-widest text-zinc-400">
+                              {verse.book.abbreviation} {verse.chapter}:{verse.verse}
+                            </span>
+                            {hasBookmark && <Bookmark className="h-2.5 w-2.5 text-blue-600 fill-blue-600" />}
+                          </div>
+                          <p className={cn(
+                            "text-base md:text-lg font-serif leading-relaxed",
+                            hasHighlight ? "bg-yellow-100/50 dark:bg-yellow-900/20 rounded-lg px-1 -mx-1" : "text-zinc-800 dark:text-zinc-200"
+                          )}>
+                            {verse.text}
                           </p>
                         </div>
-                        <div className="flex flex-col gap-2 border-l border-zinc-100 pl-8 md:pl-12 dark:border-zinc-800">
+                        <div className="flex flex-col gap-2 border-l border-zinc-100 dark:border-zinc-800 pl-8 md:pl-12">
                           <span className="text-[8px] font-black uppercase tracking-widest text-zinc-400">
                             {parallelTranslationSlug?.toUpperCase()}
                           </span>
@@ -220,6 +249,7 @@ export function BibleReader({ initialTranslationId }: BibleReaderProps) {
       {activeVerse && (
         <VerseOverlay 
           verseId={activeVerse.id}
+          bookId={activeVerse.bookId}
           bookName={activeVerse.book.name}
           chapter={activeVerse.chapter}
           verse={activeVerse.verse}
