@@ -1,76 +1,15 @@
 import { z } from "zod";
-
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
-
 import { getLiturgicalInfoServer } from "~/server/liturgical";
 
 export const bibleRouter = createTRPCRouter({
   getLiturgicalInfo: publicProcedure
-    .input(z.object({ date: z.date().optional() }))
+    .input(z.object({ date: z.date().optional().nullable() }))
     .query(async ({ input }) => {
-      return await getLiturgicalInfoServer(input.date);
+      return await getLiturgicalInfoServer(input?.date ?? new Date());
     }),
 
-  getVerses: publicProcedure
-    .input(
-      z.object({
-        translationId: z.string().optional(),
-        bookId: z.number().optional(),
-        chapter: z.number().optional(),
-        cursor: z.number().nullish(), // globalOrder cursor for infinite scroll
-        limit: z.number().min(1).max(100).default(50),
-      })
-    )
-    .query(async ({ ctx, input }) => {
-      const { cursor, limit, translationId } = input;
-
-      // Default to WEBBE if not provided
-      let tId = translationId;
-      if (!tId) {
-        const translation = await ctx.db.translation.findUnique({
-          where: { slug: "webbe" },
-        });
-        tId = translation?.id;
-      }
-
-      if (!tId) return { items: [], nextCursor: null };
-
-      const items = await ctx.db.verse.findMany({
-        take: limit + 1,
-        where: {
-          translationId: tId,
-          ...(cursor ? { globalOrder: { gt: cursor } } : {}),
-          ...(input.bookId ? { bookId: input.bookId } : {}),
-          ...(input.chapter ? { chapter: input.chapter } : {}),
-        },
-        orderBy: { globalOrder: "asc" },
-        include: { book: true },
-      });
-
-      let nextCursor: typeof cursor | null = null;
-      if (items.length > limit) {
-        const nextItem = items.pop();
-        nextCursor = nextItem!.globalOrder;
-      }
-
-      return {
-        items,
-        nextCursor,
-      };
-    }),
-
-  getBooks: publicProcedure.query(async ({ ctx }) => {
-    return ctx.db.book.findMany({
-      orderBy: { order: "asc" },
-    });
-  }),
-
-  getTranslations: publicProcedure.query(async ({ ctx }) => {
-    return ctx.db.translation.findMany({
-      orderBy: { slug: "asc" },
-    });
-  }),
-
+  // Get total verse count for a translation
   getVerseCount: publicProcedure
     .input(z.object({ translationSlug: z.string() }))
     .query(async ({ ctx, input }) => {
@@ -83,11 +22,12 @@ export const bibleRouter = createTRPCRouter({
       });
     }),
 
-  getVersesByIndex: publicProcedure
+  // Fetch a specific range of verses by their globalOrder
+  getVersesByOrderRange: publicProcedure
     .input(z.object({
       translationSlug: z.string(),
-      startIndex: z.number(), // 0-based index
-      limit: z.number().default(50),
+      startOrder: z.number(),
+      endOrder: z.number(),
     }))
     .query(async ({ ctx, input }) => {
       const translation = await ctx.db.translation.findUnique({
@@ -96,44 +36,87 @@ export const bibleRouter = createTRPCRouter({
       if (!translation) return [];
 
       return ctx.db.verse.findMany({
-        where: { translationId: translation.id },
+        where: { 
+          translationId: translation.id,
+          globalOrder: {
+            gte: input.startOrder,
+            lte: input.endOrder
+          }
+        },
         orderBy: { globalOrder: "asc" },
-        skip: input.startIndex,
-        take: input.limit,
         include: { book: true },
       });
     }),
 
-  getParallelVerses: publicProcedure
+  // Legacy fetcher for infinite scroll fallback
+  getVerses: publicProcedure
     .input(z.object({
-      primaryTranslationSlug: z.string(),
-      parallelTranslationSlug: z.string(),
-      cursor: z.number().nullish(), // globalOrder of primary
+      translationId: z.string().optional(),
+      cursor: z.number().nullish(),
       limit: z.number().min(1).max(100).default(50),
     }))
     .query(async ({ ctx, input }) => {
-      const primaryT = await ctx.db.translation.findUnique({ where: { slug: input.primaryTranslationSlug } });
-      const parallelT = await ctx.db.translation.findUnique({ where: { slug: input.parallelTranslationSlug } });
+      const { cursor, limit, translationId } = input;
+      console.log(`[tRPC] getVerses: trans=${translationId}, cursor=${cursor}, limit=${limit}`);
 
-      if (!primaryT || !parallelT) return { items: [], nextCursor: null };
+      let tId = translationId;
+      if (!tId) {
+        const t = await ctx.db.translation.findUnique({ where: { slug: "drb" } });
+        tId = t?.id;
+      }
+      if (!tId) return { items: [], nextCursor: null };
 
-      const primaryVerses = await ctx.db.verse.findMany({
-        take: input.limit + 1,
+      const items = await ctx.db.verse.findMany({
+        take: limit + 1,
         where: {
-          translationId: primaryT.id,
-          ...(input.cursor ? { globalOrder: { gt: input.cursor } } : {}),
+          translationId: tId,
+          ...(cursor ? { globalOrder: { gt: cursor } } : {}),
         },
         orderBy: { globalOrder: "asc" },
         include: { book: true },
       });
 
       let nextCursor: number | null = null;
-      if (primaryVerses.length > input.limit) {
+      if (items.length > limit) {
+        const nextItem = items.pop();
+        nextCursor = nextItem!.globalOrder;
+      }
+
+      return { items, nextCursor };
+    }),
+
+  getParallelVerses: publicProcedure
+    .input(z.object({
+      primaryTranslationSlug: z.string(),
+      parallelTranslationSlug: z.string(),
+      cursor: z.number().nullish(),
+      limit: z.number().min(1).max(100).default(50),
+    }))
+    .query(async ({ ctx, input }) => {
+      const { cursor, limit } = input;
+      console.log(`[tRPC] getParallelVerses: primary=${input.primaryTranslationSlug}, parallel=${input.parallelTranslationSlug}, cursor=${cursor}`);
+
+      const primaryT = await ctx.db.translation.findUnique({ where: { slug: input.primaryTranslationSlug } });
+      const parallelT = await ctx.db.translation.findUnique({ where: { slug: input.parallelTranslationSlug } });
+
+      if (!primaryT || !parallelT) return { items: [], nextCursor: null };
+
+      const primaryVerses = await ctx.db.verse.findMany({
+        take: limit + 1,
+        where: {
+          translationId: primaryT.id,
+          ...(cursor ? { globalOrder: { gt: cursor } } : {}),
+        },
+        orderBy: { globalOrder: "asc" },
+        include: { book: true },
+      });
+
+      let nextCursor: number | null = null;
+      if (primaryVerses.length > limit) {
         const nextItem = primaryVerses.pop();
         nextCursor = nextItem!.globalOrder;
       }
 
-      // Fetch parallel verses based on book/chapter/verse of primary
       const items = await Promise.all(primaryVerses.map(async (pv) => {
         const parallelV = await ctx.db.verse.findFirst({
           where: {
@@ -155,6 +138,14 @@ export const bibleRouter = createTRPCRouter({
       };
     }),
 
+  getBooks: publicProcedure.query(async ({ ctx }) => {
+    return ctx.db.book.findMany({ orderBy: { order: "asc" } });
+  }),
+
+  getTranslations: publicProcedure.query(async ({ ctx }) => {
+    return ctx.db.translation.findMany({ orderBy: { slug: "asc" } });
+  }),
+
   getVerseOrder: publicProcedure
     .input(z.object({
       translationSlug: z.string(),
@@ -163,25 +154,24 @@ export const bibleRouter = createTRPCRouter({
       verse: z.number().default(1),
     }))
     .query(async ({ ctx, input }) => {
-      const translation = await ctx.db.translation.findUnique({
-        where: { slug: input.translationSlug },
-      });
-      const book = await ctx.db.book.findUnique({
-        where: { slug: input.bookSlug },
-      });
-
+      console.log(`[tRPC] getVerseOrder: ${input.translationSlug} ${input.bookSlug} ${input.chapter}:${input.verse}`);
+      const translation = await ctx.db.translation.findUnique({ where: { slug: input.translationSlug } });
+      const book = await ctx.db.book.findUnique({ where: { slug: input.bookSlug } });
       if (!translation || !book) return null;
 
       const verse = await ctx.db.verse.findFirst({
-        where: {
-          translationId: translation.id,
-          bookId: book.id,
-          chapter: input.chapter,
-          verse: input.verse,
-        },
+        where: { translationId: translation.id, bookId: book.id, chapter: input.chapter, verse: input.verse },
         select: { globalOrder: true },
       });
 
-      return verse?.globalOrder ?? null;
+      if (!verse) {
+        const fallback = await ctx.db.verse.findFirst({
+          where: { translationId: translation.id, bookId: book.id, chapter: input.chapter },
+          orderBy: { verse: "asc" },
+          select: { globalOrder: true },
+        });
+        return fallback?.globalOrder ?? null;
+      }
+      return verse.globalOrder;
     }),
 });

@@ -4,42 +4,36 @@ import React, { createContext, useContext, useEffect } from "react";
 import { getLiturgicalColorOklch, type LiturgicalInfo } from "~/lib/liturgical";
 import { api } from "~/trpc/react";
 
-const LiturgicalContext = createContext<LiturgicalInfo | null>(null);
-
-const DEFAULT_INFO: LiturgicalInfo = {
-  season: "Ordinary Time",
-  color: "green",
-  day: "Weekday",
-  readings: {
-    firstReading: "Gen 1:1-5",
-    gospel: "Jn 1:1-5"
-  }
-};
+const LiturgicalContext = createContext<{ 
+  info: LiturgicalInfo | null; 
+  isLoading: boolean;
+  error: boolean;
+} | null>(null);
 
 export function LiturgicalProvider({ children }: { children: React.ReactNode }) {
-  const { data: info } = api.bible.getLiturgicalInfo.useQuery(
-    { date: new Date() },
+  const { data: info, isLoading, isError } = api.bible.getLiturgicalInfo.useQuery(
+    { date: null },
     {
       staleTime: 1000 * 60 * 60, // 1 hour
+      retry: 3,
     }
   );
 
-  const currentInfo = info ?? DEFAULT_INFO;
-
   useEffect(() => {
-    // Update CSS variables based on liturgical color
-    const oklch = getLiturgicalColorOklch(currentInfo.color);
-    document.documentElement.style.setProperty("--primary", `oklch(${oklch})`);
-    
-    if (currentInfo.color === "violet") {
-       document.documentElement.style.setProperty("--background", `oklch(0.98 0.01 285)`);
-    } else {
-       document.documentElement.style.setProperty("--background", `oklch(0.99 0.002 240)`);
+    if (info) {
+      const oklch = getLiturgicalColorOklch(info.color);
+      document.documentElement.style.setProperty("--primary", `oklch(${oklch})`);
+      
+      if (info.color === "violet") {
+         document.documentElement.style.setProperty("--background", `oklch(0.98 0.01 285)`);
+      } else {
+         document.documentElement.style.setProperty("--background", `oklch(0.99 0.002 240)`);
+      }
     }
-  }, [currentInfo]);
+  }, [info]);
 
   return (
-    <LiturgicalContext.Provider value={currentInfo}>
+    <LiturgicalContext.Provider value={{ info: info ?? null, isLoading, error: isError }}>
       {children}
     </LiturgicalContext.Provider>
   );

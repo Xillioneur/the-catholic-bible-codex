@@ -2,76 +2,155 @@
 
 import { useReaderStore } from "~/hooks/use-reader-store";
 import { api } from "~/trpc/react";
-import { BookOpen } from "lucide-react";
+import { BookOpen, Music, Scroll, Church, Loader2, AlertCircle } from "lucide-react";
 import { useLiturgical } from "./liturgical-provider";
 import { parseCitation } from "~/lib/liturgical";
+import { cn } from "~/lib/utils";
+import { toast } from "sonner";
 
-export function LiturgicalCard() {
-  const setStartOrder = useReaderStore((state) => state.setStartOrder);
+interface LiturgicalCardProps {
+  onClose?: () => void;
+}
+
+export function LiturgicalCard({ onClose }: LiturgicalCardProps) {
+  const { info, isLoading, error } = useLiturgical();
+  const setLiturgicalGuide = useReaderStore((state) => state.setLiturgicalGuide);
   const setScrollToOrder = useReaderStore((state) => state.setScrollToOrder);
   const translationSlug = useReaderStore((state) => state.translationSlug);
-  const info = useLiturgical();
+  const liturgicalGuide = useReaderStore((state) => state.liturgicalGuide);
   
   const utils = api.useUtils();
 
-  const handleEnterWord = async (citation: string) => {
-    const { bookSlug, chapter, verse } = parseCitation(citation);
-    const order = await utils.bible.getVerseOrder.fetch({
-      translationSlug,
-      bookSlug,
-      chapter,
-      verse
-    });
-    if (order !== null) {
-      setStartOrder(order);
-      setScrollToOrder(order);
+  const handleSelectReading = async (citation: string) => {
+    if (!citation) return;
+    
+    const toastId = toast.loading(`Locating ${citation}...`);
+    
+    try {
+      const parsed = parseCitation(citation);
+      const { bookSlug, chapter, verses } = parsed;
+      
+      const order = await utils.bible.getVerseOrder.fetch({
+        translationSlug,
+        bookSlug,
+        chapter,
+        verse: verses[0] ?? 1
+      });
+
+      if (order !== null) {
+        setLiturgicalGuide({
+          citation,
+          bookSlug,
+          chapter,
+          verses,
+          order
+        });
+        
+        // Use the new standard navigation: setScrollToOrder
+        // BibleReader will detect this and scroll its virtualizer
+        setScrollToOrder(order);
+        
+        toast.success(`Found ${citation}`, { id: toastId });
+        if (onClose) onClose();
+      } else {
+        toast.error(`Could not find ${citation}`, { id: toastId });
+      }
+    } catch (e) {
+      console.error("[Liturgical] handleSelectReading error:", e);
+      toast.error("An error occurred while finding the reading", { id: toastId });
     }
   };
 
-  return (
-    <div className="rounded-[1.5rem] border border-white/40 bg-white/40 p-6 shadow-2xl shadow-blue-900/10 backdrop-blur-3xl dark:border-zinc-800/40 dark:bg-zinc-900/40">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex flex-col">
-          <h2 className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-600 dark:text-blue-400">
-            Daily Liturgy
-          </h2>
-          <span className="text-[9px] font-bold text-zinc-400 mt-0.5 truncate max-w-[180px]">
-            {info.day}
-          </span>
-        </div>
-        <div className="h-2 w-2 rounded-full bg-green-500 shadow-lg shadow-green-500/50" />
+  const todayStr = new Date().toLocaleDateString('en-US', { 
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
+  });
+
+  if (isLoading) {
+    return (
+      <div className="rounded-[2rem] border border-zinc-200 bg-white p-10 shadow-2xl dark:border-zinc-800 dark:bg-zinc-900 min-w-[340px] flex flex-col items-center justify-center gap-4 text-center">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+        <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Loading Daily Readings</p>
       </div>
-      
-      <div className="space-y-4">
-        {info.readings.firstReading && (
-          <div className="group cursor-pointer" onClick={() => handleEnterWord(info.readings.firstReading!)}>
-            <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1 group-hover:text-blue-500 transition-colors text-left text-ellipsis overflow-hidden">First Reading</p>
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-100 group-hover:translate-x-1 transition-transform">{info.readings.firstReading}</p>
-              <BookOpen className="h-3 w-3 text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity" />
-            </div>
-          </div>
-        )}
-        
-        <div className="h-px bg-zinc-200/50 dark:bg-zinc-800/50" />
-        
-        {info.readings.gospel && (
-          <div className="group cursor-pointer" onClick={() => handleEnterWord(info.readings.gospel!)}>
-            <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mb-1 group-hover:text-blue-500 transition-colors text-left text-ellipsis overflow-hidden">The Holy Gospel</p>
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold text-zinc-800 dark:text-zinc-100 group-hover:translate-x-1 transition-transform">{info.readings.gospel}</p>
-              <BookOpen className="h-3 w-3 text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity" />
-            </div>
-          </div>
-        )}
+    );
+  }
+
+  if (error || !info) {
+    return (
+      <div className="rounded-[2rem] border border-red-100 bg-white p-10 shadow-2xl dark:border-red-900/20 dark:bg-zinc-900 min-w-[340px] flex flex-col items-center justify-center gap-4 text-center">
+        <AlertCircle className="h-8 w-8 text-red-500" />
+        <p className="text-sm font-bold">Readings Unavailable</p>
       </div>
-      
+    );
+  }
+
+  const ReadingItem = ({ label, citation, icon: Icon }: { label: string, citation: string, icon: any }) => {
+    const isActive = liturgicalGuide?.citation === citation;
+    return (
       <button 
-        onClick={() => info.readings.gospel && handleEnterWord(info.readings.gospel)}
-        className="mt-6 w-full rounded-2xl bg-zinc-900 px-4 py-3 text-[10px] font-black uppercase tracking-widest text-white transition-all hover:bg-blue-600 hover:shadow-xl hover:shadow-blue-500/20 active:scale-95 dark:bg-zinc-50 dark:text-zinc-900"
+        className={cn(
+          "w-full group flex flex-col p-4 rounded-2xl transition-all duration-200 border text-left",
+          isActive 
+            ? "border-blue-600 bg-blue-50/50 dark:bg-blue-900/20" 
+            : "border-transparent hover:border-zinc-200 hover:bg-zinc-50 dark:hover:bg-zinc-800 active:scale-[0.98]"
+        )} 
+        onClick={() => handleSelectReading(citation)}
       >
-        Enter the Word
+        <div className="flex items-center justify-between w-full mb-1">
+          <span className={cn(
+            "text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-colors",
+            isActive ? "text-blue-600" : "text-zinc-400 group-hover:text-zinc-600"
+          )}>
+            <Icon className="h-3.5 w-3.5" />
+            {label}
+          </span>
+          {isActive && <div className="h-1.5 w-1.5 rounded-full bg-blue-600 animate-pulse" />}
+        </div>
+        <span className="text-base font-black text-zinc-900 dark:text-zinc-50 tracking-tight">
+          {citation}
+        </span>
       </button>
+    );
+  };
+
+  return (
+    <div className="rounded-[2.5rem] border border-zinc-200 bg-white shadow-2xl dark:border-zinc-800 dark:bg-zinc-950 overflow-hidden relative min-w-[360px] flex flex-col">
+      <div className={cn(
+        "h-2 w-full",
+        info.color === "green" && "bg-green-500",
+        info.color === "violet" && "bg-violet-500",
+        info.color === "white" && "bg-zinc-200",
+        info.color === "red" && "bg-red-500",
+        info.color === "gold" && "bg-amber-400"
+      )} />
+
+      <div className="p-8">
+        <div className="flex flex-col mb-8 text-center">
+          <h2 className="text-[10px] font-black uppercase tracking-[0.4em] text-blue-600 mb-2">Daily Liturgy</h2>
+          <h3 className="text-xl font-black text-zinc-900 dark:text-zinc-50 tracking-tighter">{todayStr}</h3>
+          <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-[0.2em] mt-1 italic">
+            {info.season} • {info.day}
+          </p>
+        </div>
+        
+        <div className="space-y-2">
+          {info.readings.firstReading && (
+            <ReadingItem label="First Reading" citation={info.readings.firstReading} icon={Scroll} />
+          )}
+          {info.readings.psalm && (
+            <ReadingItem label="Responsorial Psalm" citation={info.readings.psalm} icon={Music} />
+          )}
+          {info.readings.secondReading && (
+            <ReadingItem label="Second Reading" citation={info.readings.secondReading} icon={Scroll} />
+          )}
+          {info.readings.gospel && (
+            <ReadingItem label="The Holy Gospel" citation={info.readings.gospel} icon={Church} />
+          )}
+        </div>
+
+        <p className="text-[9px] font-bold text-zinc-400 text-center mt-6 uppercase tracking-widest leading-relaxed">
+          Select a reading to pin it as a guide<br/>in the Bible view
+        </p>
+      </div>
     </div>
   );
 }

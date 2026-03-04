@@ -28,6 +28,7 @@ export function ReaderHeader() {
 
   const handleBookChange = async (bookSlug: string) => {
     if (!bookSlug) return;
+    setShowDaily(false);
     const order = await utils.bible.getVerseOrder.fetch({
       translationSlug,
       bookSlug,
@@ -41,7 +42,13 @@ export function ReaderHeader() {
   const currentBook = books?.find(b => b.id === currentBookId);
 
   return (
-    <header className="h-16 border-b border-white/10 bg-white/70 backdrop-blur-xl dark:bg-zinc-950/70 shrink-0">
+    <header className="h-16 border-b border-white/10 bg-white/70 backdrop-blur-xl dark:bg-zinc-950/70 shrink-0 relative z-[100]">
+      {showDaily && (
+        <div 
+          className="fixed inset-0 h-screen w-screen z-[-1] cursor-default" 
+          onClick={() => setShowDaily(false)}
+        />
+      )}
       <div className="mx-auto flex h-full max-w-7xl items-center justify-between px-6">
         <div className="flex items-center gap-8">
           <div className="flex flex-col">
@@ -146,24 +153,26 @@ export function ReaderHeader() {
 
           <div className="h-4 w-px bg-zinc-200 dark:bg-zinc-800 mx-1" />
 
-          <button 
-            onClick={() => setShowDaily(!showDaily)}
-            className={cn(
-              "flex h-9 items-center gap-2 rounded-full px-4 text-[10px] font-black uppercase tracking-widest transition-all",
-              showDaily 
-                ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20" 
-                : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-900 dark:text-zinc-400"
-            )}
-          >
-            <CalendarDays className="h-3.5 w-3.5" />
-            <span className="hidden md:inline">Daily Bread</span>
-          </button>
+          <div className="relative">
+            <button 
+              onClick={() => setShowDaily(!showDaily)}
+              className={cn(
+                "flex h-9 items-center gap-2 rounded-full px-4 text-[10px] font-black uppercase tracking-widest transition-all",
+                showDaily 
+                  ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20" 
+                  : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-900 dark:text-zinc-400"
+              )}
+            >
+              <CalendarDays className="h-3.5 w-3.5" />
+              <span className="hidden md:inline">Daily Bread</span>
+            </button>
 
-          {showDaily && (
-            <div className="absolute top-20 right-6 w-80 animate-in fade-in slide-in-from-top-2 duration-300 z-[100]">
-              <LiturgicalCard />
-            </div>
-          )}
+            {showDaily && (
+              <div className="absolute top-12 right-0 w-80 animate-in fade-in slide-in-from-top-2 duration-300 z-[110]">
+                <LiturgicalCard onClose={() => setShowDaily(false)} />
+              </div>
+            )}
+          </div>
           
           <button className="flex h-9 w-9 items-center justify-center rounded-full text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors">
             <Search className="h-4 w-4" />

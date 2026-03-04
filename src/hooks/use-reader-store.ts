@@ -1,5 +1,13 @@
 import { create } from "zustand";
 
+interface ReadingTarget {
+  citation: string;
+  bookSlug: string;
+  chapter: number;
+  verses: number[];
+  order: number;
+}
+
 interface ReaderState {
   translationSlug: string;
   setTranslationSlug: (slug: string) => void;
@@ -7,14 +15,22 @@ interface ReaderState {
   setCurrentBookId: (id: number | null) => void;
   currentChapter: number | null;
   setCurrentChapter: (chapter: number | null) => void;
+  
+  // Navigation
   scrollToOrder: number | null;
   setScrollToOrder: (order: number | null) => void;
-  startOrder: number;
-  setStartOrder: (order: number) => void;
-  isParallelView: boolean;
-  setIsParallelView: (isParallel: boolean) => void;
-  parallelTranslationSlug: string | null;
-  setParallelTranslationSlug: (slug: string | null) => void;
+  
+  // Highlighting
+  liturgicalHighlight: {
+    bookSlug: string;
+    chapter: number;
+    verses: number[];
+  } | null;
+  setLiturgicalHighlight: (highlight: { bookSlug: string; chapter: number; verses: number[] } | null) => void;
+  
+  // Guide System
+  liturgicalGuide: ReadingTarget | null;
+  setLiturgicalGuide: (guide: ReadingTarget | null) => void;
 }
 
 export const useReaderStore = create<ReaderState>((set) => ({
@@ -24,12 +40,16 @@ export const useReaderStore = create<ReaderState>((set) => ({
   setCurrentBookId: (id) => set({ currentBookId: id }),
   currentChapter: null,
   setCurrentChapter: (chapter) => set({ currentChapter: chapter }),
+  
   scrollToOrder: null,
   setScrollToOrder: (order) => set({ scrollToOrder: order }),
-  startOrder: 1,
-  setStartOrder: (order) => set({ startOrder: order }),
+  
   isParallelView: false,
-  setIsParallelView: (isParallel) => set({ isParallelView: isParallel }),
   parallelTranslationSlug: "webbe",
-  setParallelTranslationSlug: (slug) => set({ parallelTranslationSlug: slug }),
+  
+  liturgicalHighlight: null,
+  setLiturgicalHighlight: (highlight) => set({ liturgicalHighlight: highlight }),
+  
+  liturgicalGuide: null,
+  setLiturgicalGuide: (guide) => set({ liturgicalGuide: guide }),
 }));
