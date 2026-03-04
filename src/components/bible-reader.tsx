@@ -21,6 +21,7 @@ export function BibleReader() {
   const setCurrentChapter = useReaderStore((state) => state.setCurrentChapter);
   const highlightedOrders = useReaderStore((state) => state.highlightedOrders);
   const liturgicalGuide = useReaderStore((state) => state.liturgicalGuide);
+  const searchHighlight = useReaderStore((state) => state.searchHighlight);
 
   const [activeVerse, setActiveVerse] = useState<any | null>(null);
   const [currentOrder, setCurrentOrder] = useState<number>(1);
@@ -93,29 +94,54 @@ export function BibleReader() {
     if (!verse) return null;
     
     const hasHighlight = localHighlights.find(h => h.verseId === verse.id);
-    
-    // FUTURE-PROOF: Check if this absolute order is in our highlighted list
     const isLiturgical = highlightedOrders.includes(verse.globalOrder);
-
+    
+    // Search Highlighting
+    const isSearchTarget = searchHighlight?.targetOrder === verse.globalOrder;
+    const query = searchHighlight?.query;
+    
     const isFirstVerse = verse.verse === 1;
     const text = verse.text;
+
+    // Helper to highlight terms
+    const highlightTerms = (content: string, term: string | undefined) => {
+      if (!term || term.length < 2) return content;
+      const parts = content.split(new RegExp(`(${term})`, 'gi'));
+      return parts.map((part, i) => 
+        part.toLowerCase() === term.toLowerCase() 
+          ? <mark key={i} className="bg-primary/20 text-inherit p-0 rounded-sm">{part}</mark> 
+          : part
+      );
+    };
 
     return (
       <div className={cn(
         "text-[17px] md:text-[19px] font-serif leading-[1.7] tracking-normal transition-all duration-500 rounded-lg",
         hasHighlight ? "bg-yellow-100/40 dark:bg-yellow-900/20 px-1 -mx-1" : "text-zinc-800 dark:text-zinc-200",
-        isLiturgical && "bg-primary/5 ring-1 ring-primary/10 px-3 -mx-3 py-1 my-0.5 shadow-sm border-l-2 border-primary"
+        isLiturgical && "bg-primary/5 ring-1 ring-primary/10 px-3 -mx-3 py-1 my-0.5 shadow-sm border-l-2 border-primary",
+        isSearchTarget && "bg-primary/10 ring-2 ring-primary/20 px-3 -mx-3 py-2 my-1 shadow-md scale-[1.01]"
       )}>
-        {isFirstVerse ? (
-          <p><span className="float-left text-[2.8em] leading-[0.8] font-black text-primary mr-2 mt-1 font-serif">{text.charAt(0)}</span>{text.slice(1)}</p>
+        {verse.verse === 1 ? (
+          <p>
+            <span className="float-left text-[2.8em] leading-[0.8] font-black text-primary mr-2 mt-1 font-serif">
+              {text.charAt(0)}
+            </span>
+            {highlightTerms(text.slice(1), query)}
+          </p>
         ) : (
-          <p>{text}</p>
+          <p>{highlightTerms(text, query)}</p>
         )}
       </div>
     );
   };
 
-  if (!totalCount) return null;
+  if (!totalCount) {
+    return (
+      <div className="flex h-full w-full items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-zinc-300" />
+      </div>
+    );
+  }
 
   return (
     <>
@@ -127,7 +153,7 @@ export function BibleReader() {
             
             if (!verse) {
               return (
-                <div key={virtualRow.index} style={{ position: "absolute", top: 0, left: 0, width: "100%", height: `${virtualRow.size}px`, transform: `translateY(${virtualRow.start}px)` }} className="py-4">
+                <div key={virtualRow.index} style={{ position: "absolute", top: 0, left: 0, width: "100%", height: `${virtualRow.size}px`, transform: `translateY(${virtualRow.start}px)` }} className="py-4 px-12">
                   <div className="h-3 w-full bg-zinc-100 dark:bg-zinc-900/50 animate-pulse rounded-full" />
                 </div>
               );

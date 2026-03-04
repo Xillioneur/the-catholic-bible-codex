@@ -27,6 +27,15 @@ interface ReaderState {
   // Guide System
   liturgicalGuide: ReadingTarget | null;
   setLiturgicalGuide: (guide: ReadingTarget | null) => void;
+
+  // Search UI
+  isSearchOpen: boolean;
+  setIsSearchOpen: (open: boolean) => void;
+  searchHighlight: {
+    query: string;
+    targetOrder: number | null;
+  } | null;
+  setSearchHighlight: (highlight: { query: string; targetOrder: number | null } | null) => void;
 }
 
 export const useReaderStore = create<ReaderState>((set) => ({
@@ -45,4 +54,9 @@ export const useReaderStore = create<ReaderState>((set) => ({
   
   liturgicalGuide: null,
   setLiturgicalGuide: (guide) => set({ liturgicalGuide: guide }),
+
+  isSearchOpen: false,
+  setIsSearchOpen: (open) => set({ isSearchOpen: open }),
+  searchHighlight: null,
+  setSearchHighlight: (highlight) => set({ searchHighlight: highlight }),
 }));

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { api } from "~/trpc/react";
 import { LiturgicalCard } from "./liturgical-card";
-import { CalendarDays, ChevronDown, Menu, Search, Columns } from "lucide-react";
+import { CalendarDays, ChevronDown, Search } from "lucide-react";
 import { useReaderStore } from "~/hooks/use-reader-store";
 import { cn } from "~/lib/utils";
 
@@ -17,6 +17,7 @@ export function ReaderHeader() {
   const setScrollToOrder = useReaderStore((state) => state.setScrollToOrder);
   const currentBookId = useReaderStore((state) => state.currentBookId);
   const currentChapter = useReaderStore((state) => state.currentChapter);
+  const setIsSearchOpen = useReaderStore((state) => state.setIsSearchOpen);
 
   const utils = api.useUtils();
 
@@ -75,6 +76,20 @@ export function ReaderHeader() {
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Enhanced Search Trigger */}
+          <button 
+            onClick={() => setIsSearchOpen(true)}
+            className="flex h-8 items-center gap-3 rounded-lg border border-zinc-100 dark:border-zinc-800 px-3 text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-all group"
+          >
+            <Search className="h-3.5 w-3.5 group-hover:text-primary transition-colors" />
+            <span className="text-[10px] font-bold uppercase tracking-widest hidden md:inline">Search...</span>
+            <kbd className="hidden sm:flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded text-[9px] font-black text-zinc-500">
+              <span className="text-[10px]">⌘</span>K
+            </kbd>
+          </button>
+
+          <div className="h-4 w-px bg-zinc-200 dark:bg-zinc-800 mx-1" />
+
           <div className="flex items-center bg-zinc-100 dark:bg-zinc-900 rounded-lg p-0.5">
              <select 
               value={translationSlug}
@@ -94,12 +109,12 @@ export function ReaderHeader() {
             className={cn(
               "flex h-8 items-center gap-2 rounded-lg px-3 text-[9px] font-black uppercase tracking-widest transition-all",
               showDaily 
-                ? "bg-primary text-primary-foreground shadow-sm" 
+                ? "bg-primary text-white shadow-sm" 
                 : "bg-transparent text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-900"
             )}
           >
             <CalendarDays className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Daily</span>
+            <span className="hidden lg:inline">Daily</span>
           </button>
 
           {showDaily && (
@@ -107,10 +122,6 @@ export function ReaderHeader() {
               <LiturgicalCard onClose={() => setShowDaily(false)} />
             </div>
           )}
-          
-          <button className="flex h-8 w-8 items-center justify-center rounded-lg text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors">
-            <Search className="h-3.5 w-3.5" />
-          </button>
         </div>
       </div>
     </header>
