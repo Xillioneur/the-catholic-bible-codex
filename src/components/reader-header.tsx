@@ -12,17 +12,11 @@ export function ReaderHeader() {
   const { data: translations } = api.bible.getTranslations.useQuery();
   const [showDaily, setShowDaily] = useState(false);
 
-  // Selective store subscriptions
   const translationSlug = useReaderStore((state) => state.translationSlug);
   const setTranslationSlug = useReaderStore((state) => state.setTranslationSlug);
   const setScrollToOrder = useReaderStore((state) => state.setScrollToOrder);
   const currentBookId = useReaderStore((state) => state.currentBookId);
   const currentChapter = useReaderStore((state) => state.currentChapter);
-  const setStartOrder = useReaderStore((state) => state.setStartOrder);
-  const isParallelView = useReaderStore((state) => state.isParallelView);
-  const setIsParallelView = useReaderStore((state) => state.setIsParallelView);
-  const parallelTranslationSlug = useReaderStore((state) => state.parallelTranslationSlug);
-  const setParallelTranslationSlug = useReaderStore((state) => state.setParallelTranslationSlug);
 
   const utils = api.useUtils();
 
@@ -34,7 +28,6 @@ export function ReaderHeader() {
       bookSlug,
     });
     if (order !== null) {
-      setStartOrder(order);
       setScrollToOrder(order);
     }
   };
@@ -42,89 +35,51 @@ export function ReaderHeader() {
   const currentBook = books?.find(b => b.id === currentBookId);
 
   return (
-    <header className="h-16 border-b border-white/10 bg-white/70 backdrop-blur-xl dark:bg-zinc-950/70 shrink-0 relative z-[100]">
+    <header className="h-14 border-b border-zinc-100 bg-white/80 backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-950/80 shrink-0 relative z-[100]">
       {showDaily && (
-        <div 
-          className="fixed inset-0 h-screen w-screen z-[-1] cursor-default" 
-          onClick={() => setShowDaily(false)}
-        />
+        <div className="fixed inset-0 h-screen w-screen z-[-1]" onClick={() => setShowDaily(false)} />
       )}
-      <div className="mx-auto flex h-full max-w-7xl items-center justify-between px-6">
-        <div className="flex items-center gap-8">
+      <div className="mx-auto flex h-full max-w-7xl items-center justify-between px-4">
+        <div className="flex items-center gap-6">
           <div className="flex flex-col">
-            <h1 className="text-sm font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
-              Catholic Bible Codex
+            <h1 className="text-xs font-black tracking-tight text-zinc-900 dark:text-zinc-50 uppercase">
+              Bible Codex
             </h1>
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-blue-600/80 dark:text-blue-400/80">
+            <span className="text-[8px] font-bold uppercase tracking-[0.2em] text-primary/60">
               Verbum Domini
             </span>
           </div>
 
-          <nav className="hidden lg:flex items-center gap-1">
-            <button 
-              onClick={() => handleBookChange("genesis")}
-              className={cn(
-                "px-4 py-2 text-xs font-semibold transition-colors rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-900",
-                currentBook?.slug === "genesis" ? "text-blue-600" : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100"
-              )}
-            >
-              Genesis
-            </button>
-            <div className="h-3 w-px bg-zinc-200 dark:bg-zinc-800 mx-1" />
-            <button 
-              onClick={() => handleBookChange("matthew")}
-              className={cn(
-                "px-4 py-2 text-xs font-semibold transition-colors rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-900",
-                currentBook?.slug === "matthew" ? "text-blue-600" : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100"
-              )}
-            >
-              Matthew
-            </button>
-          </nav>
-        </div>
+          <div className="h-4 w-px bg-zinc-200 dark:bg-zinc-800" />
 
-        <div className="flex items-center gap-3">
-          <div className="relative flex items-center gap-1 group">
-            <div className="absolute left-3 flex items-center gap-1 pointer-events-none">
+          <div className="relative flex items-center group">
+            <div className="absolute left-0 flex items-center gap-1 pointer-events-none">
               <span className="text-xs font-bold text-zinc-900 dark:text-zinc-50">
-                {currentBook ? `${currentBook.name} ${currentChapter ?? 1}` : "Jump to..."}
+                {currentBook ? `${currentBook.abbreviation} ${currentChapter ?? 1}` : "Genesis 1"}
               </span>
+              <ChevronDown className="h-3 w-3 text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-zinc-100 transition-colors" />
             </div>
             <select 
               value={currentBook?.slug ?? ""}
               onChange={(e) => handleBookChange(e.target.value)}
-              className="appearance-none bg-transparent pl-32 pr-8 py-2 text-xs font-bold text-transparent focus:outline-none cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-900 rounded-lg transition-colors min-w-[140px]"
+              className="appearance-none bg-transparent pl-20 pr-4 py-1.5 text-xs font-bold text-transparent focus:outline-none cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-900 rounded-lg transition-colors min-w-[120px]"
             >
-              <option value="" disabled className="text-zinc-500">Jump to Book...</option>
+              <option value="" disabled>Jump...</option>
               {books?.map((book) => (
                 <option key={book.id} value={book.slug} className="text-zinc-900 dark:text-zinc-100">
                   {book.name}
                 </option>
               ))}
             </select>
-            <ChevronDown className="absolute right-2 h-3 w-3 pointer-events-none text-zinc-400 group-hover:text-zinc-900 dark:group-hover:text-zinc-100 transition-colors" />
           </div>
+        </div>
 
-          <div className="h-4 w-px bg-zinc-200 dark:bg-zinc-800 mx-1" />
-
-          <button 
-            onClick={() => setIsParallelView(!isParallelView)}
-            className={cn(
-              "flex h-9 w-9 items-center justify-center rounded-full transition-all",
-              isParallelView 
-                ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20" 
-                : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-900 dark:text-zinc-400"
-            )}
-            title="Toggle Parallel View"
-          >
-            <Columns className="h-4 w-4" />
-          </button>
-
-          <div className="flex items-center bg-zinc-100 dark:bg-zinc-900 rounded-lg px-1">
+        <div className="flex items-center gap-2">
+          <div className="flex items-center bg-zinc-100 dark:bg-zinc-900 rounded-lg p-0.5">
              <select 
               value={translationSlug}
               onChange={(e) => setTranslationSlug(e.target.value)}
-              className="appearance-none bg-transparent px-3 py-1.5 text-[9px] font-black uppercase tracking-tighter focus:outline-none cursor-pointer text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
+              className="appearance-none bg-transparent px-2.5 py-1 text-[9px] font-black uppercase tracking-widest focus:outline-none cursor-pointer text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
             >
               {translations?.map((t) => (
                 <option key={t.id} value={t.slug}>
@@ -132,50 +87,29 @@ export function ReaderHeader() {
                 </option>
               ))}
             </select>
-            
-            {isParallelView && (
-              <>
-                <div className="h-3 w-px bg-zinc-300 dark:bg-zinc-700 mx-1" />
-                <select 
-                  value={parallelTranslationSlug ?? ""}
-                  onChange={(e) => setParallelTranslationSlug(e.target.value)}
-                  className="appearance-none bg-transparent px-3 py-1.5 text-[9px] font-black uppercase tracking-tighter focus:outline-none cursor-pointer text-blue-600 hover:text-blue-700 transition-colors"
-                >
-                  {translations?.map((t) => (
-                    <option key={t.id} value={t.slug}>
-                      {t.abbreviation}
-                    </option>
-                  ))}
-                </select>
-              </>
-            )}
           </div>
 
-          <div className="h-4 w-px bg-zinc-200 dark:bg-zinc-800 mx-1" />
-
-          <div className="relative">
-            <button 
-              onClick={() => setShowDaily(!showDaily)}
-              className={cn(
-                "flex h-9 items-center gap-2 rounded-full px-4 text-[10px] font-black uppercase tracking-widest transition-all",
-                showDaily 
-                  ? "bg-blue-600 text-white shadow-lg shadow-blue-500/20" 
-                  : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-900 dark:text-zinc-400"
-              )}
-            >
-              <CalendarDays className="h-3.5 w-3.5" />
-              <span className="hidden md:inline">Daily Bread</span>
-            </button>
-
-            {showDaily && (
-              <div className="absolute top-12 right-0 w-80 animate-in fade-in slide-in-from-top-2 duration-300 z-[110]">
-                <LiturgicalCard onClose={() => setShowDaily(false)} />
-              </div>
+          <button 
+            onClick={() => setShowDaily(!showDaily)}
+            className={cn(
+              "flex h-8 items-center gap-2 rounded-lg px-3 text-[9px] font-black uppercase tracking-widest transition-all",
+              showDaily 
+                ? "bg-primary text-primary-foreground shadow-sm" 
+                : "bg-transparent text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-900"
             )}
-          </div>
+          >
+            <CalendarDays className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">Daily</span>
+          </button>
+
+          {showDaily && (
+            <div className="absolute top-12 right-4 w-80 animate-in fade-in slide-in-from-top-2 duration-300 z-[110]">
+              <LiturgicalCard onClose={() => setShowDaily(false)} />
+            </div>
+          )}
           
-          <button className="flex h-9 w-9 items-center justify-center rounded-full text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors">
-            <Search className="h-4 w-4" />
+          <button className="flex h-8 w-8 items-center justify-center rounded-lg text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors">
+            <Search className="h-3.5 w-3.5" />
           </button>
         </div>
       </div>

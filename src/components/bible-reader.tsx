@@ -25,29 +25,25 @@ export function BibleReader() {
   const [activeVerse, setActiveVerse] = useState<any | null>(null);
   const [currentOrder, setCurrentOrder] = useState<number>(1);
 
-  // 1. Get total verse count
   const { data: totalCount } = api.bible.getVerseCount.useQuery(
     { translationSlug },
     { staleTime: Infinity }
   );
 
-  // 2. Fetcher for visible verses
   const utils = api.useUtils();
   const [verseCache, setVerseMap] = useState<Map<number, any>>(new Map());
 
   const rowVirtualizer = useVirtualizer({
     count: totalCount ?? 0,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 120, 
-    overscan: 20,
+    estimateSize: () => 80, // More compact estimate
+    overscan: 30,
   });
 
   const virtualRows = rowVirtualizer.getVirtualItems();
 
-  // Load missing data for visible rows
   useEffect(() => {
     if (!totalCount) return;
-
     const missingIndices = virtualRows
       .map(r => r.index + 1)
       .filter(order => !verseCache.has(order));
@@ -55,7 +51,6 @@ export function BibleReader() {
     if (missingIndices.length > 0) {
       const startOrder = Math.min(...missingIndices);
       const endOrder = Math.max(...missingIndices);
-
       void utils.bible.getVersesByOrderRange.fetch({
         translationSlug,
         startOrder,
@@ -70,14 +65,10 @@ export function BibleReader() {
     }
   }, [virtualRows, translationSlug, totalCount, verseCache, utils]);
 
-  // Track scroll position - Finding the actual visible top verse
   useEffect(() => {
     if (virtualRows.length > 0 && parentRef.current) {
       const scrollTop = parentRef.current.scrollTop;
-      
-      // Find the first virtual row that is actually at or below the scroll top
-      const visibleRow = virtualRows.find(r => r.start >= scrollTop - 50) ?? virtualRows[0];
-      
+      const visibleRow = virtualRows.find(r => r.start >= scrollTop - 20) ?? virtualRows[0];
       const verse = verseCache.get(visibleRow!.index + 1);
       if (verse) {
         setCurrentOrder(verse.globalOrder);
@@ -87,7 +78,6 @@ export function BibleReader() {
     }
   }, [virtualRows, verseCache, setCurrentBookId, setCurrentChapter]);
 
-  // Handle navigation
   useEffect(() => {
     if (scrollToOrder !== null && totalCount) {
       rowVirtualizer.scrollToIndex(scrollToOrder - 1, { align: "start" });
@@ -95,34 +85,30 @@ export function BibleReader() {
     }
   }, [scrollToOrder, totalCount, rowVirtualizer, setScrollToOrder]);
 
-  // Local user data
   const localHighlights = useLiveQuery(() => db.highlights.toArray()) ?? [];
   const localBookmarks = useLiveQuery(() => db.bookmarks.toArray()) ?? [];
   const localNotes = useLiveQuery(() => db.notes.toArray()) ?? [];
 
   if (!totalCount) {
     return (
-      <div className="flex h-full w-full items-center justify-center bg-white dark:bg-zinc-950">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400">Opening Codex</p>
-        </div>
+      <div className="flex h-full w-full items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-zinc-300" />
       </div>
     );
   }
 
   return (
     <>
-      <div ref={parentRef} className="h-full w-full overflow-auto bg-transparent scroll-smooth selection:bg-blue-100 selection:text-blue-900">
-        <div style={{ height: `${rowVirtualizer.getTotalSize()}px`, width: "100%", position: "relative" }} className="max-w-5xl mx-auto">
+      <div ref={parentRef} className="h-full w-full overflow-auto bg-transparent scroll-smooth selection:bg-primary/10">
+        <div style={{ height: `${rowVirtualizer.getTotalSize()}px`, width: "100%", position: "relative" }} className="max-w-3xl mx-auto px-4">
           {virtualRows.map((virtualRow) => {
             const order = virtualRow.index + 1;
             const verse = verseCache.get(order);
             
             if (!verse) {
               return (
-                <div key={virtualRow.index} style={{ position: "absolute", top: 0, left: 0, width: "100%", height: `${virtualRow.size}px`, transform: `translateY(${virtualRow.start}px)` }} className="px-12 py-8">
-                  <div className="h-4 w-3/4 bg-zinc-100 dark:bg-zinc-900 animate-pulse rounded" />
+                <div key={virtualRow.index} style={{ position: "absolute", top: 0, left: 0, width: "100%", height: `${virtualRow.size}px`, transform: `translateY(${virtualRow.start}px)` }} className="py-4">
+                  <div className="h-3 w-full bg-zinc-100 dark:bg-zinc-900/50 animate-pulse rounded-full" />
                 </div>
               );
             }
@@ -139,29 +125,36 @@ export function BibleReader() {
               <div
                 key={virtualRow.index}
                 style={{ position: "absolute", top: 0, left: 0, width: "100%", height: `${virtualRow.size}px`, transform: `translateY(${virtualRow.start}px)` }}
-                className="px-6 md:px-12 py-8 group cursor-pointer"
+                className="py-2 group cursor-pointer"
                 onClick={() => setActiveVerse(verse)}
               >
-                <div className="max-w-4xl mx-auto flex flex-col gap-3 transition-all duration-500">
-                  <div className="flex items-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <span className="text-[9px] font-black uppercase tracking-widest text-blue-600/60">{verse.book.name} {verse.chapter}:{verse.verse}</span>
-                    <div className="h-[1px] flex-1 bg-gradient-to-r from-blue-600/20 to-transparent" />
-                    <div className="flex gap-2">
-                      {hasBookmark && <Bookmark className="h-3 w-3 text-blue-600 fill-blue-600" />}
-                      {hasNote && <MessageSquare className="h-3 w-3 text-blue-600" />}
-                    </div>
+                <div className="flex gap-4 items-start">
+                  {/* Integrated Verse Marker */}
+                  <div className="w-8 flex-shrink-0 pt-1.5 flex flex-col items-end gap-1">
+                    <span className={cn(
+                      "text-[10px] font-bold transition-colors",
+                      hasBookmark ? "text-primary" : "text-zinc-300 group-hover:text-zinc-500"
+                    )}>
+                      {verse.verse}
+                    </span>
+                    {hasNote && <div className="h-1 w-1 rounded-full bg-primary/50" />}
                   </div>
-                  <div className="relative">
-                    {verse.verse !== 1 && (
-                      <span className={cn("absolute -left-8 md:-left-12 top-1.5 text-[10px] font-bold select-none transition-colors", hasBookmark ? "text-blue-600" : "text-zinc-300 group-hover:text-blue-600")}>{verse.verse}</span>
+
+                  <div className="flex-1 min-w-0 flex flex-col gap-1">
+                    {verse.verse === 1 && (
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-primary/60">{verse.book.name} {verse.chapter}</span>
+                        <div className="h-px flex-1 bg-zinc-100 dark:bg-zinc-900" />
+                      </div>
                     )}
+                    
                     <div className={cn(
-                      "text-xl md:text-2xl font-serif leading-[1.8] tracking-tight transition-all duration-700",
-                      hasHighlight ? "bg-yellow-100/50 dark:bg-yellow-900/20 rounded-lg px-1 -mx-1" : "text-zinc-800 dark:text-zinc-200",
-                      isLiturgical && "bg-blue-50 dark:bg-blue-900/20 ring-1 ring-blue-100 dark:ring-blue-900/30 rounded-2xl px-6 -mx-6 shadow-sm py-2 my-1"
+                      "text-[17px] md:text-[19px] font-serif leading-[1.7] tracking-normal transition-all duration-500 rounded-lg",
+                      hasHighlight ? "bg-yellow-100/40 dark:bg-yellow-900/20 px-1 -mx-1" : "text-zinc-800 dark:text-zinc-200",
+                      isLiturgical && "bg-primary/5 ring-1 ring-primary/10 px-3 -mx-3 py-1 my-0.5 shadow-sm border-l-2 border-primary"
                     )}>
                       {verse.verse === 1 ? (
-                        <p><span className="float-left text-[3.5em] leading-[0.8] font-black text-blue-600 mr-2 mt-[-0.1em] font-serif">{verse.text.charAt(0)}</span>{verse.text.slice(1)}</p>
+                        <p><span className="float-left text-[2.8em] leading-[0.8] font-black text-primary mr-2 mt-1 font-serif">{verse.text.charAt(0)}</span>{verse.text.slice(1)}</p>
                       ) : (
                         <p>{verse.text}</p>
                       )}
