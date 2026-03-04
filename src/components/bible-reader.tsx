@@ -19,7 +19,7 @@ export function BibleReader() {
   const setScrollToOrder = useReaderStore((state) => state.setScrollToOrder);
   const setCurrentBookId = useReaderStore((state) => state.setCurrentBookId);
   const setCurrentChapter = useReaderStore((state) => state.setCurrentChapter);
-  const liturgicalHighlight = useReaderStore((state) => state.liturgicalHighlight);
+  const highlightedOrders = useReaderStore((state) => state.highlightedOrders);
   const liturgicalGuide = useReaderStore((state) => state.liturgicalGuide);
 
   const [activeVerse, setActiveVerse] = useState<any | null>(null);
@@ -36,7 +36,7 @@ export function BibleReader() {
   const rowVirtualizer = useVirtualizer({
     count: totalCount ?? 0,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 80, // More compact estimate
+    estimateSize: () => 80,
     overscan: 30,
   });
 
@@ -89,13 +89,33 @@ export function BibleReader() {
   const localBookmarks = useLiveQuery(() => db.bookmarks.toArray()) ?? [];
   const localNotes = useLiveQuery(() => db.notes.toArray()) ?? [];
 
-  if (!totalCount) {
+  const renderVerseText = (verse: any) => {
+    if (!verse) return null;
+    
+    const hasHighlight = localHighlights.find(h => h.verseId === verse.id);
+    
+    // FUTURE-PROOF: Check if this absolute order is in our highlighted list
+    const isLiturgical = highlightedOrders.includes(verse.globalOrder);
+
+    const isFirstVerse = verse.verse === 1;
+    const text = verse.text;
+
     return (
-      <div className="flex h-full w-full items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-zinc-300" />
+      <div className={cn(
+        "text-[17px] md:text-[19px] font-serif leading-[1.7] tracking-normal transition-all duration-500 rounded-lg",
+        hasHighlight ? "bg-yellow-100/40 dark:bg-yellow-900/20 px-1 -mx-1" : "text-zinc-800 dark:text-zinc-200",
+        isLiturgical && "bg-primary/5 ring-1 ring-primary/10 px-3 -mx-3 py-1 my-0.5 shadow-sm border-l-2 border-primary"
+      )}>
+        {isFirstVerse ? (
+          <p><span className="float-left text-[2.8em] leading-[0.8] font-black text-primary mr-2 mt-1 font-serif">{text.charAt(0)}</span>{text.slice(1)}</p>
+        ) : (
+          <p>{text}</p>
+        )}
       </div>
     );
-  }
+  };
+
+  if (!totalCount) return null;
 
   return (
     <>
@@ -115,11 +135,6 @@ export function BibleReader() {
 
             const hasBookmark = localBookmarks.find(b => b.verseId === verse.id);
             const hasNote = localNotes.find(n => n.verseId === verse.id);
-            const hasHighlight = localHighlights.find(h => h.verseId === verse.id);
-            const isLiturgical = (liturgicalHighlight || liturgicalGuide) && (
-              (liturgicalHighlight?.bookSlug === verse.book.slug && liturgicalHighlight?.chapter === verse.chapter && liturgicalHighlight?.verses.includes(verse.verse)) ||
-              (liturgicalGuide?.bookSlug === verse.book.slug && liturgicalGuide?.chapter === verse.chapter && liturgicalGuide?.verses.includes(verse.verse))
-            );
 
             return (
               <div
@@ -129,12 +144,8 @@ export function BibleReader() {
                 onClick={() => setActiveVerse(verse)}
               >
                 <div className="flex gap-4 items-start">
-                  {/* Integrated Verse Marker */}
                   <div className="w-8 flex-shrink-0 pt-1.5 flex flex-col items-end gap-1">
-                    <span className={cn(
-                      "text-[10px] font-bold transition-colors",
-                      hasBookmark ? "text-primary" : "text-zinc-300 group-hover:text-zinc-500"
-                    )}>
+                    <span className={cn("text-[10px] font-bold transition-colors", hasBookmark ? "text-primary" : "text-zinc-300 group-hover:text-zinc-500")}>
                       {verse.verse}
                     </span>
                     {hasNote && <div className="h-1 w-1 rounded-full bg-primary/50" />}
@@ -147,18 +158,7 @@ export function BibleReader() {
                         <div className="h-px flex-1 bg-zinc-100 dark:bg-zinc-900" />
                       </div>
                     )}
-                    
-                    <div className={cn(
-                      "text-[17px] md:text-[19px] font-serif leading-[1.7] tracking-normal transition-all duration-500 rounded-lg",
-                      hasHighlight ? "bg-yellow-100/40 dark:bg-yellow-900/20 px-1 -mx-1" : "text-zinc-800 dark:text-zinc-200",
-                      isLiturgical && "bg-primary/5 ring-1 ring-primary/10 px-3 -mx-3 py-1 my-0.5 shadow-sm border-l-2 border-primary"
-                    )}>
-                      {verse.verse === 1 ? (
-                        <p><span className="float-left text-[2.8em] leading-[0.8] font-black text-primary mr-2 mt-1 font-serif">{verse.text.charAt(0)}</span>{verse.text.slice(1)}</p>
-                      ) : (
-                        <p>{verse.text}</p>
-                      )}
-                    </div>
+                    {renderVerseText(verse)}
                   </div>
                 </div>
               </div>

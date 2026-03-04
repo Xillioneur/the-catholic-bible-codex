@@ -20,13 +20,9 @@ interface ReaderState {
   scrollToOrder: number | null;
   setScrollToOrder: (order: number | null) => void;
   
-  // Highlighting
-  liturgicalHighlight: {
-    bookSlug: string;
-    chapter: number;
-    verses: number[];
-  } | null;
-  setLiturgicalHighlight: (highlight: { bookSlug: string; chapter: number; verses: number[] } | null) => void;
+  // Highlighting System (Absolute IDs)
+  highlightedOrders: number[];
+  setHighlightedOrders: (orders: number[]) => void;
   
   // Guide System
   liturgicalGuide: ReadingTarget | null;
@@ -44,11 +40,8 @@ export const useReaderStore = create<ReaderState>((set) => ({
   scrollToOrder: null,
   setScrollToOrder: (order) => set({ scrollToOrder: order }),
   
-  isParallelView: false,
-  parallelTranslationSlug: "webbe",
-  
-  liturgicalHighlight: null,
-  setLiturgicalHighlight: (highlight) => set({ liturgicalHighlight: highlight }),
+  highlightedOrders: [],
+  setHighlightedOrders: (orders) => set({ highlightedOrders: orders }),
   
   liturgicalGuide: null,
   setLiturgicalGuide: (guide) => set({ liturgicalGuide: guide }),

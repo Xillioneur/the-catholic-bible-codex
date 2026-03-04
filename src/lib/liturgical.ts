@@ -25,8 +25,8 @@ export function getLiturgicalColorOklch(color: LiturgicalColor): string {
 }
 
 /**
- * Robustly parses complex citations like "Ps 50:8-9, 16bc-17, 21+23" or "Isa 1:10, 16-20"
- * Returns the book, chapter, and an array of all verse numbers in the range.
+ * The most robust parser for Catholic citations.
+ * Handles complex strings like: "Ps 31:5-6, 14, 15-16"
  */
 export function parseCitation(citation: string): { bookSlug: string; chapter: number; verses: number[] } {
   const abbrevMap: Record<string, string> = {
@@ -62,37 +62,57 @@ export function parseCitation(citation: string): { bookSlug: string; chapter: nu
 
   const slug = abbrevMap[bookPart] ?? "genesis";
   
-  // Extract chapter: handles "Ps 50:8" or "Jn 1:1"
-  const chapterMatch = rest.match(/^(\d+)/);
-  const chapter = chapterMatch ? parseInt(chapterMatch[1]!) : 1;
+  // Clean up 'rest' to handle cases like "31: 5-6" or "31 : 5-6"
+  const cleanRest = rest.replace(/\s+/g, '');
+  const colonIndex = cleanRest.indexOf(':');
   
-  // Extract verses part (everything after the first colon or space after chapter)
-  const versesPart = rest.includes(':') ? rest.split(':')[1] : rest.replace(/^\d+/, '').trim();
+  let chapter = 1;
+  let versesPart = "";
+
+  if (colonIndex !== -1) {
+    chapter = parseInt(cleanRest.slice(0, colonIndex).replace(/\D/g, '')) || 1;
+    versesPart = cleanRest.slice(colonIndex + 1);
+  } else {
+    // Check for chapter then space then verses: "Ps 23 1-6"
+    const spaceMatch = rest.trim().match(/^(\d+)\s+(.*)/);
+    if (spaceMatch) {
+      chapter = parseInt(spaceMatch[1]!) || 1;
+      versesPart = spaceMatch[2]!.replace(/\s+/g, '');
+    } else {
+      chapter = parseInt(cleanRest.replace(/\D/g, '')) || 1;
+    }
+  }
   
   const verses: number[] = [];
   if (versesPart) {
-    // Split by commas and handle multiple ranges/singles
-    // Cleans up letters like "16bc" or "21+23"
-    const parts = versesPart.split(/[,+]/);
-    for (const part of parts) {
-      const p = part.trim();
-      if (p.includes('-')) {
-        const rangeMatch = p.match(/(\d+)-(\d+)/);
-        if (rangeMatch) {
-          const start = parseInt(rangeMatch[1]!);
-          const end = parseInt(rangeMatch[2]!);
-          for (let i = start; i <= end; i++) verses.push(i);
+    // Correctly split by ANY non-digit separator that isn't a hyphen
+    // This catches commas, semicolons, pluses, etc.
+    const segments = versesPart.split(/[^0-9-]/);
+    
+    for (const segment of segments) {
+      if (!segment) continue;
+      
+      if (segment.includes('-')) {
+        const range = segment.split('-');
+        if (range.length >= 2) {
+          // Robustly parse start and end, stripping any lingering letters like 'bc'
+          const start = parseInt(range[0]!.replace(/\D/g, ''));
+          const end = parseInt(range[range.length - 1]!.replace(/\D/g, ''));
+          if (!isNaN(start) && !isNaN(end)) {
+            for (let i = Math.min(start, end); i <= Math.max(start, end); i++) {
+              verses.push(i);
+            }
+          }
         }
       } else {
-        const verseMatch = p.match(/(\d+)/);
-        if (verseMatch) {
-          verses.push(parseInt(verseMatch[1]!));
+        const v = parseInt(segment.replace(/\D/g, ''));
+        if (!isNaN(v)) {
+          verses.push(v);
         }
       }
     }
   }
 
-  // Final fallback
   if (verses.length === 0) verses.push(1);
   
   return {
