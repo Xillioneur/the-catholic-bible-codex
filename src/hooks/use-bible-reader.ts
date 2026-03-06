@@ -4,6 +4,9 @@ import { useState, useCallback, useEffect, useMemo } from "react";
 import { api } from "~/trpc/react";
 import { useReaderStore } from "~/hooks/use-reader-store";
 import { useVirtualizer } from "@tanstack/react-virtual";
+import { bibleService } from "~/lib/bible-service";
+import { useLiveQuery } from "dexie-react-hooks";
+import { db } from "~/lib/db";
 
 export type BibleRow = 
   | { type: "book-header"; book: any }
@@ -12,22 +15,46 @@ export type BibleRow =
 
 /**
  * useBibleReader Hook
- * Flatten the 73 books into a single linear sequence of Headers and Verses.
+ * High-performance hook that streams the Bible from local IndexedDB
+ * while syncing in the background.
  */
 export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>) {
   const translationSlug = useReaderStore((state) => state.translationSlug);
   const scrollToOrder = useReaderStore((state) => state.scrollToOrder);
   const setScrollToOrder = useReaderStore((state) => state.setScrollToOrder);
+  const setCurrentBookId = useReaderStore((state) => state.setCurrentBookId);
+  const setCurrentChapter = useReaderStore((state) => state.setCurrentChapter);
 
   const [currentOrder, setCurrentOrder] = useState<number>(1);
 
-  // 1. Hydration
-  const { data: allVerses, isLoading } = api.bible.getEntireBible.useQuery(
+  // 1. Get total verse count from server (fast query)
+  const { data: totalCount } = api.bible.getVerseCount.useQuery(
     { translationSlug },
-    { staleTime: Infinity, refetchOnWindowFocus: false }
+    { staleTime: Infinity }
   );
 
-  // 2. Linearize the Bible: Interleave Headers with Verses
+  const utils = api.useUtils();
+
+  // 2. Trigger Background Sync (Multithreaded Parallel Loading)
+  useEffect(() => {
+    if (totalCount) {
+      void bibleService.syncBible(
+        translationSlug, 
+        totalCount, 
+        (input) => utils.bible.getVersesByOrderRange.fetch(input)
+      );
+    }
+  }, [totalCount, translationSlug, utils]);
+
+  // 3. Reactive Local Data Stream (No lag, instant response)
+  const allVerses = useLiveQuery(
+    () => db.verses.where("translationId").equals(translationSlug).sortBy("globalOrder"),
+    [translationSlug]
+  );
+
+  const isLoading = !allVerses || allVerses.length === 0;
+
+  // 4. Linearize the Bible: Interleave Headers with Verses
   const flattenedRows = useMemo(() => {
     if (!allVerses) return [];
     const rows: BibleRow[] = [];
@@ -49,7 +76,7 @@ export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>
     return rows;
   }, [allVerses]);
 
-  // 3. Virtualization
+  // 5. Virtualization (Deterministic heights for 60fps)
   const rowVirtualizer = useVirtualizer({
     count: flattenedRows.length,
     getScrollElement: () => parentRef.current,
@@ -59,10 +86,10 @@ export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>
       if (row?.type === "chapter-header") return 120;
       return 100;
     },
-    overscan: 40,
+    overscan: 100,
   });
 
-  // 4. Optimized Scroll Sync (Guarded to prevent jitter)
+  // 6. Scroll Sync
   useEffect(() => {
     const virtualItems = rowVirtualizer.getVirtualItems();
     if (virtualItems.length === 0 || !parentRef.current || flattenedRows.length === 0) return;
@@ -73,7 +100,6 @@ export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>
 
     if (!row) return;
 
-    // Use store getState to check values before setting to avoid re-render loops
     const state = useReaderStore.getState();
 
     if (row.type === "verse") {
@@ -85,9 +111,9 @@ export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>
       const targetChapter = row.type === "chapter-header" ? row.chapter : 1;
       if (state.currentChapter !== targetChapter) state.setCurrentChapter(targetChapter);
     }
-  }, [rowVirtualizer.getVirtualItems(), flattenedRows, currentOrder, parentRef]);
+  }, [rowVirtualizer.getVirtualItems(), flattenedRows, currentOrder, parentRef, setCurrentBookId, setCurrentChapter]);
 
-  // 5. Accurate Navigation
+  // 7. Instant Teleportation
   useEffect(() => {
     if (scrollToOrder !== null && flattenedRows.length > 0) {
       const index = flattenedRows.findIndex(r => r.type === "verse" && r.verse.globalOrder === scrollToOrder);
@@ -100,7 +126,6 @@ export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>
 
   return {
     rows: flattenedRows,
-    allVerses,
     isLoading,
     rowVirtualizer,
     currentOrder
