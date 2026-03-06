@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useReaderStore } from "~/hooks/use-reader-store";
 import { api } from "~/trpc/react";
 import { BookOpen, Music, Scroll, Church, Loader2, AlertCircle, Calendar } from "lucide-react";
@@ -21,20 +22,18 @@ export function LiturgicalCard({ onClose }: LiturgicalCardProps) {
   
   const utils = api.useUtils();
 
-  const handleSelectReading = async (citation: string) => {
+  const handleSelectReading = async (citation: string, type: string) => {
     if (!citation) return;
-    const toastId = toast.loading(`Resolving ${citation}...`);
+    const toastId = toast.loading(`Locating ${citation}...`);
     
     try {
       const parsed = parseCitation(citation);
       
-      // 1. Resolve absolute highlights from server (future-proof)
       const highlightOrders = await utils.bible.resolveReadingHighlight.fetch({
         translationSlug,
         citation
       });
 
-      // 2. Resolve first verse order for navigation
       const order = await utils.bible.getVerseOrder.fetch({
         translationSlug,
         bookSlug: parsed.bookSlug,
@@ -43,10 +42,10 @@ export function LiturgicalCard({ onClose }: LiturgicalCardProps) {
       });
 
       if (order !== null) {
-        setHighlightedOrders(highlightOrders);
+        setHighlightedOrders(highlightOrders, { type, citation });
         setLiturgicalGuide({ ...parsed, citation, order });
         setScrollToOrder(order);
-        toast.success(`Target Locked`, { id: toastId });
+        toast.success(`${type} Locked`, { id: toastId });
         if (onClose) onClose();
       } else {
         toast.error(`Not found in current translation`, { id: toastId });
@@ -69,9 +68,9 @@ export function LiturgicalCard({ onClose }: LiturgicalCardProps) {
     </div>
   );
 
-  const ReadingRow = ({ label, citation, icon: Icon }: { label: string, citation: string, icon: any }) => (
+  const ReadingRow = ({ label, citation, icon: Icon, typeName }: { label: string, citation: string, icon: any, typeName: string }) => (
     <button 
-      onClick={() => handleSelectReading(citation)}
+      onClick={() => handleSelectReading(citation, typeName)}
       className="w-full flex items-center justify-between p-3 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-all group border border-transparent hover:border-zinc-100 dark:hover:border-zinc-800 active:scale-[0.98]"
     >
       <div className="flex flex-col items-start gap-0.5">
@@ -113,15 +112,15 @@ export function LiturgicalCard({ onClose }: LiturgicalCardProps) {
       </div>
 
       <div className="p-3 space-y-1">
-        {info.readings.firstReading && <ReadingRow label="First" citation={info.readings.firstReading} icon={Scroll} />}
-        {info.readings.psalm && <ReadingRow label="Psalm" citation={info.readings.psalm} icon={Music} />}
-        {info.readings.secondReading && <ReadingRow label="Second" citation={info.readings.secondReading} icon={Scroll} />}
-        {info.readings.gospel && <ReadingRow label="Gospel" citation={info.readings.gospel} icon={Church} />}
+        {info.readings.firstReading && <ReadingRow label="First" typeName="First Reading" citation={info.readings.firstReading} icon={Scroll} />}
+        {info.readings.psalm && <ReadingRow label="Psalm" typeName="Responsorial Psalm" citation={info.readings.psalm} icon={Music} />}
+        {info.readings.secondReading && <ReadingRow label="Second" typeName="Second Reading" citation={info.readings.secondReading} icon={Scroll} />}
+        {info.readings.gospel && <ReadingRow label="Gospel" typeName="The Holy Gospel" citation={info.readings.gospel} icon={Church} />}
       </div>
 
       <div className="p-3 pt-0">
         <button 
-          onClick={() => info.readings.gospel && handleSelectReading(info.readings.gospel)}
+          onClick={() => info.readings.gospel && handleSelectReading(info.readings.gospel, "The Holy Gospel")}
           className="w-full h-10 rounded-xl bg-zinc-900 dark:bg-zinc-50 text-white dark:text-zinc-950 font-black text-[9px] uppercase tracking-[0.2em] hover:bg-primary dark:hover:bg-primary hover:text-white transition-all shadow-md active:scale-[0.97]"
         >
           Enter the Word

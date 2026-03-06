@@ -6,6 +6,7 @@ interface ReadingTarget {
   chapter: number;
   verses: number[];
   order: number;
+  type?: "First" | "Psalm" | "Second" | "Gospel";
 }
 
 interface ReaderState {
@@ -20,9 +21,13 @@ interface ReaderState {
   scrollToOrder: number | null;
   setScrollToOrder: (order: number | null) => void;
   
-  // Highlighting System (Absolute IDs)
+  // Highlighting System
   highlightedOrders: number[];
-  setHighlightedOrders: (orders: number[]) => void;
+  highlightMetadata: {
+    type?: string;
+    citation?: string;
+  } | null;
+  setHighlightedOrders: (orders: number[], metadata?: { type?: string; citation?: string }) => void;
   
   // Guide System
   liturgicalGuide: ReadingTarget | null;
@@ -50,7 +55,11 @@ export const useReaderStore = create<ReaderState>((set) => ({
   setScrollToOrder: (order) => set({ scrollToOrder: order }),
   
   highlightedOrders: [],
-  setHighlightedOrders: (orders) => set({ highlightedOrders: orders }),
+  highlightMetadata: null,
+  setHighlightedOrders: (orders, metadata) => set({ 
+    highlightedOrders: orders, 
+    highlightMetadata: metadata ?? null 
+  }),
   
   liturgicalGuide: null,
   setLiturgicalGuide: (guide) => set({ liturgicalGuide: guide }),
