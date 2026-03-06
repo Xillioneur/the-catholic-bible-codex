@@ -10,8 +10,8 @@ class BibleDataManager {
   private cache: Map<number, any> = new Map();
   private loadingRanges: Set<number> = new Set();
   
-  // High-performance chunk size for Bible-scale depth
-  public static readonly CHUNK_SIZE = 1000;
+  // Massive chunks for deep Bible loading (2000 verses)
+  public static readonly CHUNK_SIZE = 2000;
 
   async fetchRange(
     chunkIndex: number, 
@@ -38,8 +38,7 @@ class BibleDataManager {
       verses.forEach(v => this.cache.set(v.globalOrder, v));
       return verses;
     } finally {
-      this.loadingRanges.add(chunkIndex); // Keep in set to avoid refetches
-      this.loadingRanges.delete(chunkIndex); // Standard cleanup
+      this.loadingRanges.delete(chunkIndex);
     }
   }
 

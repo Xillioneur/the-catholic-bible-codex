@@ -30,6 +30,21 @@ export const bibleRouter = createTRPCRouter({
       return ctx.db.verse.count({ where: { translationId: translation.id } });
     }),
 
+  // Fetches the entire 73-book canon for a translation in one pass
+  getEntireBible: publicProcedure
+    .input(z.object({ translationSlug: z.string() }))
+    .query(async ({ ctx, input }) => {
+      console.log(`[tRPC] getEntireBible: START for ${input.translationSlug}`);
+      const translation = await ctx.db.translation.findUnique({ where: { slug: input.translationSlug } });
+      if (!translation) return [];
+
+      return ctx.db.verse.findMany({
+        where: { translationId: translation.id },
+        orderBy: { globalOrder: "asc" },
+        include: { book: true },
+      });
+    }),
+
   getVersesByOrderRange: publicProcedure
     .input(z.object({
       translationSlug: z.string(),
@@ -70,11 +85,7 @@ export const bibleRouter = createTRPCRouter({
         ctx.db.verse.findMany({
           where,
           take: input.limit,
-          orderBy: [
-            { bookId: 'asc' },
-            { chapter: 'asc' },
-            { verse: 'asc' }
-          ],
+          orderBy: [ { bookId: 'asc' }, { chapter: 'asc' }, { verse: 'asc' } ],
           include: { book: true },
         }),
         ctx.db.verse.count({ where })
