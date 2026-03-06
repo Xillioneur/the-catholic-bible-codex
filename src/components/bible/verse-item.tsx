@@ -1,6 +1,6 @@
 "use client";
 
-import { memo } from "react";
+import { memo, useMemo } from "react";
 import { Bookmark, MessageSquare } from "lucide-react";
 import { cn } from "~/lib/utils";
 
@@ -25,15 +25,23 @@ export const VerseItem = memo(({
   hasNote,
   onClick
 }: VerseItemProps) => {
-  const highlightTerms = (content: string, term: string | undefined) => {
-    if (!term || term.length < 2) return content;
-    const parts = content.split(new RegExp(`(${term})`, 'gi'));
-    return parts.map((part, i) => 
-      part.toLowerCase() === term.toLowerCase() 
-        ? <mark key={i} className="bg-primary/20 text-inherit p-0 rounded-sm font-inherit">{part}</mark> 
-        : part
-    );
-  };
+  
+  // Memoized highlight logic to save CPU
+  const content = useMemo(() => {
+    const text = verse.text;
+    if (!searchQuery || searchQuery.length < 2) return text;
+
+    try {
+      const parts = text.split(new RegExp(`(${searchQuery})`, 'gi'));
+      return parts.map((part: string, i: number) => 
+        part.toLowerCase() === searchQuery.toLowerCase() 
+          ? <mark key={i} className="bg-primary/20 text-inherit p-0 rounded-sm font-inherit">{part}</mark> 
+          : part
+      );
+    } catch (e) {
+      return text;
+    }
+  }, [verse.text, searchQuery]);
 
   return (
     <div className="max-w-3xl mx-auto px-6 py-1 group cursor-pointer" onClick={onClick}>
@@ -55,7 +63,7 @@ export const VerseItem = memo(({
             isLiturgical && "bg-primary/5 ring-1 ring-primary/10 border-l-4 border-primary shadow-md",
             isSearchTarget && "bg-primary/10 ring-2 ring-primary/20"
           )}>
-            <p>{highlightTerms(verse.text, searchQuery)}</p>
+            <p>{content}</p>
           </div>
         </div>
       </div>

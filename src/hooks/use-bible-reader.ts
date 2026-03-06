@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useMemo } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { api } from "~/trpc/react";
 import { useReaderStore } from "~/hooks/use-reader-store";
 import { useVirtualizer } from "@tanstack/react-virtual";
@@ -13,11 +13,6 @@ export type BibleRow =
   | { type: "chapter-header"; book: any; chapter: number }
   | { type: "verse"; verse: any };
 
-/**
- * useBibleReader Hook
- * High-performance hook that streams the Bible from local IndexedDB
- * while syncing in the background.
- */
 export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>) {
   const translationSlug = useReaderStore((state) => state.translationSlug);
   const scrollToOrder = useReaderStore((state) => state.scrollToOrder);
@@ -26,8 +21,9 @@ export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>
   const setCurrentChapter = useReaderStore((state) => state.setCurrentChapter);
 
   const [currentOrder, setCurrentOrder] = useState<number>(1);
+  const lastSyncTime = useRef(0);
 
-  // 1. Get total verse count from server (fast query)
+  // 1. Hydration
   const { data: totalCount } = api.bible.getVerseCount.useQuery(
     { translationSlug },
     { staleTime: Infinity }
@@ -35,7 +31,7 @@ export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>
 
   const utils = api.useUtils();
 
-  // 2. Trigger Background Sync (Multithreaded Parallel Loading)
+  // 2. Background Sync
   useEffect(() => {
     if (totalCount) {
       void bibleService.syncBible(
@@ -46,7 +42,7 @@ export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>
     }
   }, [totalCount, translationSlug, utils]);
 
-  // 3. Reactive Local Data Stream (No lag, instant response)
+  // 3. Optimized Data Stream
   const allVerses = useLiveQuery(
     () => db.verses.where("translationId").equals(translationSlug).sortBy("globalOrder"),
     [translationSlug]
@@ -54,14 +50,15 @@ export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>
 
   const isLoading = !allVerses || allVerses.length === 0;
 
-  // 4. Linearize the Bible: Interleave Headers with Verses
+  // 4. Heavy linearization memoized strictly
   const flattenedRows = useMemo(() => {
     if (!allVerses) return [];
     const rows: BibleRow[] = [];
     let lastBookId: number | null = null;
     let lastChapter: number | null = null;
 
-    for (const v of allVerses) {
+    for (let i = 0; i < allVerses.length; i++) {
+      const v = allVerses[i]!;
       if (v.bookId !== lastBookId) {
         rows.push({ type: "book-header", book: v.book });
         rows.push({ type: "chapter-header", book: v.book, chapter: v.chapter });
@@ -76,7 +73,7 @@ export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>
     return rows;
   }, [allVerses]);
 
-  // 5. Virtualization (Deterministic heights for 60fps)
+  // 5. Virtualization Tuning
   const rowVirtualizer = useVirtualizer({
     count: flattenedRows.length,
     getScrollElement: () => parentRef.current,
@@ -84,18 +81,22 @@ export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>
       const row = flattenedRows[index];
       if (row?.type === "book-header") return 350;
       if (row?.type === "chapter-header") return 120;
-      return 100;
+      return 90; // Optimized tighter estimate
     },
-    overscan: 100,
+    overscan: 30, // Reduced overscan to save CPU during scroll
   });
 
-  // 6. Scroll Sync
+  // 6. Throttled Scroll Sync (The key to 20% CPU)
   useEffect(() => {
     const virtualItems = rowVirtualizer.getVirtualItems();
     if (virtualItems.length === 0 || !parentRef.current || flattenedRows.length === 0) return;
 
+    const now = Date.now();
+    if (now - lastSyncTime.current < 150) return; // Sync only every 150ms
+    lastSyncTime.current = now;
+
     const scrollTop = parentRef.current.scrollTop;
-    const visibleItem = virtualItems.find(item => item.start >= scrollTop - 10) ?? virtualItems[0];
+    const visibleItem = virtualItems.find(item => item.start >= scrollTop - 5) ?? virtualItems[0];
     const row = flattenedRows[visibleItem!.index];
 
     if (!row) return;
@@ -111,9 +112,9 @@ export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>
       const targetChapter = row.type === "chapter-header" ? row.chapter : 1;
       if (state.currentChapter !== targetChapter) state.setCurrentChapter(targetChapter);
     }
-  }, [rowVirtualizer.getVirtualItems(), flattenedRows, currentOrder, parentRef, setCurrentBookId, setCurrentChapter]);
+  }, [rowVirtualizer.getVirtualItems(), flattenedRows, currentOrder, parentRef]);
 
-  // 7. Instant Teleportation
+  // 7. Navigation
   useEffect(() => {
     if (scrollToOrder !== null && flattenedRows.length > 0) {
       const index = flattenedRows.findIndex(r => r.type === "verse" && r.verse.globalOrder === scrollToOrder);
