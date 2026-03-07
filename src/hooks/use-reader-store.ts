@@ -41,6 +41,18 @@ interface ReaderState {
     targetOrder: number | null;
   } | null;
   setSearchHighlight: (highlight: { query: string; targetOrder: number | null } | null) => void;
+
+  // Sidebar UI
+  isSidebarCollapsed: boolean;
+  toggleSidebar: () => void;
+  
+  // Advanced Settings (Source of Truth)
+  fontSize: number;
+  setFontSize: (size: number) => void;
+  isParallelView: boolean;
+  setIsParallelView: (val: boolean) => void;
+  theme: "sanctuary" | "traditional" | "midnight";
+  setTheme: (theme: "sanctuary" | "traditional" | "midnight") => void;
 }
 
 export const useReaderStore = create<ReaderState>((set) => ({
@@ -68,4 +80,14 @@ export const useReaderStore = create<ReaderState>((set) => ({
   setIsSearchOpen: (open) => set({ isSearchOpen: open }),
   searchHighlight: null,
   setSearchHighlight: (highlight) => set({ searchHighlight: highlight }),
+
+  isSidebarCollapsed: false,
+  toggleSidebar: () => set((state) => ({ isSidebarCollapsed: !state.isSidebarCollapsed })),
+
+  fontSize: 18,
+  setFontSize: (size) => set({ fontSize: size }),
+  isParallelView: false,
+  setIsParallelView: (val) => set({ isParallelView: val }),
+  theme: "sanctuary",
+  setTheme: (theme) => set({ theme }),
 }));

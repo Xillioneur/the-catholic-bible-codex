@@ -29,6 +29,7 @@ export const VerseItem = memo(({
   
   const highlightMetadata = useReaderStore((state) => state.highlightMetadata);
   const highlightedOrders = useReaderStore((state) => state.highlightedOrders);
+  const fontSize = useReaderStore((state) => state.fontSize);
 
   const content = useMemo(() => {
     const text = verse.text;
@@ -46,38 +47,37 @@ export const VerseItem = memo(({
     }
   }, [verse.text, searchQuery]);
 
-  // Check if this is the very first verse of the current liturgical highlight
   const isStartOfLiturgical = isLiturgical && highlightMetadata && verse.globalOrder === Math.min(...highlightedOrders);
 
   return (
     <div className="max-w-3xl mx-auto px-6 py-0.5 group cursor-pointer" onClick={onClick}>
-      <div className="flex gap-6 items-start relative">
-        {/* Margin Area */}
-        <div className="w-8 flex-shrink-0 pt-1 flex flex-col items-end gap-1 relative">
+      <div className="flex gap-6 items-start relative py-1">
+        {/* Expanded Margin Area for Label Integration */}
+        <div className="w-10 flex-shrink-0 pt-1 flex flex-col items-end gap-1 relative">
           {isStartOfLiturgical && (
-            <div className="absolute -right-1 -top-4 translate-x-full pr-2 flex flex-col items-end pointer-events-none">
-               <span className="text-[7px] font-black uppercase tracking-[0.2em] text-primary whitespace-nowrap bg-white dark:bg-zinc-950 px-1.5 py-0.5 rounded shadow-sm border border-primary/20 animate-in fade-in slide-in-from-bottom-1 duration-500">
+            <div className="absolute right-full mr-4 top-1 flex items-center pointer-events-none animate-in fade-in slide-in-from-right-2 duration-700">
+               <span className="text-[7px] font-black uppercase tracking-[0.2em] text-primary whitespace-nowrap bg-white dark:bg-zinc-950 px-2 py-1 rounded shadow-sm border border-primary/20">
                 {highlightMetadata.type}
               </span>
             </div>
           )}
           
-          <span className={cn("text-[10px] font-black tabular-nums transition-colors", hasBookmark ? "text-primary" : "text-zinc-400 group-hover:text-zinc-600")}>
+          <span className={cn("text-[10px] font-black tabular-nums transition-colors", hasBookmark ? "text-primary opacity-100" : "text-zinc-400 group-hover:text-zinc-600")}>
             {verse.verse}
           </span>
           <div className="flex flex-col gap-1">
-            {hasBookmark && <Bookmark className="h-2 w-2 text-primary fill-primary" />}
-            {hasNote && <MessageSquare className="h-2 w-2 text-primary/60" />}
+            {hasBookmark && <Bookmark className="h-2.5 w-2.5 text-primary fill-primary" />}
+            {hasNote && <MessageSquare className="h-2.5 w-2.5 text-primary/60" />}
           </div>
         </div>
         
         <div className="flex-1 min-w-0">
           <div className={cn(
-            "text-[17px] md:text-[18px] font-serif leading-[1.65] transition-all duration-300 rounded-lg",
-            hasHighlight ? "bg-yellow-100/30 dark:bg-yellow-900/10 px-1 -mx-1 shadow-sm" : "text-zinc-800 dark:text-zinc-200",
-            isLiturgical && "bg-primary/[0.02] border-l-2 border-primary pl-3 -ml-3",
-            isSearchTarget && "bg-primary/10 ring-1 ring-primary/20 px-2 -mx-2"
-          )}>
+            "font-serif tracking-normal rounded-xl transition-all duration-500 px-4 -mx-4 py-1 relative",
+            hasHighlight ? "bg-yellow-100/30 dark:bg-yellow-900/10 shadow-sm" : "text-zinc-800 dark:text-zinc-200",
+            isLiturgical && "bg-primary/[0.02] border-l-4 border-primary shadow-sm",
+            isSearchTarget && "bg-primary/10 ring-2 ring-primary/20"
+          )} style={{ fontSize: `${fontSize}px`, lineHeight: "1.7" }}>
             <p className={cn(isLiturgical && "font-medium")}>{content}</p>
           </div>
         </div>

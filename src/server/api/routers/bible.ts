@@ -102,11 +102,13 @@ export const bibleRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const { bookSlug, chapter: rawChapter, verses } = parseCitation(input.citation);
       const translation = await ctx.db.translation.findUnique({ where: { slug: input.translationSlug } });
-      const book = await ctx.db.book.findUnique({ where: { slug: bookSlug } });
+      const book = await ctx.db.book.findFirst({ 
+        where: { slug: { equals: bookSlug, mode: 'insensitive' } } 
+      });
       if (!translation || !book) return [];
 
       let chapter = rawChapter;
-      if (bookSlug === "psalms" && input.translationSlug === "drb") {
+      if (book.slug.toLowerCase() === "psalms" && input.translationSlug === "drb") {
         chapter = mapPsalmToVulgate(rawChapter);
       }
 
@@ -134,11 +136,13 @@ export const bibleRouter = createTRPCRouter({
     }))
     .query(async ({ ctx, input }) => {
       const translation = await ctx.db.translation.findUnique({ where: { slug: input.translationSlug } });
-      const book = await ctx.db.book.findUnique({ where: { slug: input.bookSlug } });
+      const book = await ctx.db.book.findFirst({ 
+        where: { slug: { equals: input.bookSlug, mode: 'insensitive' } } 
+      });
       if (!translation || !book) return null;
 
       let chapter = input.chapter;
-      if (input.bookSlug === "psalms" && input.translationSlug === "drb") {
+      if (book.slug.toLowerCase() === "psalms" && input.translationSlug === "drb") {
         chapter = mapPsalmToVulgate(input.chapter);
       }
 
@@ -153,7 +157,16 @@ export const bibleRouter = createTRPCRouter({
           orderBy: { verse: "asc" },
           select: { globalOrder: true },
         });
-        return fallback?.globalOrder ?? null;
+        
+        if (fallback) return fallback.globalOrder;
+
+        // Absolute fallback to first verse of book
+        const bookFallback = await ctx.db.verse.findFirst({
+          where: { translationId: translation.id, bookId: book.id },
+          orderBy: [{ chapter: "asc" }, { verse: "asc" }],
+          select: { globalOrder: true }
+        });
+        return bookFallback?.globalOrder ?? 1;
       }
       return verse.globalOrder;
     }),
