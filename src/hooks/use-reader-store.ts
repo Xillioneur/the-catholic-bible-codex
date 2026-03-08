@@ -1,12 +1,9 @@
 import { create } from "zustand";
 
-interface ReadingTarget {
+interface Reading {
+  type: string;
   citation: string;
-  bookSlug: string;
-  chapter: number;
-  verses: number[];
-  order: number;
-  type?: "First" | "Psalm" | "Second" | "Gospel";
+  orders: number[];
 }
 
 interface ReaderState {
@@ -17,22 +14,24 @@ interface ReaderState {
   currentChapter: number | null;
   setCurrentChapter: (chapter: number | null) => void;
   
+  // LIVE POSITION
+  currentOrder: number;
+  setCurrentOrder: (order: number) => void;
+  progress: number;
+  setProgress: (val: number) => void;
+  totalVerseCount: number;
+  setTotalVerseCount: (count: number) => void;
+
   // Navigation
   scrollToOrder: number | null;
   setScrollToOrder: (order: number | null) => void;
   
-  // Highlighting System
-  highlightedOrders: number[];
-  highlightMetadata: {
-    type?: string;
-    citation?: string;
-  } | null;
-  setHighlightedOrders: (orders: number[], metadata?: { type?: string; citation?: string }) => void;
+  // ADVANCED HIGHLIGHTING (The Sanctuary Layer)
+  liturgicalReadings: Reading[];
+  setLiturgicalReadings: (readings: Reading[]) => void;
+  activeReadingType: string | null;
+  setActiveReadingType: (type: string | null) => void;
   
-  // Guide System
-  liturgicalGuide: ReadingTarget | null;
-  setLiturgicalGuide: (guide: ReadingTarget | null) => void;
-
   // Search UI
   isSearchOpen: boolean;
   setIsSearchOpen: (open: boolean) => void;
@@ -46,11 +45,9 @@ interface ReaderState {
   isSidebarCollapsed: boolean;
   toggleSidebar: () => void;
   
-  // Advanced Settings (Source of Truth)
+  // Advanced Settings
   fontSize: number;
   setFontSize: (size: number) => void;
-  isParallelView: boolean;
-  setIsParallelView: (val: boolean) => void;
   theme: "sanctuary" | "traditional" | "midnight";
   setTheme: (theme: "sanctuary" | "traditional" | "midnight") => void;
 }
@@ -63,18 +60,20 @@ export const useReaderStore = create<ReaderState>((set) => ({
   currentChapter: null,
   setCurrentChapter: (chapter) => set({ currentChapter: chapter }),
   
+  currentOrder: 1,
+  setCurrentOrder: (order) => set({ currentOrder: order }),
+  progress: 0,
+  setProgress: (val) => set({ progress: val }),
+  totalVerseCount: 0,
+  setTotalVerseCount: (count) => set({ totalVerseCount: count }),
+
   scrollToOrder: null,
   setScrollToOrder: (order) => set({ scrollToOrder: order }),
   
-  highlightedOrders: [],
-  highlightMetadata: null,
-  setHighlightedOrders: (orders, metadata) => set({ 
-    highlightedOrders: orders, 
-    highlightMetadata: metadata ?? null 
-  }),
-  
-  liturgicalGuide: null,
-  setLiturgicalGuide: (guide) => set({ liturgicalGuide: guide }),
+  liturgicalReadings: [],
+  setLiturgicalReadings: (readings) => set({ liturgicalReadings: readings }),
+  activeReadingType: null,
+  setActiveReadingType: (type) => set({ activeReadingType: type }),
 
   isSearchOpen: false,
   setIsSearchOpen: (open) => set({ isSearchOpen: open }),
@@ -86,8 +85,6 @@ export const useReaderStore = create<ReaderState>((set) => ({
 
   fontSize: 18,
   setFontSize: (size) => set({ fontSize: size }),
-  isParallelView: false,
-  setIsParallelView: (val) => set({ isParallelView: val }),
   theme: "sanctuary",
   setTheme: (theme) => set({ theme }),
 }));

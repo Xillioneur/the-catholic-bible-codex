@@ -26,92 +26,90 @@ export function getLiturgicalColorOklch(color: LiturgicalColor): string {
 
 /**
  * The most robust parser for Catholic citations.
- * Handles complex strings and all standard liturgical abbreviations.
+ * Handles complex strings, multi-range verses, and varying abbreviations.
  */
 export function parseCitation(citation: string): { bookSlug: string; chapter: number; verses: number[] } {
-  // CLEANUP: Do not use damaging regex that might strip book names (like Isaiah 58:)
-  const raw = citation.trim();
+  // CLEAN: Remove only specific known prefixes if they exist
+  const raw = citation.replace(/^(First Reading|Second Reading|Gospel|Psalm):\s+/i, '').trim();
 
   const abbrevMap: Record<string, string> = {
-    "Genesis": "genesis", "Gen": "genesis", "Gn": "genesis",
-    "Exodus": "exodus", "Exo": "exodus", "Ex": "exodus",
-    "Leviticus": "leviticus", "Lev": "leviticus", "Lv": "leviticus",
-    "Numbers": "numbers", "Num": "numbers", "Nm": "numbers",
-    "Deuteronomy": "deuteronomy", "Deut": "deuteronomy", "Dt": "deuteronomy", "Deu": "deuteronomy",
-    "Joshua": "joshua", "Josh": "joshua", "Jos": "joshua",
-    "Judges": "judges", "Judg": "judges", "Jdg": "judges",
-    "Ruth": "ruth", "Rut": "ruth",
-    "1 Samuel": "1-samuel", "1 Sam": "1-samuel", "1 Sa": "1-samuel", "1Sa": "1-samuel",
-    "2 Samuel": "2-samuel", "2 Sam": "2-samuel", "2 Sa": "2-samuel", "2Sa": "2-samuel",
-    "1 Kings": "1-kings", "1 Kgs": "1-kings", "1 Ki": "1-kings", "1Ki": "1-kings",
-    "2 Kings": "2-kings", "2 Kgs": "2-kings", "2 Ki": "2-kings", "2Ki": "2-kings",
-    "1 Chronicles": "1-chronicles", "1 Chr": "1-chronicles", "1 Ch": "1-chronicles", "1Ch": "1-chronicles",
-    "2 Chronicles": "2-chronicles", "2 Chr": "2-chronicles", "2 Ch": "2-chronicles", "2Ch": "2-chronicles",
-    "Ezra": "ezra", "Ezr": "ezra",
-    "Nehemiah": "nehemiah", "Neh": "nehemiah",
-    "Tobit": "tobit", "Tob": "tobit",
-    "Judith": "judith", "Jdt": "judith", "Judit": "judith",
-    "Esther": "esther", "Esth": "esther", "Est": "esther",
-    "1 Maccabees": "1-maccabees", "1 Mac": "1-maccabees", "1 Ma": "1-maccabees", "1Ma": "1-maccabees",
-    "2 Maccabees": "2-maccabees", "2 Mac": "2-maccabees", "2 Ma": "2-maccabees", "2Ma": "2-maccabees",
-    "Job": "job",
-    "Psalms": "psalms", "Psalm": "psalms", "Ps": "psalms", "Psa": "psalms",
-    "Proverbs": "proverbs", "Prov": "proverbs", "Pro": "proverbs",
-    "Ecclesiastes": "ecclesiastes", "Eccl": "ecclesiastes", "Ecc": "ecclesiastes",
-    "Song of Solomon": "song-of-solomon", "Song of Songs": "song-of-solomon", "Song": "song-of-solomon", "Sos": "song-of-solomon",
-    "Wisdom": "wisdom", "Wis": "wisdom",
-    "Sirach": "sirach", "Sir": "sirach", "Ecclesiasticus": "sirach",
-    "Isaiah": "isaiah", "Isa": "isaiah", "Is": "isaiah",
-    "Jeremiah": "jeremiah", "Jer": "jeremiah",
-    "Lamentations": "lamentations", "Lam": "lamentations",
-    "Baruch": "baruch", "Bar": "baruch",
-    "Ezekiel": "ezekiel", "Ezek": "ezekiel", "Eze": "ezekiel",
-    "Daniel": "daniel", "Dan": "daniel",
-    "Hosea": "hosea", "Hos": "hosea",
-    "Joel": "joel", "Joe": "joel",
-    "Amos": "amos", "Amo": "amos",
-    "Obadiah": "obadiah", "Obad": "obadiah", "Oba": "obadiah",
-    "Jonah": "jonah", "Jon": "jonah",
-    "Micah": "micah", "Mic": "micah",
-    "Nahum": "nahum", "Nah": "nahum",
-    "Habakkuk": "habakkuk", "Hab": "habakkuk",
-    "Zephaniah": "zephaniah", "Zeph": "zephaniah", "Zep": "zephaniah",
-    "Haggai": "haggai", "Hag": "haggai",
-    "Zechariah": "zechariah", "Zech": "zechariah", "Zec": "zechariah",
-    "Malachi": "malachi", "Mal": "malachi",
-    "Matthew": "matthew", "Matt": "matthew", "Mt": "matthew", "Mat": "matthew",
-    "Mark": "mark", "Mk": "mark", "Mar": "mark",
-    "Luke": "luke", "Lk": "luke", "Luk": "luke",
-    "John": "john", "Jn": "john", "Joh": "john",
-    "Acts": "acts", "Act": "acts",
-    "Romans": "romans", "Rom": "romans", "Rm": "romans",
-    "1 Corinthians": "1-corinthians", "1 Cor": "1-corinthians", "1 Co": "1-corinthians", "1Co": "1-corinthians",
-    "2 Corinthians": "2-corinthians", "2 Cor": "2-corinthians", "2 Co": "2-corinthians", "2Co": "2-corinthians",
-    "Galatians": "galatians", "Gal": "galatians",
-    "Ephesians": "ephesians", "Eph": "ephesians",
-    "Philippians": "philippians", "Phil": "philippians", "Phi": "philippians",
-    "Colossians": "colossians", "Col": "colossians",
-    "1 Thessalonians": "1-thessalonians", "1 Thess": "1-thessalonians", "1 Th": "1-thessalonians", "1Th": "1-thessalonians",
-    "2 Thessalonians": "2-thessalonians", "2 Thess": "2-thessalonians", "2 Th": "2-thessalonians", "2Th": "2-thessalonians",
-    "1 Timothy": "1-timothy", "1 Tim": "1-timothy", "1 Ti": "1-timothy", "1Ti": "1-timothy",
-    "2 Timothy": "2-timothy", "2 Tim": "2-timothy", "2 Ti": "2-timothy", "2Ti": "2-timothy",
-    "Titus": "titus", "Tit": "titus",
-    "Philemon": "philemon", "Phlm": "philemon", "Phm": "philemon",
-    "Hebrews": "hebrews", "Heb": "hebrews",
-    "James": "james", "Jas": "james", "Jam": "james",
-    "1 Peter": "1-peter", "1 Pet": "1-peter", "1 Pe": "1-peter", "1Pe": "1-peter",
-    "2 Peter": "2-peter", "2 Pet": "2-peter", "2 Pe": "2-peter", "2Pe": "2-peter",
-    "1 John": "1-john", "1 Jn": "1-john", "1 Jo": "1-john", "1Jo": "1-john",
-    "2 John": "2-john", "2 Jn": "2-john", "2 Jo": "2-john", "2Jo": "2-john",
-    "3 John": "3-john", "3 Jn": "3-john", "3 Jo": "3-john", "3Jo": "3-john",
-    "Jude": "jude", "Jud": "jude",
-    "Revelation": "revelation", "Rev": "revelation", "Apocalypse": "revelation"
+    "Genesis": "genesis", "Gen": "genesis", "Gn": "genesis", "Gn.": "genesis", "Gen.": "genesis",
+    "Exodus": "exodus", "Exo": "exodus", "Ex": "exodus", "Ex.": "exodus", "Exo.": "exodus",
+    "Leviticus": "leviticus", "Lev": "leviticus", "Lv": "leviticus", "Lv.": "leviticus", "Lev.": "leviticus",
+    "Numbers": "numbers", "Num": "numbers", "Nm": "numbers", "Nm.": "numbers", "Num.": "numbers",
+    "Deuteronomy": "deuteronomy", "Deut": "deuteronomy", "Dt": "deuteronomy", "Deu": "deuteronomy", "Dt.": "deuteronomy", "Deut.": "deuteronomy",
+    "Joshua": "joshua", "Josh": "joshua", "Jos": "joshua", "Jos.": "joshua", "Josh.": "joshua",
+    "Judges": "judges", "Judg": "judges", "Jdg": "judges", "Jdg.": "judges", "Judg.": "judges",
+    "Ruth": "ruth", "Rut": "ruth", "Rut.": "ruth",
+    "1 Samuel": "1-samuel", "1 Sam": "1-samuel", "1 Sa": "1-samuel", "1Sa": "1-samuel", "1 Sam.": "1-samuel", "1 Sa.": "1-samuel",
+    "2 Samuel": "2-samuel", "2 Sam": "2-samuel", "2 Sa": "2-samuel", "2Sa": "2-samuel", "2 Sam.": "2-samuel", "2 Sa.": "2-samuel",
+    "1 Kings": "1-kings", "1 Kgs": "1-kings", "1 Ki": "1-kings", "1Ki": "1-kings", "1 Kgs.": "1-kings", "1 Ki.": "1-kings",
+    "2 Kings": "2-kings", "2 Kgs": "2-kings", "2 Ki": "2-kings", "2Ki": "2-kings", "2 Kgs.": "2-kings", "2 Ki.": "2-kings",
+    "1 Chronicles": "1-chronicles", "1 Chr": "1-chronicles", "1 Ch": "1-chronicles", "1Ch": "1-chronicles", "1 Chr.": "1-chronicles", "1 Ch.": "1-chronicles",
+    "2 Chronicles": "2-chronicles", "2 Chr": "2-chronicles", "2 Ch": "2-chronicles", "2Ch": "2-chronicles", "2 Chr.": "2-chronicles", "2 Ch.": "2-chronicles",
+    "Ezra": "ezra", "Ezr": "ezra", "Ezr.": "ezra",
+    "Nehemiah": "nehemiah", "Neh": "nehemiah", "Neh.": "nehemiah",
+    "Tobit": "tobit", "Tob": "tobit", "Tob.": "tobit",
+    "Judith": "judith", "Jdt": "judith", "Judit": "judith", "Jdt.": "judith",
+    "Esther": "esther", "Esth": "esther", "Est": "esther", "Est.": "esther", "Esth.": "esther",
+    "1 Maccabees": "1-maccabees", "1 Mac": "1-maccabees", "1 Ma": "1-maccabees", "1Ma": "1-maccabees", "1 Mac.": "1-maccabees", "1 Ma.": "1-maccabees",
+    "2 Maccabees": "2-maccabees", "2 Mac": "2-maccabees", "2 Ma": "2-maccabees", "2Ma": "2-maccabees", "2 Mac.": "2-maccabees", "2 Ma.": "2-maccabees",
+    "Job": "job", "Job.": "job",
+    "Psalms": "psalms", "Psalm": "psalms", "Ps": "psalms", "Psa": "psalms", "Ps.": "psalms", "Psa.": "psalms",
+    "Proverbs": "proverbs", "Prov": "proverbs", "Pro": "proverbs", "Prov.": "proverbs", "Pro.": "proverbs",
+    "Ecclesiastes": "ecclesiastes", "Eccl": "ecclesiastes", "Ecc": "ecclesiastes", "Eccl.": "ecclesiastes", "Ecc.": "ecclesiastes",
+    "Song of Solomon": "song-of-solomon", "Song of Songs": "song-of-solomon", "Song": "song-of-solomon", "Sos": "song-of-solomon", "Sos.": "song-of-solomon",
+    "Wisdom": "wisdom", "Wis": "wisdom", "Wis.": "wisdom",
+    "Sirach": "sirach", "Sir": "sirach", "Sir.": "sirach", "Ecclesiasticus": "sirach",
+    "Isaiah": "isaiah", "Isa": "isaiah", "Is": "isaiah", "Is.": "isaiah", "Isa.": "isaiah",
+    "Jeremiah": "jeremiah", "Jer": "jeremiah", "Jer.": "jeremiah",
+    "Lamentations": "lamentations", "Lam": "lamentations", "Lam.": "lamentations",
+    "Baruch": "baruch", "Bar": "baruch", "Bar.": "baruch",
+    "Ezekiel": "ezekiel", "Ezek": "ezekiel", "Eze": "ezekiel", "Eze.": "ezekiel", "Ezek.": "ezekiel",
+    "Daniel": "daniel", "Dan": "daniel", "Dan.": "daniel",
+    "Hosea": "hosea", "Hos": "hosea", "Hos.": "hosea",
+    "Joel": "joel", "Joe": "joel", "Joe.": "joel",
+    "Amos": "amos", "Amo": "amos", "Amo.": "amos",
+    "Obadiah": "obadiah", "Obad": "obadiah", "Oba": "obadiah", "Oba.": "obadiah",
+    "Jonah": "jonah", "Jon": "jonah", "Jon.": "jonah",
+    "Micah": "micah", "Mic": "micah", "Mic.": "micah",
+    "Nahum": "nahum", "Nah": "nahum", "Nah.": "nahum",
+    "Habakkuk": "habakkuk", "Hab": "habakkuk", "Hab.": "habakkuk",
+    "Zephaniah": "zephaniah", "Zeph": "zephaniah", "Zep": "zephaniah", "Zep.": "zephaniah", "Zeph.": "zephaniah",
+    "Haggai": "haggai", "Hag": "haggai", "Hag.": "haggai",
+    "Zechariah": "zechariah", "Zech": "zechariah", "Zec": "zechariah", "Zec.": "zechariah", "Zech.": "zechariah",
+    "Malachi": "malachi", "Mal": "malachi", "Mal.": "malachi",
+    "Matthew": "matthew", "Matt": "matthew", "Mt": "matthew", "Mat": "matthew", "Mt.": "matthew", "Matt.": "matthew", "Mat.": "matthew",
+    "Mark": "mark", "Mk": "mark", "Mar": "mark", "Mk.": "mark", "Mark.": "mark",
+    "Luke": "luke", "Lk": "luke", "Luk": "luke", "Lk.": "luke", "Luke.": "luke",
+    "John": "john", "Jn": "john", "Joh": "john", "Jn.": "john", "John.": "john",
+    "Acts": "acts", "Act": "acts", "Act.": "acts", "Acts.": "acts",
+    "Romans": "romans", "Rom": "romans", "Rm": "romans", "Rom.": "romans", "Rm.": "romans",
+    "1 Corinthians": "1-corinthians", "1 Cor": "1-corinthians", "1 Co": "1-corinthians", "1Co": "1-corinthians", "1 Cor.": "1-corinthians", "1 Co.": "1-corinthians",
+    "2 Corinthians": "2-corinthians", "2 Cor": "2-corinthians", "2 Co": "2-corinthians", "2Co": "2-corinthians", "2 Cor.": "2-corinthians", "2 Co.": "2-corinthians",
+    "Galatians": "galatians", "Gal": "galatians", "Gal.": "galatians",
+    "Ephesians": "ephesians", "Eph": "ephesians", "Eph.": "ephesians",
+    "Philippians": "philippians", "Phil": "philippians", "Phi": "philippians", "Phil.": "philippians", "Phi.": "philippians",
+    "Colossians": "colossians", "Col": "colossians", "Col.": "colossians",
+    "1 Thessalonians": "1-thessalonians", "1 Thess": "1-thessalonians", "1 Th": "1-thessalonians", "1Th": "1-thessalonians", "1 Thess.": "1-thessalonians", "1 Th.": "1-thessalonians",
+    "2 Thessalonians": "2-thessalonians", "2 Thess": "2-thessalonians", "2 Th": "2-thessalonians", "2Th": "2-thessalonians", "2 Thess.": "2-thessalonians", "2 Th.": "2-thessalonians",
+    "1 Timothy": "1-timothy", "1 Tim": "1-timothy", "1 Ti": "1-timothy", "1Ti": "1-timothy", "1 Tim.": "1-timothy", "1 Ti.": "1-timothy",
+    "2 Timothy": "2-timothy", "2 Tim": "2-timothy", "2 Ti": "2-timothy", "2Ti": "2-timothy", "2 Tim.": "2-timothy", "2 Ti.": "2-timothy",
+    "Titus": "titus", "Tit": "titus", "Tit.": "titus",
+    "Philemon": "philemon", "Phlm": "philemon", "Phm": "philemon", "Phm.": "philemon", "Phlm.": "philemon",
+    "Hebrews": "hebrews", "Heb": "hebrews", "Heb.": "hebrews",
+    "James": "james", "Jas": "james", "Jam": "james", "Jas.": "james", "Jam.": "james",
+    "1 Peter": "1-peter", "1 Pet": "1-peter", "1 Pe": "1-peter", "1Pe": "1-peter", "1 Pet.": "1-peter", "1 Pe.": "1-peter",
+    "2 Peter": "2-peter", "2 Pet": "2-peter", "2 Pe": "2-peter", "2Pe": "2-peter", "2 Pet.": "2-peter", "2 Pe.": "2-peter",
+    "1 John": "1-john", "1 Jn": "1-john", "1 Jo": "1-john", "1Jo": "1-john", "1 Jn.": "1-john", "1 Jo.": "1-john",
+    "2 John": "2-john", "2 Jn": "2-john", "2 Jo": "2-john", "2Jo": "2-john", "2 Jn.": "2-john", "2 Jo.": "2-john",
+    "3 John": "3-john", "3 Jn": "3-john", "3 Jo": "3-john", "3Jo": "3-john", "3 Jn.": "3-john", "3 Jo.": "3-john",
+    "Jude": "jude", "Jud": "jude", "Jud.": "jude",
+    "Revelation": "revelation", "Rev": "revelation", "Rev.": "revelation", "Apocalypse": "revelation"
   };
 
   let bookPart = "";
   let rest = "";
-  
-  // Sort keys by length DESC to match longer abbreviations first (e.g. "1 John" before "John")
   const sortedAbbrevs = Object.keys(abbrevMap).sort((a, b) => b.length - a.length);
 
   for (const abbrev of sortedAbbrevs) {
@@ -124,7 +122,7 @@ export function parseCitation(citation: string): { bookSlug: string; chapter: nu
 
   const slug = abbrevMap[bookPart] ?? "genesis";
   
-  // Clean up 'rest' to handle cases like "31:5-6" or "31 : 5-6"
+  // Isolate Chapter and Verses
   const cleanRest = rest.replace(/\s+/g, '');
   const colonIndex = cleanRest.indexOf(':');
   
@@ -132,14 +130,16 @@ export function parseCitation(citation: string): { bookSlug: string; chapter: nu
   let versesPart = "";
 
   if (colonIndex !== -1) {
-    chapter = parseInt(cleanRest.slice(0, colonIndex).replace(/\D/g, '')) || 1;
+    // Correctly extract chapter without accidentally grabbing next segments
+    const chapterStr = cleanRest.slice(0, colonIndex);
+    chapter = parseInt(chapterStr.replace(/\D/g, '')) || 1;
     versesPart = cleanRest.slice(colonIndex + 1);
   } else {
-    // Check for chapter then space then verses: "Ps 23 1-6"
-    const spaceMatch = rest.trim().match(/^(\d+)\s+(.*)/);
+    // Handle chapter-only or space-separated: "Ps 23" or "Ps 23 1-6"
+    const spaceMatch = rest.match(/^(\d+)/);
     if (spaceMatch) {
       chapter = parseInt(spaceMatch[1]!) || 1;
-      versesPart = spaceMatch[2]!.replace(/\s+/g, '');
+      versesPart = rest.slice(spaceMatch[1]!.length).trim();
     } else {
       chapter = parseInt(cleanRest.replace(/\D/g, '')) || 1;
     }
@@ -147,14 +147,17 @@ export function parseCitation(citation: string): { bookSlug: string; chapter: nu
   
   const verses: number[] = [];
   if (versesPart) {
-    const segments = versesPart.split(/[^0-9-]/);
+    // Strip only letters from the verse part to preserve ranges
+    const numericPart = versesPart.replace(/[a-zA-Z]/g, '');
+    const segments = numericPart.split(/[^0-9-]/);
+    
     for (const segment of segments) {
       if (!segment) continue;
       if (segment.includes('-')) {
         const range = segment.split('-');
         if (range.length >= 2) {
-          const start = parseInt(range[0]!.replace(/\D/g, ''));
-          const end = parseInt(range[range.length - 1]!.replace(/\D/g, ''));
+          const start = parseInt(range[0]!);
+          const end = parseInt(range[range.length - 1]!);
           if (!isNaN(start) && !isNaN(end)) {
             for (let i = Math.min(start, end); i <= Math.max(start, end); i++) {
               verses.push(i);
@@ -162,7 +165,7 @@ export function parseCitation(citation: string): { bookSlug: string; chapter: nu
           }
         }
       } else {
-        const v = parseInt(segment.replace(/\D/g, ''));
+        const v = parseInt(segment);
         if (!isNaN(v)) verses.push(v);
       }
     }

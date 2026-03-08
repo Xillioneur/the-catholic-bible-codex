@@ -22,7 +22,7 @@ export function BibleReader() {
     currentOrder 
   } = useBibleReader(parentRef);
 
-  const highlightedOrders = useReaderStore((state) => state.highlightedOrders);
+  const liturgicalReadings = useReaderStore((state) => state.liturgicalReadings);
   const searchHighlight = useReaderStore((state) => state.searchHighlight);
 
   const localHighlights = useLiveQuery(() => db.highlights.toArray()) ?? [];
@@ -55,7 +55,7 @@ export function BibleReader() {
                   <VerseItem 
                     verse={row.verse}
                     hasHighlight={localHighlights.some(h => h.verseId === row.verse.id)}
-                    isLiturgical={highlightedOrders.includes(row.verse.globalOrder)}
+                    isLiturgical={liturgicalReadings.some(r => r.orders.includes(row.verse.globalOrder))}
                     isSearchTarget={searchHighlight?.targetOrder === row.verse.globalOrder}
                     searchQuery={searchHighlight?.query}
                     hasBookmark={localBookmarks.some(b => b.verseId === row.verse.id)}

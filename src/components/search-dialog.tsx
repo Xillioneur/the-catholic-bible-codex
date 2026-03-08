@@ -11,47 +11,6 @@ type SearchMode = "global" | "book" | "chapter";
 export function SearchDialog() {
   const isSearchOpen = useReaderStore((state) => state.isSearchOpen);
   const setIsSearchOpen = useReaderStore((state) => state.setIsSearchOpen);
-  const translationSlug = useReaderStore((state) => state.translationSlug);
-  const initialBookId = useReaderStore((state) => state.currentBookId);
-  const initialChapter = useReaderStore((state) => state.currentChapter);
-  const setScrollToOrder = useReaderStore((state) => state.setScrollToOrder);
-  const setSearchHighlight = useReaderStore((state) => state.setSearchHighlight);
-
-  const [query, setQuery] = useState("");
-  const [mode, setMode] = useState<SearchMode>("global");
-  
-  // Dynamic Context Selection
-  const [selectedBookId, setSelectedBookId] = useState<number | null>(null);
-  const [selectedChapter, setSelectedChapter] = useState<number>(1);
-
-  const { data: books } = api.bible.getBooks.useQuery(undefined, { enabled: isSearchOpen });
-  const selectedBook = useMemo(() => books?.find(b => b.id === selectedBookId), [books, selectedBookId]);
-
-  // Sync with store on open
-  useEffect(() => {
-    if (isSearchOpen) {
-      setSelectedBookId(initialBookId ?? 1);
-      setSelectedChapter(initialChapter ?? 1);
-    }
-  }, [isSearchOpen, initialBookId, initialChapter]);
-
-  const { data, isFetching } = api.bible.searchVerses.useQuery(
-    {
-      translationSlug,
-      query,
-      bookId: selectedBookId ?? undefined,
-      chapter: selectedChapter,
-      mode,
-      limit: 50,
-    },
-    {
-      enabled: query.length >= 2,
-      staleTime: 1000 * 60,
-    }
-  );
-
-  const results = data?.items;
-  const totalResults = data?.total ?? 0;
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -64,27 +23,76 @@ export function SearchDialog() {
     return () => document.removeEventListener("keydown", down);
   }, [isSearchOpen, setIsSearchOpen]);
 
+  if (!isSearchOpen) return null;
+
+  return <SearchContent />;
+}
+
+function SearchContent() {
+  const setIsSearchOpen = useReaderStore((state) => state.setIsSearchOpen);
+  const translationSlug = useReaderStore((state) => state.translationSlug);
+  const initialBookId = useReaderStore((state) => state.currentBookId);
+  const initialChapter = useReaderStore((state) => state.currentChapter);
+  const setScrollToOrder = useReaderStore((state) => state.setScrollToOrder);
+  const setSearchHighlight = useReaderStore((state) => state.setSearchHighlight);
+
+  const [input, setInput] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
+  const [mode, setMode] = useState<SearchMode>("global");
+  const [selectedBookId, setSelectedBookId] = useState<number>(initialBookId ?? 1);
+  const [selectedChapter, setSelectedChapter] = useState<number>(initialChapter ?? 1);
+
+  // Debounce logic to prevent empty queries and spam
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (input.length >= 2) {
+        setDebouncedQuery(input);
+      } else {
+        setDebouncedQuery("");
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [input]);
+
+  const { data: books } = api.bible.getBooks.useQuery();
+  const selectedBook = useMemo(() => books?.find(b => b.id === selectedBookId), [books, selectedBookId]);
+
+  // Use debouncedQuery and explicit null-guards
+  const { data, isFetching } = api.bible.searchVerses.useQuery(
+    {
+      translationSlug,
+      query: debouncedQuery,
+      bookId: selectedBookId,
+      chapter: selectedChapter,
+      mode,
+      limit: 50,
+    },
+    {
+      enabled: debouncedQuery.length >= 2,
+      staleTime: 1000 * 60,
+    }
+  );
+
+  const results = data?.items;
+  const totalResults = data?.total ?? 0;
+
   const handleSelect = (verse: any) => {
-    setSearchHighlight({ query, targetOrder: verse.globalOrder });
+    setSearchHighlight({ query: debouncedQuery, targetOrder: verse.globalOrder });
     setScrollToOrder(verse.globalOrder);
     setIsSearchOpen(false);
   };
-
-  if (!isSearchOpen) return null;
 
   return (
     <div className="fixed inset-0 z-[200] flex items-start justify-center pt-[8vh] px-4">
       <div className="fixed inset-0 bg-zinc-950/40 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => setIsSearchOpen(false)} />
       
       <div className="bg-white dark:bg-zinc-900 w-full max-w-2xl rounded-[2.5rem] shadow-2xl border border-zinc-200 dark:border-zinc-800 overflow-hidden animate-in zoom-in-95 slide-in-from-top-4 duration-300 relative z-10">
-        {/* Header: Selectors & Input */}
         <div className="p-6 flex flex-col gap-5 border-b border-zinc-100 dark:border-zinc-800">
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 p-1 rounded-xl">
-              {/* Book Select */}
               <div className="relative flex items-center">
                 <select 
-                  value={selectedBookId ?? ""}
+                  value={selectedBookId}
                   onChange={(e) => {
                     setSelectedBookId(Number(e.target.value));
                     setSelectedChapter(1);
@@ -98,7 +106,6 @@ export function SearchDialog() {
                 <ChevronDown className="absolute right-2 h-3 w-3 pointer-events-none text-zinc-400" />
               </div>
               <div className="h-3 w-px bg-zinc-300 dark:bg-zinc-700" />
-              {/* Chapter Select */}
               <div className="relative flex items-center">
                 <select 
                   value={selectedChapter}
@@ -119,8 +126,8 @@ export function SearchDialog() {
               <Search className="h-4 w-4 text-zinc-400" />
               <input 
                 autoFocus
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
                 placeholder={mode === "global" ? "Search all Scripture..." : `Search in ${selectedBook?.name}...`}
                 className="flex-1 bg-transparent border-none outline-none text-lg font-bold text-zinc-900 dark:text-zinc-50 placeholder:text-zinc-300"
               />
@@ -133,36 +140,21 @@ export function SearchDialog() {
 
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 p-1 rounded-full">
-              <button 
-                onClick={() => setMode("global")}
-                className={cn(
-                  "px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all",
-                  mode === "global" ? "bg-white dark:bg-zinc-700 text-primary shadow-sm" : "text-zinc-500 hover:text-zinc-700"
-                )}
-              >
-                Global
-              </button>
-              <button 
-                onClick={() => setMode("book")}
-                className={cn(
-                  "px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all",
-                  mode === "book" ? "bg-white dark:bg-zinc-700 text-primary shadow-sm" : "text-zinc-500 hover:text-zinc-700"
-                )}
-              >
-                Book
-              </button>
-              <button 
-                onClick={() => setMode("chapter")}
-                className={cn(
-                  "px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all",
-                  mode === "chapter" ? "bg-white dark:bg-zinc-700 text-primary shadow-sm" : "text-zinc-500 hover:text-zinc-700"
-                )}
-              >
-                Chapter
-              </button>
+              {(["global", "book", "chapter"] as const).map((m) => (
+                <button 
+                  key={m}
+                  onClick={() => setMode(m)}
+                  className={cn(
+                    "px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all",
+                    mode === m ? "bg-white dark:bg-zinc-700 text-primary shadow-sm" : "text-zinc-500 hover:text-zinc-700"
+                  )}
+                >
+                  {m}
+                </button>
+              ))}
             </div>
 
-            {query.length >= 2 && (
+            {debouncedQuery.length >= 2 && (
               <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-primary/5 border border-primary/10">
                 <span className="text-[10px] font-black uppercase text-primary tracking-tighter">
                   {totalResults.toLocaleString()} Results Found
@@ -172,7 +164,6 @@ export function SearchDialog() {
           </div>
         </div>
 
-        {/* Results Area */}
         <div className="max-h-[55vh] overflow-auto p-2 scrollbar-none">
           {isFetching ? (
             <div className="p-16 flex flex-col items-center gap-3">
@@ -203,7 +194,7 @@ export function SearchDialog() {
                 </button>
               ))}
             </div>
-          ) : query.length >= 2 ? (
+          ) : input.length >= 2 ? (
             <div className="p-16 text-center flex flex-col items-center gap-2">
               <span className="text-sm font-black text-zinc-900 dark:text-zinc-50 uppercase tracking-tighter">No Verses Found</span>
               <span className="text-[10px] font-medium text-zinc-400 uppercase tracking-widest">Adjust your context or keywords</span>

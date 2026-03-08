@@ -19,12 +19,16 @@ export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>
   const setScrollToOrder = useReaderStore((state) => state.setScrollToOrder);
   const setCurrentBookId = useReaderStore((state) => state.setCurrentBookId);
   const setCurrentChapter = useReaderStore((state) => state.setCurrentChapter);
+  
+  // Get reactive setters
+  const setCurrentOrderStore = useReaderStore((state) => state.setCurrentOrder);
+  const setTotalVerseCount = useReaderStore((state) => state.setTotalVerseCount);
 
   const [currentOrder, setCurrentOrder] = useState<number>(1);
   const lastSyncTime = useRef(0);
 
-  // 1. Hydration
-  const { data: totalCount } = api.bible.getVerseCount.useQuery(
+  // 1. Hydration Info
+  const { data: totalVerseCount } = api.bible.getVerseCount.useQuery(
     { translationSlug },
     { staleTime: Infinity }
   );
@@ -33,16 +37,16 @@ export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>
 
   // 2. Background Sync
   useEffect(() => {
-    if (totalCount) {
+    if (totalVerseCount) {
       void bibleService.syncBible(
         translationSlug, 
-        totalCount, 
+        totalVerseCount, 
         (input) => utils.bible.getVersesByOrderRange.fetch(input)
       );
     }
-  }, [totalCount, translationSlug, utils]);
+  }, [totalVerseCount, translationSlug, utils]);
 
-  // 3. Optimized Data Stream
+  // 3. Data Stream
   const allVerses = useLiveQuery(
     () => db.verses.where("translationId").equals(translationSlug).sortBy("globalOrder"),
     [translationSlug]
@@ -50,7 +54,7 @@ export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>
 
   const isLoading = !allVerses || allVerses.length === 0;
 
-  // 4. Heavy linearization memoized strictly
+  // 4. Linearization
   const flattenedRows = useMemo(() => {
     if (!allVerses) return [];
     const rows: BibleRow[] = [];
@@ -73,46 +77,60 @@ export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>
     return rows;
   }, [allVerses]);
 
-  // 5. Virtualization Tuning
+  // 5. Virtualization
   const rowVirtualizer = useVirtualizer({
     count: flattenedRows.length,
     getScrollElement: () => parentRef.current,
     estimateSize: (index) => {
       const row = flattenedRows[index];
-      if (row?.type === "book-header") return 350;
-      if (row?.type === "chapter-header") return 120;
-      return 90; // Optimized tighter estimate
+      if (row?.type === "book-header") return 400;
+      if (row?.type === "chapter-header") return 150;
+      return 100;
     },
-    overscan: 30, // Reduced overscan to save CPU during scroll
+    overscan: 30,
   });
 
-  // 6. Throttled Scroll Sync (The key to 20% CPU)
+  const virtualItems = rowVirtualizer.getVirtualItems();
+
+  // 6. REACTIVE SCROLL SYNC
   useEffect(() => {
-    const virtualItems = rowVirtualizer.getVirtualItems();
     if (virtualItems.length === 0 || !parentRef.current || flattenedRows.length === 0) return;
 
     const now = Date.now();
-    if (now - lastSyncTime.current < 150) return; // Sync only every 150ms
+    if (now - lastSyncTime.current < 50) return; // Faster sync (50ms)
     lastSyncTime.current = now;
 
     const scrollTop = parentRef.current.scrollTop;
     const visibleItem = virtualItems.find(item => item.start >= scrollTop - 5) ?? virtualItems[0];
-    const row = flattenedRows[visibleItem!.index];
+    if (!visibleItem) return;
 
+    const row = flattenedRows[visibleItem.index];
     if (!row) return;
 
+    // Use current store state for guards
     const state = useReaderStore.getState();
+    
+    // SYNC TOTALS (Use flattened length for accurate progress bar)
+    if (state.totalVerseCount !== flattenedRows.length) {
+      setTotalVerseCount(flattenedRows.length);
+    }
+
+    // SYNC POSITION
+    // Use the index directly for the "canonical" progress number
+    if (state.currentOrder !== visibleItem.index + 1) {
+      setCurrentOrderStore(visibleItem.index + 1);
+    }
 
     if (row.type === "verse") {
-      if (currentOrder !== row.verse.globalOrder) setCurrentOrder(row.verse.globalOrder);
-      if (state.currentBookId !== row.verse.bookId) state.setCurrentBookId(row.verse.bookId);
-      if (state.currentChapter !== row.verse.chapter) state.setCurrentChapter(row.verse.chapter);
+      setCurrentOrder(row.verse.globalOrder);
+      if (state.currentBookId !== row.verse.bookId) setCurrentBookId(row.verse.bookId);
+      if (state.currentChapter !== row.verse.chapter) setCurrentChapter(row.verse.chapter);
     } else if (row.type === "chapter-header" || row.type === "book-header") {
-      if (state.currentBookId !== row.book.id) state.setCurrentBookId(row.book.id);
+      if (state.currentBookId !== row.book.id) setCurrentBookId(row.book.id);
       const targetChapter = row.type === "chapter-header" ? row.chapter : 1;
-      if (state.currentChapter !== targetChapter) state.setCurrentChapter(targetChapter);
+      if (state.currentChapter !== targetChapter) setCurrentChapter(targetChapter);
     }
-  }, [rowVirtualizer.getVirtualItems(), flattenedRows, currentOrder, parentRef]);
+  }, [virtualItems, flattenedRows, parentRef, setTotalVerseCount, setCurrentOrderStore, setCurrentBookId, setCurrentChapter]);
 
   // 7. Navigation
   useEffect(() => {

@@ -30,14 +30,11 @@ export const bibleRouter = createTRPCRouter({
       return ctx.db.verse.count({ where: { translationId: translation.id } });
     }),
 
-  // Fetches the entire 73-book canon for a translation in one pass
   getEntireBible: publicProcedure
     .input(z.object({ translationSlug: z.string() }))
     .query(async ({ ctx, input }) => {
-      console.log(`[tRPC] getEntireBible: START for ${input.translationSlug}`);
       const translation = await ctx.db.translation.findUnique({ where: { slug: input.translationSlug } });
       if (!translation) return [];
-
       return ctx.db.verse.findMany({
         where: { translationId: translation.id },
         orderBy: { globalOrder: "asc" },
@@ -74,12 +71,17 @@ export const bibleRouter = createTRPCRouter({
       const translation = await ctx.db.translation.findUnique({ where: { slug: input.translationSlug } });
       if (!translation) return { items: [], total: 0 };
 
-      const where = {
+      const where: any = {
         translationId: translation.id,
         text: { contains: input.query, mode: 'insensitive' as const },
-        ...(input.mode === "book" && input.bookId ? { bookId: input.bookId } : {}),
-        ...(input.mode === "chapter" && input.bookId && input.chapter ? { bookId: input.bookId, chapter: input.chapter } : {}),
       };
+
+      if (input.mode === "book" && input.bookId) {
+        where.bookId = input.bookId;
+      } else if (input.mode === "chapter" && input.bookId && input.chapter) {
+        where.bookId = input.bookId;
+        where.chapter = input.chapter;
+      }
 
       const [items, total] = await Promise.all([
         ctx.db.verse.findMany({
@@ -100,23 +102,68 @@ export const bibleRouter = createTRPCRouter({
       citation: z.string(),
     }))
     .query(async ({ ctx, input }) => {
-      const { bookSlug, chapter: rawChapter, verses } = parseCitation(input.citation);
+      const { bookSlug, chapter: startChapter, verses: rawVerses } = parseCitation(input.citation);
       const translation = await ctx.db.translation.findUnique({ where: { slug: input.translationSlug } });
-      const book = await ctx.db.book.findFirst({ 
-        where: { slug: { equals: bookSlug, mode: 'insensitive' } } 
-      });
+      const book = await ctx.db.book.findFirst({ where: { slug: { equals: bookSlug, mode: 'insensitive' } } });
+      
       if (!translation || !book) return [];
 
-      let chapter = rawChapter;
+      // Liturgical citations often list verses like "17-28".
+      // If the verses array is just a list of numbers for a SINGLE chapter:
+      let chapter = startChapter;
       if (book.slug.toLowerCase() === "psalms" && input.translationSlug === "drb") {
-        chapter = mapPsalmToVulgate(rawChapter);
+        chapter = mapPsalmToVulgate(startChapter);
       }
 
+      // Handle the common case (single chapter)
       const matchedVerses = await ctx.db.verse.findMany({
-        where: { translationId: translation.id, bookId: book.id, chapter: chapter, verse: { in: verses } },
+        where: { 
+          translationId: translation.id, 
+          bookId: book.id, 
+          chapter: chapter, 
+          verse: { in: rawVerses } 
+        },
         select: { globalOrder: true }
       });
-      return matchedVerses.map(v => v.globalOrder);
+
+      // If we found everything, return. 
+      // If the citation spans chapters (complex), find all verses in the range.
+      if (matchedVerses.length === rawVerses.length) {
+        return matchedVerses.map(v => v.globalOrder);
+      }
+
+      // COMPLEX FALLBACK: If individual verse matching failed, 
+      // it might be because the citation covers a range that spans chapters.
+      // E.g., "17-28" where chapter ends at 20.
+      const firstVerseNum = Math.min(...rawVerses);
+      const lastVerseNum = Math.max(...rawVerses);
+
+      const rangeVerses = await ctx.db.verse.findMany({
+        where: {
+          translationId: translation.id,
+          bookId: book.id,
+          chapter: { gte: chapter },
+        },
+        orderBy: [{ chapter: 'asc' }, { verse: 'asc' }],
+        take: 100 // Safety limit for a single reading
+      });
+
+      // Filter based on the linearized sequence starting from firstVerseNum
+      let collecting = false;
+      const resultOrders: number[] = [];
+      let versesFound = 0;
+
+      for (const v of rangeVerses) {
+        if (v.chapter === chapter && v.verse === firstVerseNum) collecting = true;
+        if (collecting) {
+          resultOrders.push(v.globalOrder);
+          versesFound++;
+          // Stop once we've collected the number of verses requested or hit the end verse if it's in the same/next chapter
+          if (versesFound >= rawVerses.length) break;
+        }
+      }
+
+      return resultOrders;
     }),
 
   getBooks: publicProcedure.query(async ({ ctx }) => {
@@ -157,10 +204,7 @@ export const bibleRouter = createTRPCRouter({
           orderBy: { verse: "asc" },
           select: { globalOrder: true },
         });
-        
         if (fallback) return fallback.globalOrder;
-
-        // Absolute fallback to first verse of book
         const bookFallback = await ctx.db.verse.findFirst({
           where: { translationId: translation.id, bookId: book.id },
           orderBy: [{ chapter: "asc" }, { verse: "asc" }],

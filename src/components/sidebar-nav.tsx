@@ -9,14 +9,13 @@ import {
   Search, 
   ChevronLeft, 
   ChevronRight,
-  BookOpen,
   Compass,
   Bookmark,
   Flame,
   Sun,
-  Scroll,
   Settings2,
-  Sparkles
+  Sparkles,
+  Target
 } from "lucide-react";
 import { useReaderStore } from "~/hooks/use-reader-store";
 import { cn } from "~/lib/utils";
@@ -42,6 +41,9 @@ export function SidebarNav() {
   const currentChapter = useReaderStore((state) => state.currentChapter);
   const setIsSearchOpen = useReaderStore((state) => state.setIsSearchOpen);
   
+  const currentOrder = useReaderStore((state) => state.currentOrder);
+  const totalVerseCount = useReaderStore((state) => state.totalVerseCount);
+  
   const fontSize = useReaderStore((state) => state.fontSize);
   const setFontSize = useReaderStore((state) => state.setFontSize);
 
@@ -63,44 +65,50 @@ export function SidebarNav() {
     if (order) setScrollToOrder(order);
   };
 
+  const progress = totalVerseCount > 0 ? (currentOrder / totalVerseCount) * 100 : 0;
+
+  const scrollToCurrent = () => {
+    if (currentOrder) setScrollToOrder(currentOrder);
+  };
+
   const currentBook = books?.find(b => b.id === currentBookId);
 
   return (
     <aside className={cn("fixed left-4 top-1/2 -translate-y-1/2 z-[100] transition-all duration-500 ease-[cubic-bezier(0.2,1,0.3,1)]", isCollapsed ? "w-12" : "w-56")}>
       <div className={cn(
-        "flex flex-col glass rounded-[2.5rem] transition-all duration-500 relative z-10 shadow-2xl",
-        isCollapsed ? "h-[50vh] w-12 px-1" : "h-[90vh] w-full px-2.5",
-        "will-change-transform" // Hardware acceleration
+        "flex flex-col glass rounded-[2.5rem] transition-all duration-500 relative z-10 shadow-xl",
+        isCollapsed ? "h-[65vh] w-12 px-1" : "h-[90vh] w-full px-2.5",
+        "bg-white/90 dark:bg-zinc-900/90 border border-zinc-200 dark:border-zinc-800"
       )}>
         
-        {/* TOP: Primary Actions (The "Do" Layer) */}
+        {/* TOP Actions */}
         <div className={cn("flex flex-col gap-2 mt-5", isCollapsed ? "items-center" : "px-1")}>
           <button 
             onClick={() => setIsSearchOpen(true)}
             className={cn(
-              "flex items-center justify-center rounded-2xl bg-primary text-white shadow-lg shadow-primary/20 transition-all active:scale-95 group", 
+              "flex items-center justify-center rounded-2xl bg-primary text-white shadow-lg shadow-primary/30 transition-all active:scale-95 group", 
               isCollapsed ? "h-10 w-10" : "w-full py-3 gap-3"
             )}
           >
-            <Search className="h-4 w-4 transition-transform group-hover:scale-110 duration-300" />
+            <Search className="h-4 w-4" />
             {!isCollapsed && <span className="text-[10px] font-black uppercase tracking-[0.2em]">Search</span>}
           </button>
 
           <button 
             onClick={() => setShowDaily(!showDaily)}
             className={cn(
-              "flex items-center justify-center rounded-xl bg-zinc-50 dark:bg-zinc-800/50 transition-all border border-transparent active:scale-95 group relative overflow-hidden",
-              showDaily ? "border-primary/30 bg-primary/5 text-primary" : "hover:bg-white dark:hover:bg-zinc-700",
+              "flex items-center justify-center rounded-xl bg-zinc-100/50 dark:bg-zinc-800/50 transition-all border border-transparent active:scale-95 group relative",
+              showDaily ? "border-primary/30 bg-primary/5 text-primary" : "hover:border-zinc-200 text-zinc-500 hover:text-primary",
               isCollapsed ? "h-10 w-10" : "w-full py-3 gap-3"
             )}
           >
-            <Sun className={cn("h-4 w-4 transition-all duration-500", showDaily ? "rotate-180 text-primary" : "text-zinc-400 group-hover:text-primary")} />
+            <Sun className={cn("h-4 w-4 transition-all duration-500", showDaily ? "rotate-180 text-primary" : "group-hover:text-primary")} />
             {!isCollapsed && <span className="text-[10px] font-black uppercase tracking-[0.2em]">Daily bread</span>}
             {showDaily && <Sparkles className="absolute top-1 right-1 h-2 w-2 text-primary animate-pulse" />}
           </button>
         </div>
 
-        {/* MIDDLE: Content Navigator (The "Explore" Layer) */}
+        {/* MIDDLE Content */}
         <div className="flex-1 flex flex-col gap-6 overflow-y-auto scrollbar-none py-6">
           {!isCollapsed ? (
             <div className="flex flex-col gap-6 animate-in fade-in duration-700">
@@ -110,7 +118,7 @@ export function SidebarNav() {
                   <select 
                     value={currentBook?.slug ?? ""} 
                     onChange={(e) => handleBookChange(e.target.value)} 
-                    className="appearance-none bg-zinc-50/50 dark:bg-zinc-800/30 pl-9 pr-8 py-3 w-full text-[10px] font-black uppercase tracking-wider focus:outline-none cursor-pointer rounded-2xl border border-transparent hover:border-primary/20 transition-all"
+                    className="appearance-none bg-zinc-50 dark:bg-zinc-800/50 pl-10 pr-8 py-3 w-full text-[10px] font-black uppercase tracking-wider focus:outline-none cursor-pointer rounded-2xl border border-zinc-100 dark:border-zinc-800 hover:border-primary/20 transition-all"
                   >
                     <option value="" disabled>Browse Codex</option>
                     {books?.map((book) => (<option key={book.id} value={book.slug}>{book.name}</option>))}
@@ -118,7 +126,7 @@ export function SidebarNav() {
                   <ChevronDown className="absolute right-3 h-3 w-3 text-zinc-300 pointer-events-none" />
                 </div>
 
-                <div className="flex bg-zinc-100/50 dark:bg-zinc-800/50 p-1 rounded-2xl">
+                <div className="flex bg-zinc-100/50 dark:bg-zinc-800/50 p-1 rounded-2xl border border-zinc-100 dark:border-zinc-800">
                   {translations?.map((t) => (
                     <button 
                       key={t.id} 
@@ -144,7 +152,7 @@ export function SidebarNav() {
                     <button 
                       key={b.id} 
                       onClick={() => jumpToVerse(b.bookId, b.chapter, b.verse)} 
-                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-primary/5 text-left transition-all group"
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-primary/5 text-left transition-all group border border-transparent hover:border-zinc-100"
                     >
                       <Flame className="h-3 w-3 text-primary/20 group-hover:text-primary transition-colors" />
                       <span className="text-[10px] font-black text-zinc-700 dark:text-zinc-300 truncate group-hover:text-primary">
@@ -164,7 +172,7 @@ export function SidebarNav() {
                 <Compass className="h-4 w-4" />
               </button>
               {showNavFlyout && (
-                <div className="fixed z-[110] animate-in fade-in slide-in-from-left-2 duration-300 left-16 top-[30vh] w-48 glass rounded-[2rem] p-4 shadow-2xl">
+                <div className="fixed z-[110] animate-in fade-in slide-in-from-left-2 duration-300 left-16 top-[30vh] w-48 glass rounded-[2rem] p-4 shadow-2xl border border-zinc-200">
                   <span className="text-[8px] font-black uppercase tracking-widest text-zinc-400 block mb-2 px-1">Quick Nav</span>
                   <select 
                     value={currentBook?.slug ?? ""} 
@@ -179,52 +187,78 @@ export function SidebarNav() {
           )}
         </div>
 
-        {/* BOTTOM: Systems (The "Configure" Layer) */}
-        <div className={cn("mt-auto pb-5 flex flex-col gap-2", isCollapsed ? "items-center" : "px-1")}>
-          {!isCollapsed && showSettings && (
-            <div className="px-1 mb-2 animate-in slide-in-from-bottom-2 duration-300">
-              <div className="p-3 bg-zinc-900 rounded-2xl flex items-center justify-between">
-                <span className="text-[8px] font-black uppercase text-zinc-500 tracking-widest">Size</span>
-                <div className="flex items-center gap-2">
-                  <button onClick={() => setFontSize(fontSize - 1)} className="text-white text-[10px] h-5 w-5 flex items-center justify-center hover:bg-white/10 rounded">-</button>
-                  <span className="text-white text-[10px] font-black tabular-nums">{fontSize}</span>
-                  <button onClick={() => setFontSize(fontSize + 1)} className="text-white text-[10px] h-5 w-5 flex items-center justify-center hover:bg-white/10 rounded">+</button>
+        {/* BOTTOM: Precision Command Hub (LIGHT THEME) */}
+        <div className={cn("mt-auto pb-5 flex flex-col gap-2.5", isCollapsed ? "items-center" : "px-1")}>
+          
+          <button 
+            onClick={scrollToCurrent}
+            className={cn(
+              "flex flex-col items-center justify-center transition-all duration-700 group relative overflow-hidden",
+              isCollapsed 
+                ? "h-20 w-10 rounded-full bg-zinc-50 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 hover:border-primary shadow-sm active:scale-95" 
+                : "mx-1 px-4 py-4 bg-zinc-50 dark:bg-zinc-800 rounded-[1.75rem] shadow-sm border border-zinc-200 dark:border-zinc-700 hover:bg-zinc-100 active:scale-[0.98]"
+            )}
+          >
+            {/* Celestial Progress Bar */}
+            <div className={cn(
+              "absolute bg-primary/10 transition-all duration-700",
+              isCollapsed ? "bottom-0 left-0 w-full" : "bottom-0 left-0 h-1 w-full"
+            )} style={{ [isCollapsed ? 'height' : 'width']: `${progress}%` }} />
+
+            {isCollapsed ? (
+              <div className="flex flex-col items-center gap-2 z-10 py-2">
+                <span className="text-[9px] font-black text-primary uppercase tracking-tighter">
+                  {currentBook?.abbreviation?.slice(0, 3)}
+                </span>
+                <div className="h-0.5 w-4 bg-zinc-200 dark:bg-zinc-700 rounded-full" />
+                <span className="text-[12px] font-bold text-zinc-900 dark:text-zinc-100 tabular-nums leading-none">
+                  {currentChapter}
+                </span>
+                <Target className="mt-1 h-3 w-3 text-primary opacity-0 group-hover:opacity-100 transition-all scale-0 group-hover:scale-100" />
+              </div>
+            ) : (
+              <div className="flex flex-col gap-1 z-10 w-full">
+                <span className="text-[7px] font-black uppercase tracking-[0.2em] text-zinc-400 group-hover:text-primary transition-colors">Eternal Witness</span>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-[14px] font-black text-zinc-900 dark:text-zinc-100 truncate tracking-tight uppercase">
+                    {currentBook?.name}
+                  </span>
+                  <span className="text-[14px] font-black text-primary tabular-nums">
+                    {currentChapter}
+                  </span>
                 </div>
               </div>
+            )}
+          </button>
+
+          {!isCollapsed && (
+            <div className="px-1 space-y-2">
+              {showSettings && (
+                <div className="p-3 bg-zinc-50 dark:bg-zinc-800 rounded-2xl flex items-center justify-between border border-zinc-200 dark:border-zinc-700 animate-in slide-in-from-bottom-2 duration-300">
+                  <span className="text-[8px] font-black uppercase text-zinc-400 tracking-widest">Focus</span>
+                  <div className="flex items-center gap-2">
+                    <button onClick={(e) => { e.stopPropagation(); setFontSize(fontSize - 1); }} className="text-zinc-900 dark:text-white text-[10px] h-5 w-5 flex items-center justify-center hover:bg-zinc-200 rounded">-</button>
+                    <span className="text-zinc-900 dark:text-white text-[10px] font-black tabular-nums">{fontSize}</span>
+                    <button onClick={(e) => { e.stopPropagation(); setFontSize(fontSize + 1); }} className="text-zinc-900 dark:text-white text-[10px] h-5 w-5 flex items-center justify-center hover:bg-zinc-200 rounded">+</button>
+                  </div>
+                </div>
+              )}
+              <button 
+                onClick={() => setShowSettings(!showSettings)}
+                className={cn(
+                  "w-full flex items-center justify-center rounded-xl transition-all active:scale-95 py-2.5 gap-3",
+                  showSettings ? "bg-primary text-white shadow-md" : "bg-zinc-100 dark:bg-zinc-800 text-zinc-500 hover:text-zinc-900"
+                )}
+              >
+                <Settings2 className="h-3.5 w-3.5" />
+                {!isCollapsed && <span className="text-[9px] font-black uppercase tracking-widest">Sanctuary</span>}
+              </button>
             </div>
           )}
 
-          {!isCollapsed && (
-            <button 
-              onClick={() => setShowSettings(!showSettings)}
-              className={cn(
-                "flex items-center justify-center rounded-xl bg-zinc-50 dark:bg-zinc-800/50 transition-all active:scale-95 py-2.5 gap-3",
-                showSettings ? "bg-primary/10 text-primary border-primary/20" : "text-zinc-400 hover:text-zinc-600 border-transparent"
-              )}
-            >
-              <Settings2 className="h-3.5 w-3.5" />
-              <span className="text-[9px] font-black uppercase tracking-widest">Settings</span>
-            </button>
-          )}
-
-          <div className={cn(
-            "flex items-center justify-center transition-all duration-500",
-            isCollapsed ? "h-9 w-9 rounded-full bg-zinc-900" : "px-4 py-3.5 bg-zinc-900 dark:bg-zinc-800 rounded-2xl shadow-xl border border-white/5"
-          )}>
-            {isCollapsed ? (
-              <span className="text-[9px] font-black text-primary">{currentBook?.abbreviation?.charAt(0)}</span>
-            ) : (
-              <div className="flex flex-col gap-0.5 overflow-hidden text-center">
-                <span className="text-[11px] font-black text-white truncate tracking-tight uppercase">
-                  {currentBook?.name} {currentChapter}
-                </span>
-              </div>
-            )}
-          </div>
-
           <button 
             onClick={toggleSidebar} 
-            className="flex h-8 w-8 items-center justify-center self-center rounded-full bg-zinc-50 dark:bg-zinc-800 text-zinc-400 hover:text-primary transition-all active:scale-75 shadow-sm"
+            className="flex h-8 w-8 items-center justify-center self-center rounded-full bg-zinc-100 dark:bg-zinc-800 text-zinc-400 hover:text-primary transition-all active:scale-75 shadow-sm"
           >
             {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
           </button>
@@ -233,8 +267,8 @@ export function SidebarNav() {
 
       {showDaily && (
         <div className={cn(
-          "absolute z-[110] animate-in fade-in slide-in-from-left-6 duration-700 ease-[cubic-bezier(0.2,1,0.3,1)] top-0 flex items-center",
-          isCollapsed ? "left-14 h-[50vh]" : "left-[15.5rem] h-[90vh]"
+          "absolute z-[110] animate-in fade-in slide-in-from-left-6 duration-700 top-0 flex items-center",
+          isCollapsed ? "left-14 h-[65vh]" : "left-[15.5rem] h-[90vh]"
         )}>
           <LiturgicalCard onClose={() => setShowDaily(false)} />
         </div>

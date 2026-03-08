@@ -1,10 +1,8 @@
 "use client";
 
 import { useReaderStore } from "~/hooks/use-reader-store";
-import { api } from "~/trpc/react";
 import { BookOpen, Music, Scroll, Church, Loader2, AlertCircle, Calendar, Sparkles } from "lucide-react";
 import { useLiturgical } from "./liturgical-provider";
-import { parseCitation } from "~/lib/liturgical";
 import { cn } from "~/lib/utils";
 import { toast } from "sonner";
 
@@ -14,38 +12,22 @@ interface LiturgicalCardProps {
 
 export function LiturgicalCard({ onClose }: LiturgicalCardProps) {
   const { info, isLoading, error } = useLiturgical();
-  const setLiturgicalGuide = useReaderStore((state) => state.setLiturgicalGuide);
   const setScrollToOrder = useReaderStore((state) => state.setScrollToOrder);
-  const setHighlightedOrders = useReaderStore((state) => state.setHighlightedOrders);
-  const translationSlug = useReaderStore((state) => state.translationSlug);
-  
-  const utils = api.useUtils();
+  const liturgicalReadings = useReaderStore((state) => state.liturgicalReadings);
 
-  const handleSelectReading = async (citation: string, type: string) => {
-    if (!citation) return;
-    const toastId = toast.loading(`Locating ${citation}...`);
+  const handleSelectReading = (type: string) => {
+    // Advanced: Use the already resolved readings in the store
+    const reading = liturgicalReadings.find(r => r.type === type);
     
-    try {
-      const parsed = parseCitation(citation);
-      const highlightOrders = await utils.bible.resolveReadingHighlight.fetch({ translationSlug, citation });
-      const order = await utils.bible.getVerseOrder.fetch({
-        translationSlug,
-        bookSlug: parsed.bookSlug,
-        chapter: parsed.chapter,
-        verse: parsed.verses[0] ?? 1
-      });
-
-      if (order !== null) {
-        setHighlightedOrders(highlightOrders, { type, citation });
-        setLiturgicalGuide({ ...parsed, citation, order });
-        setScrollToOrder(order);
-        toast.success(`${type} Locked`, { id: toastId });
+    if (reading && reading.orders.length > 0) {
+      const firstOrder = reading.orders[0];
+      if (firstOrder) {
+        setScrollToOrder(firstOrder);
+        toast.success(`${type} Focused`);
         if (onClose) onClose();
-      } else {
-        toast.error(`Not found in ${translationSlug.toUpperCase()}`, { id: toastId });
       }
-    } catch (e) {
-      toast.error("Navigation error", { id: toastId });
+    } else {
+      toast.error("Reading not found in this translation");
     }
   };
 
@@ -62,32 +44,40 @@ export function LiturgicalCard({ onClose }: LiturgicalCardProps) {
     </div>
   );
 
-  const ReadingRow = ({ label, citation, icon: Icon, typeName }: { label: string, citation: string, icon: any, typeName: string }) => (
-    <button 
-      onClick={() => handleSelectReading(citation, typeName)}
-      className="w-full flex items-center justify-between py-2 px-3 rounded-xl hover:bg-primary/5 transition-all group active:scale-[0.97]"
-    >
-      <div className="flex items-center gap-3">
-        <div className="h-7 w-7 rounded-lg bg-zinc-50 dark:bg-zinc-800/50 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
-          <Icon className="h-3.5 w-3.5 text-zinc-400 group-hover:text-primary" />
+  const ReadingRow = ({ label, citation, icon: Icon, typeName }: { label: string, citation: string, icon: any, typeName: string }) => {
+    const isResolved = liturgicalReadings.some(r => r.type === typeName);
+    
+    return (
+      <button 
+        onClick={() => handleSelectReading(typeName)}
+        disabled={!isResolved}
+        className={cn(
+          "w-full flex items-center justify-between py-2 px-3 rounded-xl transition-all group active:scale-[0.97]",
+          isResolved ? "hover:bg-primary/5" : "opacity-40 grayscale cursor-not-allowed"
+        )}
+      >
+        <div className="flex items-center gap-3">
+          <div className="h-7 w-7 rounded-lg bg-zinc-50 dark:bg-zinc-800/50 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+            <Icon className="h-3.5 w-3.5 text-zinc-400 group-hover:text-primary" />
+          </div>
+          <div className="flex flex-col items-start text-left">
+            <span className="text-[7px] font-black uppercase tracking-[0.2em] text-zinc-400 group-hover:text-primary/60">{label}</span>
+            <span className="text-[11px] font-bold text-zinc-900 dark:text-zinc-100 tracking-tight line-clamp-1">{citation}</span>
+          </div>
         </div>
-        <div className="flex flex-col items-start">
-          <span className="text-[7px] font-black uppercase tracking-[0.2em] text-zinc-400 group-hover:text-primary/60">{label}</span>
-          <span className="text-[11px] font-bold text-zinc-900 dark:text-zinc-100 tracking-tight">{citation}</span>
-        </div>
-      </div>
-      <Sparkles className="h-3 w-3 text-primary opacity-0 group-hover:opacity-100 transition-all scale-50 group-hover:scale-100" />
-    </button>
-  );
+        {isResolved && <Sparkles className="h-3 w-3 text-primary opacity-0 group-hover:opacity-100 transition-all scale-50 group-hover:scale-100" />}
+      </button>
+    );
+  };
 
   return (
-    <div className="glass rounded-[2rem] overflow-hidden min-w-[260px] animate-in zoom-in-95 duration-300 shadow-2xl">
+    <div className="glass rounded-[2rem] overflow-hidden min-w-[260px] animate-in zoom-in-95 duration-300 shadow-2xl border border-zinc-200 dark:border-zinc-800">
       {/* Mini Header */}
       <div className={cn(
-        "px-4 py-3 border-b border-white/10 flex items-center justify-between",
-        info.color === "violet" && "bg-violet-500/10",
-        info.color === "green" && "bg-green-500/10",
-        info.color === "red" && "bg-red-500/10"
+        "px-4 py-3 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between",
+        info.color === "violet" && "bg-violet-500/5",
+        info.color === "green" && "bg-green-500/5",
+        info.color === "red" && "bg-red-500/5"
       )}>
         <div className="flex flex-col">
           <div className="flex items-center gap-1.5 mb-0.5">
@@ -106,7 +96,7 @@ export function LiturgicalCard({ onClose }: LiturgicalCardProps) {
         <Calendar className="h-3.5 w-3.5 text-zinc-300" />
       </div>
 
-      {/* Tighter List */}
+      {/* Reading List */}
       <div className="p-2 space-y-0.5">
         {info.readings.firstReading && <ReadingRow label="First" typeName="First Reading" citation={info.readings.firstReading} icon={Scroll} />}
         {info.readings.psalm && <ReadingRow label="Psalm" typeName="Responsorial Psalm" citation={info.readings.psalm} icon={Music} />}
@@ -117,7 +107,7 @@ export function LiturgicalCard({ onClose }: LiturgicalCardProps) {
       <div className="p-2 pt-0">
         <button 
           onClick={onClose}
-          className="w-full h-8 rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 font-black text-[8px] uppercase tracking-[0.2em] hover:bg-primary dark:hover:bg-primary hover:text-white transition-all active:scale-[0.95]"
+          className="w-full h-8 rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 font-black text-[8px] uppercase tracking-[0.2em] hover:bg-primary dark:hover:bg-primary hover:text-white transition-all"
         >
           Dismiss
         </button>
