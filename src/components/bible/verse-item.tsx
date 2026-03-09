@@ -57,34 +57,39 @@ export const VerseItem = memo(({
 
   return (
     <div className="max-w-3xl mx-auto px-6 py-0.5 group cursor-pointer" onClick={onClick}>
-      <div className="flex gap-6 items-start relative py-1">
-        {/* Margin Area */}
+      <div className="flex gap-4 items-start relative py-0.5">
+        
+        {/* Margin Area - Now houses the Liturgical Bar */}
         <div className="w-10 flex-shrink-0 pt-1 flex flex-col items-end gap-1 relative">
           {metadata?.isStart && (
-            <div className="absolute right-full mr-4 top-1 flex items-center pointer-events-none animate-in fade-in slide-in-from-right-2 duration-700">
-               <span className="text-[7px] font-black uppercase tracking-[0.2em] text-primary whitespace-nowrap bg-white dark:bg-zinc-950 px-2 py-1 rounded shadow-sm border border-primary/20">
+            <div className="absolute right-full mr-3 top-1 flex items-center pointer-events-none animate-in fade-in slide-in-from-right-1 duration-700">
+               <span className="text-[6px] font-black uppercase tracking-[0.2em] text-primary whitespace-nowrap bg-primary/5 px-1.5 py-0.5 rounded border border-primary/10">
                 {metadata.type}
               </span>
             </div>
+          )}
+
+          {/* THE COMPACT LITURGICAL BAR */}
+          {isLiturgical && (
+            <div className="absolute -right-2 top-0.5 bottom-0.5 w-0.5 bg-primary/30 rounded-full" />
           )}
           
           <span className={cn("text-[10px] font-black tabular-nums transition-colors", hasBookmark ? "text-primary opacity-100" : "text-zinc-400 group-hover:text-zinc-600")}>
             {verse.verse}
           </span>
           <div className="flex flex-col gap-1">
-            {hasBookmark && <Bookmark className="h-2.5 w-2.5 text-primary fill-primary" />}
-            {hasNote && <MessageSquare className="h-2.5 w-2.5 text-primary/60" />}
+            {hasBookmark && <Bookmark className="h-2 w-2 text-primary fill-primary" />}
+            {hasNote && <MessageSquare className="h-2 w-2 text-primary/60" />}
           </div>
         </div>
         
         <div className="flex-1 min-w-0">
           <div className={cn(
-            "font-serif tracking-normal rounded-xl transition-all duration-500 px-4 -mx-4 py-1 relative",
-            hasHighlight ? "bg-yellow-100/30 dark:bg-yellow-900/10 shadow-sm" : "text-zinc-800 dark:text-zinc-200",
-            isLiturgical && "bg-primary/[0.03] border-l-4 border-primary/40 shadow-sm",
-            isSearchTarget && "bg-primary/10 ring-2 ring-primary/20"
+            "font-serif tracking-normal transition-all duration-500 px-1 relative",
+            hasHighlight ? "bg-yellow-400/10 border-b border-yellow-400/30" : "text-zinc-800 dark:text-zinc-200",
+            isSearchTarget && "bg-primary/10 ring-1 ring-primary/20 rounded-md"
           )} style={{ fontSize: `${fontSize}px`, lineHeight: "1.7" }}>
-            <p className={cn(isLiturgical && "font-medium")}>{content}</p>
+            <p className={cn(isLiturgical && "text-zinc-900 dark:text-zinc-100")}>{content}</p>
           </div>
         </div>
       </div>
