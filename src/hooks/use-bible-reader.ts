@@ -26,6 +26,7 @@ export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>
 
   const [currentOrder, setCurrentOrder] = useState<number>(1);
   const lastSyncTime = useRef(0);
+  const initialScrollDone = useRef(false);
 
   // 1. Hydration Info
   const { data: totalVerseCount } = api.bible.getVerseCount.useQuery(
@@ -34,6 +35,7 @@ export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>
   );
 
   const utils = api.useUtils();
+  const liturgicalReadings = useReaderStore((state) => state.liturgicalReadings);
 
   // 2. Background Sync
   useEffect(() => {
@@ -92,7 +94,22 @@ export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>
 
   const virtualItems = rowVirtualizer.getVirtualItems();
 
-  // 6. REACTIVE SCROLL SYNC
+  // 6. INITIAL SCROLL TO LITURGICAL
+  useEffect(() => {
+    if (!initialScrollDone.current && liturgicalReadings.length > 0 && flattenedRows.length > 0) {
+      const firstReading = liturgicalReadings.find(r => r.type === "First Reading");
+      if (firstReading && firstReading.orders.length > 0) {
+        const order = firstReading.orders[0];
+        const index = flattenedRows.findIndex(r => r.type === "verse" && r.verse.globalOrder === order);
+        if (index !== -1) {
+          rowVirtualizer.scrollToIndex(index, { align: "start" });
+          initialScrollDone.current = true;
+        }
+      }
+    }
+  }, [liturgicalReadings, flattenedRows, rowVirtualizer]);
+
+  // 7. REACTIVE SCROLL SYNC
   useEffect(() => {
     if (virtualItems.length === 0 || !parentRef.current || flattenedRows.length === 0) return;
 
@@ -116,7 +133,6 @@ export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>
     }
 
     // SYNC POSITION
-    // Use the index directly for the "canonical" progress number
     if (state.currentOrder !== visibleItem.index + 1) {
       setCurrentOrderStore(visibleItem.index + 1);
     }
@@ -132,7 +148,7 @@ export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>
     }
   }, [virtualItems, flattenedRows, parentRef, setTotalVerseCount, setCurrentOrderStore, setCurrentBookId, setCurrentChapter]);
 
-  // 7. Navigation
+  // 8. Navigation
   useEffect(() => {
     if (scrollToOrder !== null && flattenedRows.length > 0) {
       const index = flattenedRows.findIndex(r => r.type === "verse" && r.verse.globalOrder === scrollToOrder);

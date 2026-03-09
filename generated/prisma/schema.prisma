@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
   output   = "../generated/prisma"
@@ -8,30 +5,24 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  // NOTE: When using mysql or sqlserver, uncomment the @db.Text annotations in model Account below
-  // Further reading:
-  // https://next-auth.js.org/adapters/prisma#create-the-prisma-schema
-  // https://www.prisma.io/docs/reference/api-reference/prisma-schema-reference#string
   url      = env("DATABASE_URL")
 }
 
 model Post {
-  id        Int      @id @default(autoincrement())
-  name      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  createdBy   User   @relation(fields: [createdById], references: [id])
+  id          Int      @id @default(autoincrement())
+  name        String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
   createdById String
+  createdBy   User     @relation(fields: [createdById], references: [id])
 
   @@index([name])
 }
 
-// Bible Models
 model Translation {
   id           String   @id @default(cuid())
-  slug         String   @unique // e.g., "webbe", "drb", "vul"
-  name         String // e.g., "World English Bible", "Douay-Rheims"
+  slug         String   @unique
+  name         String
   language     String   @default("en")
   abbreviation String
   isPublic     Boolean  @default(false)
@@ -41,12 +32,12 @@ model Translation {
 }
 
 model Book {
-  id           Int     @id // Use standard biblical order (1-73)
-  slug         String  @unique // e.g., "genesis", "tobit"
+  id           Int     @id
+  slug         String  @unique
   name         String
   abbreviation String
-  testament    String // "OT" or "NT"
-  category     String // "Pentateuch", "History", "Wisdom", "Prophets", "Gospels", "Acts", "Epistles", "Revelation"
+  testament    String
+  category     String
   order        Int     @unique
   verses       Verse[]
 }
@@ -54,19 +45,16 @@ model Book {
 model Verse {
   id            String      @id @default(cuid())
   translationId String
-  translation   Translation @relation(fields: [translationId], references: [id])
   bookId        Int
-  book          Book        @relation(fields: [bookId], references: [id])
   chapter       Int
   verse         Int
-  text          String      @db.Text
-
-  // For sorting and infinite scroll
-  globalOrder Int // Flat order across the whole Bible for this translation
-
-  bookmarks  Bookmark[]
-  highlights Highlight[]
-  notes      Note[]
+  text          String
+  globalOrder   Int
+  bookmarks     Bookmark[]
+  highlights    Highlight[]
+  notes         Note[]
+  book          Book        @relation(fields: [bookId], references: [id])
+  translation   Translation @relation(fields: [translationId], references: [id])
 
   @@unique([translationId, bookId, chapter, verse])
   @@index([translationId, globalOrder])
@@ -75,10 +63,10 @@ model Verse {
 model Bookmark {
   id        String   @id @default(cuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   verseId   String
-  verse     Verse    @relation(fields: [verseId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  verse     Verse    @relation(fields: [verseId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }
@@ -86,11 +74,11 @@ model Bookmark {
 model Highlight {
   id        String   @id @default(cuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   verseId   String
-  verse     Verse    @relation(fields: [verseId], references: [id], onDelete: Cascade)
-  color     String // Hex code or tailwind class
+  color     String
   createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  verse     Verse    @relation(fields: [verseId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }
@@ -98,45 +86,43 @@ model Highlight {
 model Note {
   id        String   @id @default(cuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   verseId   String
-  verse     Verse    @relation(fields: [verseId], references: [id], onDelete: Cascade)
-  content   String   @db.Text
+  content   String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  verse     Verse    @relation(fields: [verseId], references: [id], onDelete: Cascade)
 
   @@index([userId])
 }
 
-// Liturgical Readings (Daily Mass)
 model DailyReading {
   id              String   @id @default(cuid())
   date            DateTime @unique
-  title           String // e.g., "Solemnity of the Immaculate Conception"
-  liturgicalColor String // "green", "violet", "white", "red", "rose", "gold"
+  title           String
+  liturgicalColor String
   firstReading    String
   psalm           String
   secondReading   String?
   gospel          String
-  verseRef        String? // Optional pointer to a primary verse for the day
+  verseRef        String?
 }
 
-// Necessary for Next auth
 model Account {
   id                       String  @id @default(cuid())
   userId                   String
   type                     String
   provider                 String
   providerAccountId        String
-  refresh_token            String? // @db.Text
-  access_token             String? // @db.Text
+  refresh_token            String?
+  access_token             String?
   expires_at               Int?
   token_type               String?
   scope                    String?
-  id_token                 String? // @db.Text
+  id_token                 String?
   session_state            String?
-  user                     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   refresh_token_expires_in Int?
+  user                     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
 }
@@ -156,11 +142,11 @@ model User {
   emailVerified DateTime?
   image         String?
   accounts      Account[]
-  sessions      Session[]
-  posts         Post[]
   bookmarks     Bookmark[]
   highlights    Highlight[]
   notes         Note[]
+  posts         Post[]
+  sessions      Session[]
 }
 
 model VerificationToken {

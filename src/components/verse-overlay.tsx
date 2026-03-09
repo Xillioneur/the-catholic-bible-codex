@@ -3,9 +3,10 @@
 import { useState } from "react";
 import { useReaderStore } from "~/hooks/use-reader-store";
 import { cn } from "~/lib/utils";
-import { Bookmark as BookmarkIcon, Highlighter, MessageSquare, Share2, ExternalLink, ChevronDown, Trash2 } from "lucide-react";
+import { Bookmark as BookmarkIcon, Highlighter, MessageSquare, Share2, ExternalLink, ChevronDown, Trash2, Scroll, BookOpen } from "lucide-react";
 import { db } from "~/lib/db";
 import { useLiveQuery } from "dexie-react-hooks";
+import { getCatechismUrl, getCatenaAureaUrl, getPatristicCommentaryUrl } from "~/lib/bible-utils";
 
 interface VerseOverlayProps {
   verseId: string;
@@ -165,7 +166,12 @@ export function VerseOverlay({ verseId, bookId, bookName, chapter, verse, text, 
         )}
 
         <div className="pt-6 border-t border-zinc-100 dark:border-zinc-800 flex flex-col gap-4">
-           <div className="flex items-center justify-between group cursor-pointer">
+           <a 
+              href={getCatechismUrl(bookName, chapter, verse)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-between group cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800/50 p-2 rounded-2xl transition-all"
+           >
               <div className="flex items-center gap-3">
                 <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center dark:bg-blue-900/30">
                   <ExternalLink className="h-4 w-4 text-blue-600" />
@@ -176,7 +182,45 @@ export function VerseOverlay({ verseId, bookId, bookName, chapter, verse, text, 
                 </div>
               </div>
               <ChevronDown className="h-4 w-4 text-zinc-400 rotate-[-90deg]" />
-           </div>
+           </a>
+
+           {getCatenaAureaUrl(bookName, chapter) && (
+             <a 
+                href={getCatenaAureaUrl(bookName, chapter)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-between group cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800/50 p-2 rounded-2xl transition-all"
+             >
+                <div className="flex items-center gap-3">
+                  <div className="h-8 w-8 rounded-full bg-amber-100 flex items-center justify-center dark:bg-amber-900/30">
+                    <Scroll className="h-4 w-4 text-amber-600" />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Catena Aurea</span>
+                    <span className="text-xs font-bold text-zinc-700 dark:text-zinc-200">Patristic Commentary</span>
+                  </div>
+                </div>
+                <ChevronDown className="h-4 w-4 text-zinc-400 rotate-[-90deg]" />
+             </a>
+           )}
+
+           <a 
+              href={getPatristicCommentaryUrl(bookName, chapter)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-between group cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800/50 p-2 rounded-2xl transition-all"
+           >
+              <div className="flex items-center gap-3">
+                <div className="h-8 w-8 rounded-full bg-emerald-100 flex items-center justify-center dark:bg-emerald-900/30">
+                  <BookOpen className="h-4 w-4 text-emerald-600" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Study Tool</span>
+                  <span className="text-xs font-bold text-zinc-700 dark:text-zinc-200">New Advent Commentary</span>
+                </div>
+              </div>
+              <ChevronDown className="h-4 w-4 text-zinc-400 rotate-[-90deg]" />
+           </a>
         </div>
       </div>
     </div>

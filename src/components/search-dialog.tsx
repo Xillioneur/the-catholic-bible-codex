@@ -1,12 +1,45 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef, memo, useCallback } from "react";
 import { useReaderStore } from "~/hooks/use-reader-store";
 import { api } from "~/trpc/react";
-import { Search, X, Book, Command, ArrowRight, Loader2, ChevronDown, Filter } from "lucide-react";
+import { Search, X, ArrowRight, Loader2, ChevronDown, Filter, Hash, BookOpen } from "lucide-react";
 import { cn } from "~/lib/utils";
+import { useSearchWorker } from "~/hooks/use-search-worker";
+import { db } from "~/lib/db";
+import { useLiveQuery } from "dexie-react-hooks";
+import { useVirtualizer } from "@tanstack/react-virtual";
 
-type SearchMode = "global" | "book" | "chapter";
+type SearchMode = "global" | "ot" | "nt" | "book" | "chapter";
+
+const SearchResultItem = memo(({ 
+  verse, 
+  onClick, 
+  style 
+}: { 
+  verse: any, 
+  onClick: (v: any) => void, 
+  style: React.CSSProperties 
+}) => (
+  <div style={style} className="p-1">
+    <button 
+      onClick={() => onClick(verse)}
+      className="w-full h-full text-left px-4 py-3 rounded-2xl hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors border border-transparent hover:border-zinc-100 dark:hover:border-zinc-700 flex flex-col gap-1 group"
+    >
+      <div className="flex items-center justify-between">
+        <span className="text-[9px] font-black uppercase tracking-widest text-primary/60 group-hover:text-primary transition-colors">
+          {verse.book.abbreviation} {verse.chapter}:{verse.verse}
+        </span>
+        <ArrowRight className="h-3 w-3 text-zinc-300 opacity-0 group-hover:opacity-100 transition-all transform group-hover:translate-x-0.5" />
+      </div>
+      <p className="text-[13px] font-serif leading-snug text-zinc-600 dark:text-zinc-400 line-clamp-2">
+        {verse.text}
+      </p>
+    </button>
+  </div>
+));
+
+SearchResultItem.displayName = "SearchResultItem";
 
 export function SearchDialog() {
   const isSearchOpen = useReaderStore((state) => state.isSearchOpen);
@@ -42,111 +75,109 @@ function SearchContent() {
   const [selectedBookId, setSelectedBookId] = useState<number>(initialBookId ?? 1);
   const [selectedChapter, setSelectedChapter] = useState<number>(initialChapter ?? 1);
 
-  // Debounce logic to prevent empty queries and spam
+  const { search, results: workerResults, isSearching: isWorkerSearching } = useSearchWorker();
+  const hydratedCount = useLiveQuery(() => db.verses.where("translationId").equals(translationSlug).count(), [translationSlug]) ?? 0;
+
+  const parentRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     const timer = setTimeout(() => {
       if (input.length >= 2) {
         setDebouncedQuery(input);
+        if (hydratedCount > 30000) {
+          search({ 
+            query: input, 
+            translationSlug, 
+            bookId: selectedBookId, 
+            chapter: selectedChapter, 
+            mode: (mode === "ot" || mode === "nt") ? "global" : mode, 
+            limit: 5000 
+          });
+        }
       } else {
         setDebouncedQuery("");
       }
-    }, 300);
+    }, 350);
     return () => clearTimeout(timer);
-  }, [input]);
+  }, [input, translationSlug, selectedBookId, selectedChapter, mode, hydratedCount, search]);
 
   const { data: books } = api.bible.getBooks.useQuery();
   const selectedBook = useMemo(() => books?.find(b => b.id === selectedBookId), [books, selectedBookId]);
 
-  // Use debouncedQuery and explicit null-guards
-  const { data, isFetching } = api.bible.searchVerses.useQuery(
+  const useTrpc = hydratedCount < 30000;
+  const { data: trpcData, isFetching: isTrpcFetching } = api.bible.searchVerses.useQuery(
     {
       translationSlug,
       query: debouncedQuery,
       bookId: selectedBookId,
       chapter: selectedChapter,
-      mode,
-      limit: 50,
+      mode: (mode === "ot" || mode === "nt") ? "global" : mode,
+      limit: 500,
     },
     {
-      enabled: debouncedQuery.length >= 2,
+      enabled: debouncedQuery.length >= 2 && useTrpc,
       staleTime: 1000 * 60,
     }
   );
 
-  const results = data?.items;
-  const totalResults = data?.total ?? 0;
+  const rawResults = useTrpc ? trpcData?.items : (workerResults || []);
+  
+  const results = useMemo(() => {
+    if (!rawResults) return [];
+    if (mode === "ot") return rawResults.filter((v: any) => v.book.testament === "OT");
+    if (mode === "nt") return rawResults.filter((v: any) => v.book.testament === "NT");
+    return rawResults;
+  }, [rawResults, mode]);
 
-  const handleSelect = (verse: any) => {
+  const totalResults = results.length;
+  const isFetching = useTrpc ? isTrpcFetching : isWorkerSearching;
+
+  const rowVirtualizer = useVirtualizer({
+    count: results.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 90,
+    overscan: 8,
+  });
+
+  const onSelect = useCallback((verse: any) => {
     setSearchHighlight({ query: debouncedQuery, targetOrder: verse.globalOrder });
     setScrollToOrder(verse.globalOrder);
     setIsSearchOpen(false);
-  };
+  }, [debouncedQuery, setSearchHighlight, setScrollToOrder, setIsSearchOpen]);
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-start justify-center pt-[8vh] px-4">
-      <div className="fixed inset-0 bg-zinc-950/40 backdrop-blur-sm animate-in fade-in duration-300" onClick={() => setIsSearchOpen(false)} />
+    <div className="fixed inset-0 z-[200] flex items-start justify-center pt-[12vh] px-4 sm:px-6">
+      <div className="fixed inset-0 bg-zinc-950/20 backdrop-blur-md animate-in fade-in duration-500" onClick={() => setIsSearchOpen(false)} />
       
-      <div className="bg-white dark:bg-zinc-900 w-full max-w-2xl rounded-[2.5rem] shadow-2xl border border-zinc-200 dark:border-zinc-800 overflow-hidden animate-in zoom-in-95 slide-in-from-top-4 duration-300 relative z-10">
-        <div className="p-6 flex flex-col gap-5 border-b border-zinc-100 dark:border-zinc-800">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 p-1 rounded-xl">
-              <div className="relative flex items-center">
-                <select 
-                  value={selectedBookId}
-                  onChange={(e) => {
-                    setSelectedBookId(Number(e.target.value));
-                    setSelectedChapter(1);
-                  }}
-                  className="appearance-none bg-transparent pl-3 pr-8 py-1.5 text-[10px] font-black uppercase tracking-widest focus:outline-none cursor-pointer text-zinc-600 dark:text-zinc-400 hover:text-primary transition-colors"
-                >
-                  {books?.map((b) => (
-                    <option key={b.id} value={b.id}>{b.abbreviation}</option>
-                  ))}
-                </select>
-                <ChevronDown className="absolute right-2 h-3 w-3 pointer-events-none text-zinc-400" />
-              </div>
-              <div className="h-3 w-px bg-zinc-300 dark:bg-zinc-700" />
-              <div className="relative flex items-center">
-                <select 
-                  value={selectedChapter}
-                  onChange={(e) => setSelectedChapter(Number(e.target.value))}
-                  className="appearance-none bg-transparent pl-3 pr-8 py-1.5 text-[10px] font-black uppercase tracking-widest focus:outline-none cursor-pointer text-zinc-600 dark:text-zinc-400 hover:text-primary transition-colors"
-                >
-                  {Array.from({ length: 150 }, (_, i) => i + 1).map(num => (
-                    <option key={num} value={num}>{num}</option>
-                  ))}
-                </select>
-                <ChevronDown className="absolute right-2 h-3 w-3 pointer-events-none text-zinc-400" />
-              </div>
-            </div>
-
-            <div className="h-4 w-px bg-zinc-200 dark:bg-zinc-800" />
-
-            <div className="flex-1 flex items-center gap-3">
-              <Search className="h-4 w-4 text-zinc-400" />
-              <input 
-                autoFocus
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder={mode === "global" ? "Search all Scripture..." : `Search in ${selectedBook?.name}...`}
-                className="flex-1 bg-transparent border-none outline-none text-lg font-bold text-zinc-900 dark:text-zinc-50 placeholder:text-zinc-300"
-              />
-            </div>
-            
-            <button onClick={() => setIsSearchOpen(false)} className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
-              <X className="h-4 w-4 text-zinc-400" />
+      <div className="glass w-full max-w-xl rounded-[2rem] shadow-2xl border border-white/40 dark:border-zinc-800/40 overflow-hidden animate-in zoom-in-95 slide-in-from-top-2 duration-500 relative z-10 flex flex-col h-[60vh] max-h-[600px]">
+        
+        {/* COMPACT INTEGRATED HEADER */}
+        <div className="px-5 py-4 flex flex-col gap-4 border-b border-zinc-100/50 dark:border-zinc-800/50">
+          <div className="flex items-center gap-4">
+            <Search className="h-4 w-4 text-primary opacity-60 flex-shrink-0" />
+            <input 
+              autoFocus
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Search the Word..."
+              className="flex-1 bg-transparent border-none outline-none text-base font-medium text-zinc-900 dark:text-zinc-50 placeholder:text-zinc-400"
+            />
+            {isFetching && <Loader2 className="h-3.5 w-3.5 animate-spin text-primary opacity-40" />}
+            <button onClick={() => setIsSearchOpen(false)} className="h-7 w-7 flex items-center justify-center rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
+              <X className="h-3.5 w-3.5 text-zinc-400" />
             </button>
           </div>
 
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-1 bg-zinc-100 dark:bg-zinc-800 p-1 rounded-full">
-              {(["global", "book", "chapter"] as const).map((m) => (
+          <div className="flex items-center justify-between gap-4">
+            {/* MINI SCOPE SELECTOR */}
+            <div className="flex items-center gap-1.5 p-0.5 bg-zinc-100/50 dark:bg-zinc-800/50 rounded-full">
+              {(["global", "ot", "nt", "book", "chapter"] as const).map((m) => (
                 <button 
                   key={m}
                   onClick={() => setMode(m)}
                   className={cn(
-                    "px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all",
-                    mode === m ? "bg-white dark:bg-zinc-700 text-primary shadow-sm" : "text-zinc-500 hover:text-zinc-700"
+                    "px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest transition-all whitespace-nowrap",
+                    mode === m ? "bg-white dark:bg-zinc-700 text-primary shadow-sm" : "text-zinc-400 hover:text-zinc-600"
                   )}
                 >
                   {m}
@@ -154,65 +185,93 @@ function SearchContent() {
               ))}
             </div>
 
-            {debouncedQuery.length >= 2 && (
-              <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-primary/5 border border-primary/10">
-                <span className="text-[10px] font-black uppercase text-primary tracking-tighter">
-                  {totalResults.toLocaleString()} Results Found
-                </span>
+            {/* CONTEXT CHIPS (CONDITIONAL) */}
+            {(mode === "book" || mode === "chapter") && (
+              <div className="flex items-center gap-1 animate-in fade-in slide-in-from-right-2 duration-300">
+                <div className="flex items-center gap-1 bg-primary/5 border border-primary/10 rounded-lg px-2 py-1">
+                  <BookOpen className="h-2.5 w-2.5 text-primary opacity-60" />
+                  <select 
+                    value={selectedBookId}
+                    onChange={(e) => {
+                      setSelectedBookId(Number(e.target.value));
+                      setSelectedChapter(1);
+                    }}
+                    className="appearance-none bg-transparent text-[8px] font-black uppercase tracking-wider focus:outline-none cursor-pointer text-primary"
+                  >
+                    {books?.map((b) => (
+                      <option key={b.id} value={b.id}>{b.abbreviation}</option>
+                    ))}
+                  </select>
+                </div>
+                {mode === "chapter" && (
+                  <div className="flex items-center gap-1 bg-primary/5 border border-primary/10 rounded-lg px-2 py-1">
+                    <Hash className="h-2.5 w-2.5 text-primary opacity-60" />
+                    <select 
+                      value={selectedChapter}
+                      onChange={(e) => setSelectedChapter(Number(e.target.value))}
+                      className="appearance-none bg-transparent text-[8px] font-black uppercase tracking-wider focus:outline-none cursor-pointer text-primary"
+                    >
+                      {Array.from({ length: 150 }, (_, i) => i + 1).map(num => (
+                        <option key={num} value={num}>{num}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
               </div>
             )}
           </div>
         </div>
 
-        <div className="max-h-[55vh] overflow-auto p-2 scrollbar-none">
-          {isFetching ? (
-            <div className="p-16 flex flex-col items-center gap-3">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              <span className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-400">Consulting the Word</span>
+        {/* RESULTS AREA */}
+        <div ref={parentRef} className="flex-1 overflow-auto p-2 scrollbar-elegant relative will-change-transform">
+          {results.length > 0 ? (
+            <div style={{ height: `${rowVirtualizer.getTotalSize()}px`, width: "100%", position: "relative" }}>
+              {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                const verse = results[virtualRow.index];
+                if (!verse) return null;
+
+                return (
+                  <SearchResultItem
+                    key={virtualRow.key}
+                    verse={verse}
+                    onClick={onSelect}
+                    style={{ 
+                      position: "absolute", 
+                      top: 0, 
+                      left: 0, 
+                      width: "100%", 
+                      height: `${virtualRow.size}px`, 
+                      transform: `translateY(${virtualRow.start}px)`,
+                      willChange: "transform"
+                    }}
+                  />
+                );
+              })}
             </div>
-          ) : results && results.length > 0 ? (
-            <div className="grid gap-1">
-              {results.map((verse) => (
-                <button 
-                  key={verse.id}
-                  onClick={() => handleSelect(verse)}
-                  className="w-full text-left p-4 rounded-3xl hover:bg-zinc-50 dark:hover:bg-zinc-800 group transition-all border border-transparent hover:border-zinc-100 dark:hover:border-zinc-700 flex flex-col gap-2"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-black uppercase tracking-widest text-primary">
-                        {verse.book.name} {verse.chapter}:{verse.verse}
-                      </span>
-                      <div className="h-1 w-1 rounded-full bg-zinc-200" />
-                      <span className="text-[9px] font-bold text-zinc-400 uppercase">{verse.book.category}</span>
-                    </div>
-                    <ArrowRight className="h-3.5 w-3.5 text-zinc-300 opacity-0 group-hover:opacity-100 transition-all transform group-hover:translate-x-1" />
-                  </div>
-                  <p className="text-[15px] font-serif leading-relaxed text-zinc-700 dark:text-zinc-300 line-clamp-2">
-                    {verse.text}
-                  </p>
-                </button>
-              ))}
+          ) : debouncedQuery.length >= 2 && !isFetching ? (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 p-8 text-center">
+              <span className="text-xs font-bold text-zinc-900 dark:text-zinc-100 uppercase tracking-tight">No results matched</span>
+              <span className="text-[9px] font-medium text-zinc-400 uppercase tracking-widest">Try adjusting your scope or keywords</span>
             </div>
-          ) : input.length >= 2 ? (
-            <div className="p-16 text-center flex flex-col items-center gap-2">
-              <span className="text-sm font-black text-zinc-900 dark:text-zinc-50 uppercase tracking-tighter">No Verses Found</span>
-              <span className="text-[10px] font-medium text-zinc-400 uppercase tracking-widest">Adjust your context or keywords</span>
-            </div>
-          ) : (
-            <div className="p-16 text-center flex flex-col items-center gap-4 text-zinc-300">
-              <Filter className="h-8 w-8 opacity-20" />
-              <span className="text-[10px] font-black uppercase tracking-[0.4em]">Refine Your Search Context</span>
+          ) : !isFetching && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-zinc-400 opacity-30">
+              <Filter className="h-6 w-6" />
+              <span className="text-[8px] font-black uppercase tracking-[0.4em]">Ready to Navigate</span>
             </div>
           )}
         </div>
 
-        <div className="p-4 bg-zinc-50 dark:bg-zinc-950 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
-          <div className="flex items-center gap-4 text-[9px] font-bold text-zinc-400 uppercase tracking-widest">
-            <div className="flex items-center gap-1.5"><kbd className="bg-white dark:bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-200 dark:border-zinc-700 shadow-sm font-black text-zinc-600">ESC</kbd> to close</div>
-            <div className="flex items-center gap-1.5"><kbd className="bg-white dark:bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-200 dark:border-zinc-700 shadow-sm font-black text-zinc-600">ENTER</kbd> to select</div>
+        {/* COMPACT FOOTER */}
+        <div className="px-5 py-3 bg-zinc-50/50 dark:bg-zinc-950/30 border-t border-zinc-100/50 dark:border-zinc-800/50 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="text-[9px] font-black uppercase tracking-tighter text-primary">
+              {totalResults.toLocaleString()} <span className="text-zinc-400">Hits</span>
+            </span>
           </div>
-          <span className="text-[9px] font-black uppercase text-primary/60 tracking-widest italic">Verbum Domini Navigator v3</span>
+          <div className="flex items-center gap-3 text-[8px] font-black text-zinc-400 uppercase tracking-widest opacity-60">
+            <div className="flex items-center gap-1"><kbd className="bg-white dark:bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-200 dark:border-zinc-700 shadow-sm">ESC</kbd> CLOSE</div>
+            <div className="flex items-center gap-1"><kbd className="bg-white dark:bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-200 dark:border-zinc-700 shadow-sm">ENTER</kbd> GOTO</div>
+          </div>
         </div>
       </div>
     </div>

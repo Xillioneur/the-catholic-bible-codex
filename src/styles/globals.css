@@ -88,4 +88,21 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+  .scrollbar-elegant {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in oklch, var(--primary), transparent 80%) transparent;
+  }
+  .scrollbar-elegant::-webkit-scrollbar {
+    width: 4px;
+  }
+  .scrollbar-elegant::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .scrollbar-elegant::-webkit-scrollbar-thumb {
+    background: color-mix(in oklch, var(--primary), transparent 80%);
+    border-radius: 10px;
+  }
+  .scrollbar-elegant::-webkit-scrollbar-thumb:hover {
+    background: var(--primary);
+  }
 }

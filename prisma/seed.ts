@@ -1,4 +1,6 @@
 import { PrismaClient } from "../generated/prisma";
+import fs from "fs";
+import path from "path";
 
 const prisma = new PrismaClient();
 
@@ -103,12 +105,59 @@ async function main() {
   }
 
   console.log("Seeding Translations...");
+  const translationMap: Record<string, string> = {};
   for (const translation of TRANSLATIONS) {
-    await prisma.translation.upsert({
+    const t = await prisma.translation.upsert({
       where: { slug: translation.slug },
       update: translation,
       create: translation,
     });
+    translationMap[translation.slug] = t.id;
+  }
+
+  const seedFiles = [
+    { slug: "webbe", file: "webbe.json" },
+    { slug: "drb", file: "drb.json" },
+  ];
+
+  for (const { slug, file } of seedFiles) {
+    const filePath = path.join(process.cwd(), "public", "data", file);
+    if (!fs.existsSync(filePath)) {
+      console.warn(`Seed file ${file} not found. Skipping...`);
+      continue;
+    }
+
+    const count = await prisma.verse.count({
+      where: { translationId: translationMap[slug] },
+    });
+
+    if (count > 0) {
+      console.log(`Verses for ${slug} already seeded. Skipping...`);
+      continue;
+    }
+
+    console.log(`Seeding verses for ${slug} from ${file}...`);
+    const rawData = fs.readFileSync(filePath, "utf-8");
+    const verses = JSON.parse(rawData);
+
+    // Batch insert to avoid memory issues or DB limits
+    const BATCH_SIZE = 1000;
+    for (let i = 0; i < verses.length; i += BATCH_SIZE) {
+      const batch = verses.slice(i, i + BATCH_SIZE).map((v: any) => ({
+        translationId: translationMap[slug]!,
+        bookId: v.bookId,
+        chapter: v.chapter,
+        verse: v.verse,
+        text: v.text,
+        globalOrder: v.globalOrder,
+      }));
+
+      await prisma.verse.createMany({
+        data: batch,
+        skipDuplicates: true,
+      });
+      console.log(`Inserted ${i + batch.length}/${verses.length} verses for ${slug}`);
+    }
   }
 
   console.log("Seed complete.");

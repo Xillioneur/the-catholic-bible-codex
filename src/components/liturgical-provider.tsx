@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, ReactNode } from "react";
 import { api } from "~/trpc/react";
-import { type LiturgicalInfo } from "~/lib/liturgical";
+import { type LiturgicalInfo, getLiturgicalColorOklch } from "~/lib/liturgical";
 import { useReaderStore } from "~/hooks/use-reader-store";
 
 interface LiturgicalContextType {
@@ -18,6 +18,14 @@ export function LiturgicalProvider({ children }: { children: ReactNode }) {
   const translationSlug = useReaderStore((state) => state.translationSlug);
   const setLiturgicalReadings = useReaderStore((state) => state.setLiturgicalReadings);
   const utils = api.useUtils();
+
+  useEffect(() => {
+    if (info?.color) {
+      const oklch = getLiturgicalColorOklch(info.color);
+      document.documentElement.style.setProperty("--primary", `oklch(${oklch})`);
+      document.documentElement.style.setProperty("--ring", `oklch(${oklch} / 0.1)`);
+    }
+  }, [info]);
 
   useEffect(() => {
     if (!info) return;

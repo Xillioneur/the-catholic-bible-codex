@@ -1974,20 +1974,20 @@ export namespace Prisma {
 
   export type UserCountOutputType = {
     accounts: number
-    sessions: number
-    posts: number
     bookmarks: number
     highlights: number
     notes: number
+    posts: number
+    sessions: number
   }
 
   export type UserCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     accounts?: boolean | UserCountOutputTypeCountAccountsArgs
-    sessions?: boolean | UserCountOutputTypeCountSessionsArgs
-    posts?: boolean | UserCountOutputTypeCountPostsArgs
     bookmarks?: boolean | UserCountOutputTypeCountBookmarksArgs
     highlights?: boolean | UserCountOutputTypeCountHighlightsArgs
     notes?: boolean | UserCountOutputTypeCountNotesArgs
+    posts?: boolean | UserCountOutputTypeCountPostsArgs
+    sessions?: boolean | UserCountOutputTypeCountSessionsArgs
   }
 
   // Custom InputTypes
@@ -2011,20 +2011,6 @@ export namespace Prisma {
   /**
    * UserCountOutputType without action
    */
-  export type UserCountOutputTypeCountSessionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: SessionWhereInput
-  }
-
-  /**
-   * UserCountOutputType without action
-   */
-  export type UserCountOutputTypeCountPostsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: PostWhereInput
-  }
-
-  /**
-   * UserCountOutputType without action
-   */
   export type UserCountOutputTypeCountBookmarksArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: BookmarkWhereInput
   }
@@ -2041,6 +2027,20 @@ export namespace Prisma {
    */
   export type UserCountOutputTypeCountNotesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: NoteWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountPostsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: PostWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountSessionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: SessionWhereInput
   }
 
 
@@ -5609,11 +5609,11 @@ export namespace Prisma {
     verse?: boolean
     text?: boolean
     globalOrder?: boolean
-    translation?: boolean | TranslationDefaultArgs<ExtArgs>
-    book?: boolean | BookDefaultArgs<ExtArgs>
     bookmarks?: boolean | Verse$bookmarksArgs<ExtArgs>
     highlights?: boolean | Verse$highlightsArgs<ExtArgs>
     notes?: boolean | Verse$notesArgs<ExtArgs>
+    book?: boolean | BookDefaultArgs<ExtArgs>
+    translation?: boolean | TranslationDefaultArgs<ExtArgs>
     _count?: boolean | VerseCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["verse"]>
 
@@ -5625,8 +5625,8 @@ export namespace Prisma {
     verse?: boolean
     text?: boolean
     globalOrder?: boolean
-    translation?: boolean | TranslationDefaultArgs<ExtArgs>
     book?: boolean | BookDefaultArgs<ExtArgs>
+    translation?: boolean | TranslationDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["verse"]>
 
   export type VerseSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -5637,8 +5637,8 @@ export namespace Prisma {
     verse?: boolean
     text?: boolean
     globalOrder?: boolean
-    translation?: boolean | TranslationDefaultArgs<ExtArgs>
     book?: boolean | BookDefaultArgs<ExtArgs>
+    translation?: boolean | TranslationDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["verse"]>
 
   export type VerseSelectScalar = {
@@ -5653,30 +5653,30 @@ export namespace Prisma {
 
   export type VerseOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "translationId" | "bookId" | "chapter" | "verse" | "text" | "globalOrder", ExtArgs["result"]["verse"]>
   export type VerseInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    translation?: boolean | TranslationDefaultArgs<ExtArgs>
-    book?: boolean | BookDefaultArgs<ExtArgs>
     bookmarks?: boolean | Verse$bookmarksArgs<ExtArgs>
     highlights?: boolean | Verse$highlightsArgs<ExtArgs>
     notes?: boolean | Verse$notesArgs<ExtArgs>
+    book?: boolean | BookDefaultArgs<ExtArgs>
+    translation?: boolean | TranslationDefaultArgs<ExtArgs>
     _count?: boolean | VerseCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type VerseIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    translation?: boolean | TranslationDefaultArgs<ExtArgs>
     book?: boolean | BookDefaultArgs<ExtArgs>
+    translation?: boolean | TranslationDefaultArgs<ExtArgs>
   }
   export type VerseIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    translation?: boolean | TranslationDefaultArgs<ExtArgs>
     book?: boolean | BookDefaultArgs<ExtArgs>
+    translation?: boolean | TranslationDefaultArgs<ExtArgs>
   }
 
   export type $VersePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Verse"
     objects: {
-      translation: Prisma.$TranslationPayload<ExtArgs>
-      book: Prisma.$BookPayload<ExtArgs>
       bookmarks: Prisma.$BookmarkPayload<ExtArgs>[]
       highlights: Prisma.$HighlightPayload<ExtArgs>[]
       notes: Prisma.$NotePayload<ExtArgs>[]
+      book: Prisma.$BookPayload<ExtArgs>
+      translation: Prisma.$TranslationPayload<ExtArgs>
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -6080,11 +6080,11 @@ export namespace Prisma {
    */
   export interface Prisma__VerseClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
-    translation<T extends TranslationDefaultArgs<ExtArgs> = {}>(args?: Subset<T, TranslationDefaultArgs<ExtArgs>>): Prisma__TranslationClient<$Result.GetResult<Prisma.$TranslationPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
-    book<T extends BookDefaultArgs<ExtArgs> = {}>(args?: Subset<T, BookDefaultArgs<ExtArgs>>): Prisma__BookClient<$Result.GetResult<Prisma.$BookPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     bookmarks<T extends Verse$bookmarksArgs<ExtArgs> = {}>(args?: Subset<T, Verse$bookmarksArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BookmarkPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     highlights<T extends Verse$highlightsArgs<ExtArgs> = {}>(args?: Subset<T, Verse$highlightsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$HighlightPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     notes<T extends Verse$notesArgs<ExtArgs> = {}>(args?: Subset<T, Verse$notesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$NotePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    book<T extends BookDefaultArgs<ExtArgs> = {}>(args?: Subset<T, BookDefaultArgs<ExtArgs>>): Prisma__BookClient<$Result.GetResult<Prisma.$BookPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    translation<T extends TranslationDefaultArgs<ExtArgs> = {}>(args?: Subset<T, TranslationDefaultArgs<ExtArgs>>): Prisma__TranslationClient<$Result.GetResult<Prisma.$TranslationPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -13262,11 +13262,11 @@ export namespace Prisma {
     emailVerified?: boolean
     image?: boolean
     accounts?: boolean | User$accountsArgs<ExtArgs>
-    sessions?: boolean | User$sessionsArgs<ExtArgs>
-    posts?: boolean | User$postsArgs<ExtArgs>
     bookmarks?: boolean | User$bookmarksArgs<ExtArgs>
     highlights?: boolean | User$highlightsArgs<ExtArgs>
     notes?: boolean | User$notesArgs<ExtArgs>
+    posts?: boolean | User$postsArgs<ExtArgs>
+    sessions?: boolean | User$sessionsArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["user"]>
 
@@ -13297,11 +13297,11 @@ export namespace Prisma {
   export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "email" | "emailVerified" | "image", ExtArgs["result"]["user"]>
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     accounts?: boolean | User$accountsArgs<ExtArgs>
-    sessions?: boolean | User$sessionsArgs<ExtArgs>
-    posts?: boolean | User$postsArgs<ExtArgs>
     bookmarks?: boolean | User$bookmarksArgs<ExtArgs>
     highlights?: boolean | User$highlightsArgs<ExtArgs>
     notes?: boolean | User$notesArgs<ExtArgs>
+    posts?: boolean | User$postsArgs<ExtArgs>
+    sessions?: boolean | User$sessionsArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type UserIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
@@ -13311,11 +13311,11 @@ export namespace Prisma {
     name: "User"
     objects: {
       accounts: Prisma.$AccountPayload<ExtArgs>[]
-      sessions: Prisma.$SessionPayload<ExtArgs>[]
-      posts: Prisma.$PostPayload<ExtArgs>[]
       bookmarks: Prisma.$BookmarkPayload<ExtArgs>[]
       highlights: Prisma.$HighlightPayload<ExtArgs>[]
       notes: Prisma.$NotePayload<ExtArgs>[]
+      posts: Prisma.$PostPayload<ExtArgs>[]
+      sessions: Prisma.$SessionPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -13718,11 +13718,11 @@ export namespace Prisma {
   export interface Prisma__UserClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     accounts<T extends User$accountsArgs<ExtArgs> = {}>(args?: Subset<T, User$accountsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AccountPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-    sessions<T extends User$sessionsArgs<ExtArgs> = {}>(args?: Subset<T, User$sessionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SessionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-    posts<T extends User$postsArgs<ExtArgs> = {}>(args?: Subset<T, User$postsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PostPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     bookmarks<T extends User$bookmarksArgs<ExtArgs> = {}>(args?: Subset<T, User$bookmarksArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BookmarkPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     highlights<T extends User$highlightsArgs<ExtArgs> = {}>(args?: Subset<T, User$highlightsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$HighlightPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     notes<T extends User$notesArgs<ExtArgs> = {}>(args?: Subset<T, User$notesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$NotePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    posts<T extends User$postsArgs<ExtArgs> = {}>(args?: Subset<T, User$postsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PostPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    sessions<T extends User$sessionsArgs<ExtArgs> = {}>(args?: Subset<T, User$sessionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SessionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -14169,54 +14169,6 @@ export namespace Prisma {
   }
 
   /**
-   * User.sessions
-   */
-  export type User$sessionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the Session
-     */
-    select?: SessionSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the Session
-     */
-    omit?: SessionOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: SessionInclude<ExtArgs> | null
-    where?: SessionWhereInput
-    orderBy?: SessionOrderByWithRelationInput | SessionOrderByWithRelationInput[]
-    cursor?: SessionWhereUniqueInput
-    take?: number
-    skip?: number
-    distinct?: SessionScalarFieldEnum | SessionScalarFieldEnum[]
-  }
-
-  /**
-   * User.posts
-   */
-  export type User$postsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the Post
-     */
-    select?: PostSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the Post
-     */
-    omit?: PostOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: PostInclude<ExtArgs> | null
-    where?: PostWhereInput
-    orderBy?: PostOrderByWithRelationInput | PostOrderByWithRelationInput[]
-    cursor?: PostWhereUniqueInput
-    take?: number
-    skip?: number
-    distinct?: PostScalarFieldEnum | PostScalarFieldEnum[]
-  }
-
-  /**
    * User.bookmarks
    */
   export type User$bookmarksArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -14286,6 +14238,54 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: NoteScalarFieldEnum | NoteScalarFieldEnum[]
+  }
+
+  /**
+   * User.posts
+   */
+  export type User$postsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Post
+     */
+    select?: PostSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Post
+     */
+    omit?: PostOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: PostInclude<ExtArgs> | null
+    where?: PostWhereInput
+    orderBy?: PostOrderByWithRelationInput | PostOrderByWithRelationInput[]
+    cursor?: PostWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: PostScalarFieldEnum | PostScalarFieldEnum[]
+  }
+
+  /**
+   * User.sessions
+   */
+  export type User$sessionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Session
+     */
+    select?: SessionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Session
+     */
+    omit?: SessionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SessionInclude<ExtArgs> | null
+    where?: SessionWhereInput
+    orderBy?: SessionOrderByWithRelationInput | SessionOrderByWithRelationInput[]
+    cursor?: SessionWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: SessionScalarFieldEnum | SessionScalarFieldEnum[]
   }
 
   /**
@@ -15738,11 +15738,11 @@ export namespace Prisma {
     verse?: IntFilter<"Verse"> | number
     text?: StringFilter<"Verse"> | string
     globalOrder?: IntFilter<"Verse"> | number
-    translation?: XOR<TranslationScalarRelationFilter, TranslationWhereInput>
-    book?: XOR<BookScalarRelationFilter, BookWhereInput>
     bookmarks?: BookmarkListRelationFilter
     highlights?: HighlightListRelationFilter
     notes?: NoteListRelationFilter
+    book?: XOR<BookScalarRelationFilter, BookWhereInput>
+    translation?: XOR<TranslationScalarRelationFilter, TranslationWhereInput>
   }
 
   export type VerseOrderByWithRelationInput = {
@@ -15753,11 +15753,11 @@ export namespace Prisma {
     verse?: SortOrder
     text?: SortOrder
     globalOrder?: SortOrder
-    translation?: TranslationOrderByWithRelationInput
-    book?: BookOrderByWithRelationInput
     bookmarks?: BookmarkOrderByRelationAggregateInput
     highlights?: HighlightOrderByRelationAggregateInput
     notes?: NoteOrderByRelationAggregateInput
+    book?: BookOrderByWithRelationInput
+    translation?: TranslationOrderByWithRelationInput
   }
 
   export type VerseWhereUniqueInput = Prisma.AtLeast<{
@@ -15772,11 +15772,11 @@ export namespace Prisma {
     verse?: IntFilter<"Verse"> | number
     text?: StringFilter<"Verse"> | string
     globalOrder?: IntFilter<"Verse"> | number
-    translation?: XOR<TranslationScalarRelationFilter, TranslationWhereInput>
-    book?: XOR<BookScalarRelationFilter, BookWhereInput>
     bookmarks?: BookmarkListRelationFilter
     highlights?: HighlightListRelationFilter
     notes?: NoteListRelationFilter
+    book?: XOR<BookScalarRelationFilter, BookWhereInput>
+    translation?: XOR<TranslationScalarRelationFilter, TranslationWhereInput>
   }, "id" | "translationId_bookId_chapter_verse">
 
   export type VerseOrderByWithAggregationInput = {
@@ -16211,11 +16211,11 @@ export namespace Prisma {
     emailVerified?: DateTimeNullableFilter<"User"> | Date | string | null
     image?: StringNullableFilter<"User"> | string | null
     accounts?: AccountListRelationFilter
-    sessions?: SessionListRelationFilter
-    posts?: PostListRelationFilter
     bookmarks?: BookmarkListRelationFilter
     highlights?: HighlightListRelationFilter
     notes?: NoteListRelationFilter
+    posts?: PostListRelationFilter
+    sessions?: SessionListRelationFilter
   }
 
   export type UserOrderByWithRelationInput = {
@@ -16225,11 +16225,11 @@ export namespace Prisma {
     emailVerified?: SortOrderInput | SortOrder
     image?: SortOrderInput | SortOrder
     accounts?: AccountOrderByRelationAggregateInput
-    sessions?: SessionOrderByRelationAggregateInput
-    posts?: PostOrderByRelationAggregateInput
     bookmarks?: BookmarkOrderByRelationAggregateInput
     highlights?: HighlightOrderByRelationAggregateInput
     notes?: NoteOrderByRelationAggregateInput
+    posts?: PostOrderByRelationAggregateInput
+    sessions?: SessionOrderByRelationAggregateInput
   }
 
   export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -16242,11 +16242,11 @@ export namespace Prisma {
     emailVerified?: DateTimeNullableFilter<"User"> | Date | string | null
     image?: StringNullableFilter<"User"> | string | null
     accounts?: AccountListRelationFilter
-    sessions?: SessionListRelationFilter
-    posts?: PostListRelationFilter
     bookmarks?: BookmarkListRelationFilter
     highlights?: HighlightListRelationFilter
     notes?: NoteListRelationFilter
+    posts?: PostListRelationFilter
+    sessions?: SessionListRelationFilter
   }, "id" | "email">
 
   export type UserOrderByWithAggregationInput = {
@@ -16527,11 +16527,11 @@ export namespace Prisma {
     verse: number
     text: string
     globalOrder: number
-    translation: TranslationCreateNestedOneWithoutVersesInput
-    book: BookCreateNestedOneWithoutVersesInput
     bookmarks?: BookmarkCreateNestedManyWithoutVerseInput
     highlights?: HighlightCreateNestedManyWithoutVerseInput
     notes?: NoteCreateNestedManyWithoutVerseInput
+    book: BookCreateNestedOneWithoutVersesInput
+    translation: TranslationCreateNestedOneWithoutVersesInput
   }
 
   export type VerseUncheckedCreateInput = {
@@ -16553,11 +16553,11 @@ export namespace Prisma {
     verse?: IntFieldUpdateOperationsInput | number
     text?: StringFieldUpdateOperationsInput | string
     globalOrder?: IntFieldUpdateOperationsInput | number
-    translation?: TranslationUpdateOneRequiredWithoutVersesNestedInput
-    book?: BookUpdateOneRequiredWithoutVersesNestedInput
     bookmarks?: BookmarkUpdateManyWithoutVerseNestedInput
     highlights?: HighlightUpdateManyWithoutVerseNestedInput
     notes?: NoteUpdateManyWithoutVerseNestedInput
+    book?: BookUpdateOneRequiredWithoutVersesNestedInput
+    translation?: TranslationUpdateOneRequiredWithoutVersesNestedInput
   }
 
   export type VerseUncheckedUpdateInput = {
@@ -17013,11 +17013,11 @@ export namespace Prisma {
     emailVerified?: Date | string | null
     image?: string | null
     accounts?: AccountCreateNestedManyWithoutUserInput
-    sessions?: SessionCreateNestedManyWithoutUserInput
-    posts?: PostCreateNestedManyWithoutCreatedByInput
     bookmarks?: BookmarkCreateNestedManyWithoutUserInput
     highlights?: HighlightCreateNestedManyWithoutUserInput
     notes?: NoteCreateNestedManyWithoutUserInput
+    posts?: PostCreateNestedManyWithoutCreatedByInput
+    sessions?: SessionCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateInput = {
@@ -17027,11 +17027,11 @@ export namespace Prisma {
     emailVerified?: Date | string | null
     image?: string | null
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
-    sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
-    posts?: PostUncheckedCreateNestedManyWithoutCreatedByInput
     bookmarks?: BookmarkUncheckedCreateNestedManyWithoutUserInput
     highlights?: HighlightUncheckedCreateNestedManyWithoutUserInput
     notes?: NoteUncheckedCreateNestedManyWithoutUserInput
+    posts?: PostUncheckedCreateNestedManyWithoutCreatedByInput
+    sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserUpdateInput = {
@@ -17041,11 +17041,11 @@ export namespace Prisma {
     emailVerified?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     image?: NullableStringFieldUpdateOperationsInput | string | null
     accounts?: AccountUpdateManyWithoutUserNestedInput
-    sessions?: SessionUpdateManyWithoutUserNestedInput
-    posts?: PostUpdateManyWithoutCreatedByNestedInput
     bookmarks?: BookmarkUpdateManyWithoutUserNestedInput
     highlights?: HighlightUpdateManyWithoutUserNestedInput
     notes?: NoteUpdateManyWithoutUserNestedInput
+    posts?: PostUpdateManyWithoutCreatedByNestedInput
+    sessions?: SessionUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateInput = {
@@ -17055,11 +17055,11 @@ export namespace Prisma {
     emailVerified?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     image?: NullableStringFieldUpdateOperationsInput | string | null
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
-    sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
-    posts?: PostUncheckedUpdateManyWithoutCreatedByNestedInput
     bookmarks?: BookmarkUncheckedUpdateManyWithoutUserNestedInput
     highlights?: HighlightUncheckedUpdateManyWithoutUserNestedInput
     notes?: NoteUncheckedUpdateManyWithoutUserNestedInput
+    posts?: PostUncheckedUpdateManyWithoutCreatedByNestedInput
+    sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserCreateManyInput = {
@@ -17346,16 +17346,6 @@ export namespace Prisma {
     order?: SortOrder
   }
 
-  export type TranslationScalarRelationFilter = {
-    is?: TranslationWhereInput
-    isNot?: TranslationWhereInput
-  }
-
-  export type BookScalarRelationFilter = {
-    is?: BookWhereInput
-    isNot?: BookWhereInput
-  }
-
   export type BookmarkListRelationFilter = {
     every?: BookmarkWhereInput
     some?: BookmarkWhereInput
@@ -17372,6 +17362,16 @@ export namespace Prisma {
     every?: NoteWhereInput
     some?: NoteWhereInput
     none?: NoteWhereInput
+  }
+
+  export type BookScalarRelationFilter = {
+    is?: BookWhereInput
+    isNot?: BookWhereInput
+  }
+
+  export type TranslationScalarRelationFilter = {
+    is?: TranslationWhereInput
+    isNot?: TranslationWhereInput
   }
 
   export type BookmarkOrderByRelationAggregateInput = {
@@ -17716,27 +17716,27 @@ export namespace Prisma {
     none?: AccountWhereInput
   }
 
-  export type SessionListRelationFilter = {
-    every?: SessionWhereInput
-    some?: SessionWhereInput
-    none?: SessionWhereInput
-  }
-
   export type PostListRelationFilter = {
     every?: PostWhereInput
     some?: PostWhereInput
     none?: PostWhereInput
   }
 
+  export type SessionListRelationFilter = {
+    every?: SessionWhereInput
+    some?: SessionWhereInput
+    none?: SessionWhereInput
+  }
+
   export type AccountOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
-  export type SessionOrderByRelationAggregateInput = {
+  export type PostOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
-  export type PostOrderByRelationAggregateInput = {
+  export type SessionOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -17919,18 +17919,6 @@ export namespace Prisma {
     deleteMany?: VerseScalarWhereInput | VerseScalarWhereInput[]
   }
 
-  export type TranslationCreateNestedOneWithoutVersesInput = {
-    create?: XOR<TranslationCreateWithoutVersesInput, TranslationUncheckedCreateWithoutVersesInput>
-    connectOrCreate?: TranslationCreateOrConnectWithoutVersesInput
-    connect?: TranslationWhereUniqueInput
-  }
-
-  export type BookCreateNestedOneWithoutVersesInput = {
-    create?: XOR<BookCreateWithoutVersesInput, BookUncheckedCreateWithoutVersesInput>
-    connectOrCreate?: BookCreateOrConnectWithoutVersesInput
-    connect?: BookWhereUniqueInput
-  }
-
   export type BookmarkCreateNestedManyWithoutVerseInput = {
     create?: XOR<BookmarkCreateWithoutVerseInput, BookmarkUncheckedCreateWithoutVerseInput> | BookmarkCreateWithoutVerseInput[] | BookmarkUncheckedCreateWithoutVerseInput[]
     connectOrCreate?: BookmarkCreateOrConnectWithoutVerseInput | BookmarkCreateOrConnectWithoutVerseInput[]
@@ -17952,6 +17940,18 @@ export namespace Prisma {
     connect?: NoteWhereUniqueInput | NoteWhereUniqueInput[]
   }
 
+  export type BookCreateNestedOneWithoutVersesInput = {
+    create?: XOR<BookCreateWithoutVersesInput, BookUncheckedCreateWithoutVersesInput>
+    connectOrCreate?: BookCreateOrConnectWithoutVersesInput
+    connect?: BookWhereUniqueInput
+  }
+
+  export type TranslationCreateNestedOneWithoutVersesInput = {
+    create?: XOR<TranslationCreateWithoutVersesInput, TranslationUncheckedCreateWithoutVersesInput>
+    connectOrCreate?: TranslationCreateOrConnectWithoutVersesInput
+    connect?: TranslationWhereUniqueInput
+  }
+
   export type BookmarkUncheckedCreateNestedManyWithoutVerseInput = {
     create?: XOR<BookmarkCreateWithoutVerseInput, BookmarkUncheckedCreateWithoutVerseInput> | BookmarkCreateWithoutVerseInput[] | BookmarkUncheckedCreateWithoutVerseInput[]
     connectOrCreate?: BookmarkCreateOrConnectWithoutVerseInput | BookmarkCreateOrConnectWithoutVerseInput[]
@@ -17971,22 +17971,6 @@ export namespace Prisma {
     connectOrCreate?: NoteCreateOrConnectWithoutVerseInput | NoteCreateOrConnectWithoutVerseInput[]
     createMany?: NoteCreateManyVerseInputEnvelope
     connect?: NoteWhereUniqueInput | NoteWhereUniqueInput[]
-  }
-
-  export type TranslationUpdateOneRequiredWithoutVersesNestedInput = {
-    create?: XOR<TranslationCreateWithoutVersesInput, TranslationUncheckedCreateWithoutVersesInput>
-    connectOrCreate?: TranslationCreateOrConnectWithoutVersesInput
-    upsert?: TranslationUpsertWithoutVersesInput
-    connect?: TranslationWhereUniqueInput
-    update?: XOR<XOR<TranslationUpdateToOneWithWhereWithoutVersesInput, TranslationUpdateWithoutVersesInput>, TranslationUncheckedUpdateWithoutVersesInput>
-  }
-
-  export type BookUpdateOneRequiredWithoutVersesNestedInput = {
-    create?: XOR<BookCreateWithoutVersesInput, BookUncheckedCreateWithoutVersesInput>
-    connectOrCreate?: BookCreateOrConnectWithoutVersesInput
-    upsert?: BookUpsertWithoutVersesInput
-    connect?: BookWhereUniqueInput
-    update?: XOR<XOR<BookUpdateToOneWithWhereWithoutVersesInput, BookUpdateWithoutVersesInput>, BookUncheckedUpdateWithoutVersesInput>
   }
 
   export type BookmarkUpdateManyWithoutVerseNestedInput = {
@@ -18029,6 +18013,22 @@ export namespace Prisma {
     update?: NoteUpdateWithWhereUniqueWithoutVerseInput | NoteUpdateWithWhereUniqueWithoutVerseInput[]
     updateMany?: NoteUpdateManyWithWhereWithoutVerseInput | NoteUpdateManyWithWhereWithoutVerseInput[]
     deleteMany?: NoteScalarWhereInput | NoteScalarWhereInput[]
+  }
+
+  export type BookUpdateOneRequiredWithoutVersesNestedInput = {
+    create?: XOR<BookCreateWithoutVersesInput, BookUncheckedCreateWithoutVersesInput>
+    connectOrCreate?: BookCreateOrConnectWithoutVersesInput
+    upsert?: BookUpsertWithoutVersesInput
+    connect?: BookWhereUniqueInput
+    update?: XOR<XOR<BookUpdateToOneWithWhereWithoutVersesInput, BookUpdateWithoutVersesInput>, BookUncheckedUpdateWithoutVersesInput>
+  }
+
+  export type TranslationUpdateOneRequiredWithoutVersesNestedInput = {
+    create?: XOR<TranslationCreateWithoutVersesInput, TranslationUncheckedCreateWithoutVersesInput>
+    connectOrCreate?: TranslationCreateOrConnectWithoutVersesInput
+    upsert?: TranslationUpsertWithoutVersesInput
+    connect?: TranslationWhereUniqueInput
+    update?: XOR<XOR<TranslationUpdateToOneWithWhereWithoutVersesInput, TranslationUpdateWithoutVersesInput>, TranslationUncheckedUpdateWithoutVersesInput>
   }
 
   export type BookmarkUncheckedUpdateManyWithoutVerseNestedInput = {
@@ -18204,20 +18204,6 @@ export namespace Prisma {
     connect?: AccountWhereUniqueInput | AccountWhereUniqueInput[]
   }
 
-  export type SessionCreateNestedManyWithoutUserInput = {
-    create?: XOR<SessionCreateWithoutUserInput, SessionUncheckedCreateWithoutUserInput> | SessionCreateWithoutUserInput[] | SessionUncheckedCreateWithoutUserInput[]
-    connectOrCreate?: SessionCreateOrConnectWithoutUserInput | SessionCreateOrConnectWithoutUserInput[]
-    createMany?: SessionCreateManyUserInputEnvelope
-    connect?: SessionWhereUniqueInput | SessionWhereUniqueInput[]
-  }
-
-  export type PostCreateNestedManyWithoutCreatedByInput = {
-    create?: XOR<PostCreateWithoutCreatedByInput, PostUncheckedCreateWithoutCreatedByInput> | PostCreateWithoutCreatedByInput[] | PostUncheckedCreateWithoutCreatedByInput[]
-    connectOrCreate?: PostCreateOrConnectWithoutCreatedByInput | PostCreateOrConnectWithoutCreatedByInput[]
-    createMany?: PostCreateManyCreatedByInputEnvelope
-    connect?: PostWhereUniqueInput | PostWhereUniqueInput[]
-  }
-
   export type BookmarkCreateNestedManyWithoutUserInput = {
     create?: XOR<BookmarkCreateWithoutUserInput, BookmarkUncheckedCreateWithoutUserInput> | BookmarkCreateWithoutUserInput[] | BookmarkUncheckedCreateWithoutUserInput[]
     connectOrCreate?: BookmarkCreateOrConnectWithoutUserInput | BookmarkCreateOrConnectWithoutUserInput[]
@@ -18239,25 +18225,25 @@ export namespace Prisma {
     connect?: NoteWhereUniqueInput | NoteWhereUniqueInput[]
   }
 
-  export type AccountUncheckedCreateNestedManyWithoutUserInput = {
-    create?: XOR<AccountCreateWithoutUserInput, AccountUncheckedCreateWithoutUserInput> | AccountCreateWithoutUserInput[] | AccountUncheckedCreateWithoutUserInput[]
-    connectOrCreate?: AccountCreateOrConnectWithoutUserInput | AccountCreateOrConnectWithoutUserInput[]
-    createMany?: AccountCreateManyUserInputEnvelope
-    connect?: AccountWhereUniqueInput | AccountWhereUniqueInput[]
+  export type PostCreateNestedManyWithoutCreatedByInput = {
+    create?: XOR<PostCreateWithoutCreatedByInput, PostUncheckedCreateWithoutCreatedByInput> | PostCreateWithoutCreatedByInput[] | PostUncheckedCreateWithoutCreatedByInput[]
+    connectOrCreate?: PostCreateOrConnectWithoutCreatedByInput | PostCreateOrConnectWithoutCreatedByInput[]
+    createMany?: PostCreateManyCreatedByInputEnvelope
+    connect?: PostWhereUniqueInput | PostWhereUniqueInput[]
   }
 
-  export type SessionUncheckedCreateNestedManyWithoutUserInput = {
+  export type SessionCreateNestedManyWithoutUserInput = {
     create?: XOR<SessionCreateWithoutUserInput, SessionUncheckedCreateWithoutUserInput> | SessionCreateWithoutUserInput[] | SessionUncheckedCreateWithoutUserInput[]
     connectOrCreate?: SessionCreateOrConnectWithoutUserInput | SessionCreateOrConnectWithoutUserInput[]
     createMany?: SessionCreateManyUserInputEnvelope
     connect?: SessionWhereUniqueInput | SessionWhereUniqueInput[]
   }
 
-  export type PostUncheckedCreateNestedManyWithoutCreatedByInput = {
-    create?: XOR<PostCreateWithoutCreatedByInput, PostUncheckedCreateWithoutCreatedByInput> | PostCreateWithoutCreatedByInput[] | PostUncheckedCreateWithoutCreatedByInput[]
-    connectOrCreate?: PostCreateOrConnectWithoutCreatedByInput | PostCreateOrConnectWithoutCreatedByInput[]
-    createMany?: PostCreateManyCreatedByInputEnvelope
-    connect?: PostWhereUniqueInput | PostWhereUniqueInput[]
+  export type AccountUncheckedCreateNestedManyWithoutUserInput = {
+    create?: XOR<AccountCreateWithoutUserInput, AccountUncheckedCreateWithoutUserInput> | AccountCreateWithoutUserInput[] | AccountUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: AccountCreateOrConnectWithoutUserInput | AccountCreateOrConnectWithoutUserInput[]
+    createMany?: AccountCreateManyUserInputEnvelope
+    connect?: AccountWhereUniqueInput | AccountWhereUniqueInput[]
   }
 
   export type BookmarkUncheckedCreateNestedManyWithoutUserInput = {
@@ -18281,6 +18267,20 @@ export namespace Prisma {
     connect?: NoteWhereUniqueInput | NoteWhereUniqueInput[]
   }
 
+  export type PostUncheckedCreateNestedManyWithoutCreatedByInput = {
+    create?: XOR<PostCreateWithoutCreatedByInput, PostUncheckedCreateWithoutCreatedByInput> | PostCreateWithoutCreatedByInput[] | PostUncheckedCreateWithoutCreatedByInput[]
+    connectOrCreate?: PostCreateOrConnectWithoutCreatedByInput | PostCreateOrConnectWithoutCreatedByInput[]
+    createMany?: PostCreateManyCreatedByInputEnvelope
+    connect?: PostWhereUniqueInput | PostWhereUniqueInput[]
+  }
+
+  export type SessionUncheckedCreateNestedManyWithoutUserInput = {
+    create?: XOR<SessionCreateWithoutUserInput, SessionUncheckedCreateWithoutUserInput> | SessionCreateWithoutUserInput[] | SessionUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: SessionCreateOrConnectWithoutUserInput | SessionCreateOrConnectWithoutUserInput[]
+    createMany?: SessionCreateManyUserInputEnvelope
+    connect?: SessionWhereUniqueInput | SessionWhereUniqueInput[]
+  }
+
   export type NullableDateTimeFieldUpdateOperationsInput = {
     set?: Date | string | null
   }
@@ -18297,34 +18297,6 @@ export namespace Prisma {
     update?: AccountUpdateWithWhereUniqueWithoutUserInput | AccountUpdateWithWhereUniqueWithoutUserInput[]
     updateMany?: AccountUpdateManyWithWhereWithoutUserInput | AccountUpdateManyWithWhereWithoutUserInput[]
     deleteMany?: AccountScalarWhereInput | AccountScalarWhereInput[]
-  }
-
-  export type SessionUpdateManyWithoutUserNestedInput = {
-    create?: XOR<SessionCreateWithoutUserInput, SessionUncheckedCreateWithoutUserInput> | SessionCreateWithoutUserInput[] | SessionUncheckedCreateWithoutUserInput[]
-    connectOrCreate?: SessionCreateOrConnectWithoutUserInput | SessionCreateOrConnectWithoutUserInput[]
-    upsert?: SessionUpsertWithWhereUniqueWithoutUserInput | SessionUpsertWithWhereUniqueWithoutUserInput[]
-    createMany?: SessionCreateManyUserInputEnvelope
-    set?: SessionWhereUniqueInput | SessionWhereUniqueInput[]
-    disconnect?: SessionWhereUniqueInput | SessionWhereUniqueInput[]
-    delete?: SessionWhereUniqueInput | SessionWhereUniqueInput[]
-    connect?: SessionWhereUniqueInput | SessionWhereUniqueInput[]
-    update?: SessionUpdateWithWhereUniqueWithoutUserInput | SessionUpdateWithWhereUniqueWithoutUserInput[]
-    updateMany?: SessionUpdateManyWithWhereWithoutUserInput | SessionUpdateManyWithWhereWithoutUserInput[]
-    deleteMany?: SessionScalarWhereInput | SessionScalarWhereInput[]
-  }
-
-  export type PostUpdateManyWithoutCreatedByNestedInput = {
-    create?: XOR<PostCreateWithoutCreatedByInput, PostUncheckedCreateWithoutCreatedByInput> | PostCreateWithoutCreatedByInput[] | PostUncheckedCreateWithoutCreatedByInput[]
-    connectOrCreate?: PostCreateOrConnectWithoutCreatedByInput | PostCreateOrConnectWithoutCreatedByInput[]
-    upsert?: PostUpsertWithWhereUniqueWithoutCreatedByInput | PostUpsertWithWhereUniqueWithoutCreatedByInput[]
-    createMany?: PostCreateManyCreatedByInputEnvelope
-    set?: PostWhereUniqueInput | PostWhereUniqueInput[]
-    disconnect?: PostWhereUniqueInput | PostWhereUniqueInput[]
-    delete?: PostWhereUniqueInput | PostWhereUniqueInput[]
-    connect?: PostWhereUniqueInput | PostWhereUniqueInput[]
-    update?: PostUpdateWithWhereUniqueWithoutCreatedByInput | PostUpdateWithWhereUniqueWithoutCreatedByInput[]
-    updateMany?: PostUpdateManyWithWhereWithoutCreatedByInput | PostUpdateManyWithWhereWithoutCreatedByInput[]
-    deleteMany?: PostScalarWhereInput | PostScalarWhereInput[]
   }
 
   export type BookmarkUpdateManyWithoutUserNestedInput = {
@@ -18369,21 +18341,21 @@ export namespace Prisma {
     deleteMany?: NoteScalarWhereInput | NoteScalarWhereInput[]
   }
 
-  export type AccountUncheckedUpdateManyWithoutUserNestedInput = {
-    create?: XOR<AccountCreateWithoutUserInput, AccountUncheckedCreateWithoutUserInput> | AccountCreateWithoutUserInput[] | AccountUncheckedCreateWithoutUserInput[]
-    connectOrCreate?: AccountCreateOrConnectWithoutUserInput | AccountCreateOrConnectWithoutUserInput[]
-    upsert?: AccountUpsertWithWhereUniqueWithoutUserInput | AccountUpsertWithWhereUniqueWithoutUserInput[]
-    createMany?: AccountCreateManyUserInputEnvelope
-    set?: AccountWhereUniqueInput | AccountWhereUniqueInput[]
-    disconnect?: AccountWhereUniqueInput | AccountWhereUniqueInput[]
-    delete?: AccountWhereUniqueInput | AccountWhereUniqueInput[]
-    connect?: AccountWhereUniqueInput | AccountWhereUniqueInput[]
-    update?: AccountUpdateWithWhereUniqueWithoutUserInput | AccountUpdateWithWhereUniqueWithoutUserInput[]
-    updateMany?: AccountUpdateManyWithWhereWithoutUserInput | AccountUpdateManyWithWhereWithoutUserInput[]
-    deleteMany?: AccountScalarWhereInput | AccountScalarWhereInput[]
+  export type PostUpdateManyWithoutCreatedByNestedInput = {
+    create?: XOR<PostCreateWithoutCreatedByInput, PostUncheckedCreateWithoutCreatedByInput> | PostCreateWithoutCreatedByInput[] | PostUncheckedCreateWithoutCreatedByInput[]
+    connectOrCreate?: PostCreateOrConnectWithoutCreatedByInput | PostCreateOrConnectWithoutCreatedByInput[]
+    upsert?: PostUpsertWithWhereUniqueWithoutCreatedByInput | PostUpsertWithWhereUniqueWithoutCreatedByInput[]
+    createMany?: PostCreateManyCreatedByInputEnvelope
+    set?: PostWhereUniqueInput | PostWhereUniqueInput[]
+    disconnect?: PostWhereUniqueInput | PostWhereUniqueInput[]
+    delete?: PostWhereUniqueInput | PostWhereUniqueInput[]
+    connect?: PostWhereUniqueInput | PostWhereUniqueInput[]
+    update?: PostUpdateWithWhereUniqueWithoutCreatedByInput | PostUpdateWithWhereUniqueWithoutCreatedByInput[]
+    updateMany?: PostUpdateManyWithWhereWithoutCreatedByInput | PostUpdateManyWithWhereWithoutCreatedByInput[]
+    deleteMany?: PostScalarWhereInput | PostScalarWhereInput[]
   }
 
-  export type SessionUncheckedUpdateManyWithoutUserNestedInput = {
+  export type SessionUpdateManyWithoutUserNestedInput = {
     create?: XOR<SessionCreateWithoutUserInput, SessionUncheckedCreateWithoutUserInput> | SessionCreateWithoutUserInput[] | SessionUncheckedCreateWithoutUserInput[]
     connectOrCreate?: SessionCreateOrConnectWithoutUserInput | SessionCreateOrConnectWithoutUserInput[]
     upsert?: SessionUpsertWithWhereUniqueWithoutUserInput | SessionUpsertWithWhereUniqueWithoutUserInput[]
@@ -18397,18 +18369,18 @@ export namespace Prisma {
     deleteMany?: SessionScalarWhereInput | SessionScalarWhereInput[]
   }
 
-  export type PostUncheckedUpdateManyWithoutCreatedByNestedInput = {
-    create?: XOR<PostCreateWithoutCreatedByInput, PostUncheckedCreateWithoutCreatedByInput> | PostCreateWithoutCreatedByInput[] | PostUncheckedCreateWithoutCreatedByInput[]
-    connectOrCreate?: PostCreateOrConnectWithoutCreatedByInput | PostCreateOrConnectWithoutCreatedByInput[]
-    upsert?: PostUpsertWithWhereUniqueWithoutCreatedByInput | PostUpsertWithWhereUniqueWithoutCreatedByInput[]
-    createMany?: PostCreateManyCreatedByInputEnvelope
-    set?: PostWhereUniqueInput | PostWhereUniqueInput[]
-    disconnect?: PostWhereUniqueInput | PostWhereUniqueInput[]
-    delete?: PostWhereUniqueInput | PostWhereUniqueInput[]
-    connect?: PostWhereUniqueInput | PostWhereUniqueInput[]
-    update?: PostUpdateWithWhereUniqueWithoutCreatedByInput | PostUpdateWithWhereUniqueWithoutCreatedByInput[]
-    updateMany?: PostUpdateManyWithWhereWithoutCreatedByInput | PostUpdateManyWithWhereWithoutCreatedByInput[]
-    deleteMany?: PostScalarWhereInput | PostScalarWhereInput[]
+  export type AccountUncheckedUpdateManyWithoutUserNestedInput = {
+    create?: XOR<AccountCreateWithoutUserInput, AccountUncheckedCreateWithoutUserInput> | AccountCreateWithoutUserInput[] | AccountUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: AccountCreateOrConnectWithoutUserInput | AccountCreateOrConnectWithoutUserInput[]
+    upsert?: AccountUpsertWithWhereUniqueWithoutUserInput | AccountUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: AccountCreateManyUserInputEnvelope
+    set?: AccountWhereUniqueInput | AccountWhereUniqueInput[]
+    disconnect?: AccountWhereUniqueInput | AccountWhereUniqueInput[]
+    delete?: AccountWhereUniqueInput | AccountWhereUniqueInput[]
+    connect?: AccountWhereUniqueInput | AccountWhereUniqueInput[]
+    update?: AccountUpdateWithWhereUniqueWithoutUserInput | AccountUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: AccountUpdateManyWithWhereWithoutUserInput | AccountUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: AccountScalarWhereInput | AccountScalarWhereInput[]
   }
 
   export type BookmarkUncheckedUpdateManyWithoutUserNestedInput = {
@@ -18451,6 +18423,34 @@ export namespace Prisma {
     update?: NoteUpdateWithWhereUniqueWithoutUserInput | NoteUpdateWithWhereUniqueWithoutUserInput[]
     updateMany?: NoteUpdateManyWithWhereWithoutUserInput | NoteUpdateManyWithWhereWithoutUserInput[]
     deleteMany?: NoteScalarWhereInput | NoteScalarWhereInput[]
+  }
+
+  export type PostUncheckedUpdateManyWithoutCreatedByNestedInput = {
+    create?: XOR<PostCreateWithoutCreatedByInput, PostUncheckedCreateWithoutCreatedByInput> | PostCreateWithoutCreatedByInput[] | PostUncheckedCreateWithoutCreatedByInput[]
+    connectOrCreate?: PostCreateOrConnectWithoutCreatedByInput | PostCreateOrConnectWithoutCreatedByInput[]
+    upsert?: PostUpsertWithWhereUniqueWithoutCreatedByInput | PostUpsertWithWhereUniqueWithoutCreatedByInput[]
+    createMany?: PostCreateManyCreatedByInputEnvelope
+    set?: PostWhereUniqueInput | PostWhereUniqueInput[]
+    disconnect?: PostWhereUniqueInput | PostWhereUniqueInput[]
+    delete?: PostWhereUniqueInput | PostWhereUniqueInput[]
+    connect?: PostWhereUniqueInput | PostWhereUniqueInput[]
+    update?: PostUpdateWithWhereUniqueWithoutCreatedByInput | PostUpdateWithWhereUniqueWithoutCreatedByInput[]
+    updateMany?: PostUpdateManyWithWhereWithoutCreatedByInput | PostUpdateManyWithWhereWithoutCreatedByInput[]
+    deleteMany?: PostScalarWhereInput | PostScalarWhereInput[]
+  }
+
+  export type SessionUncheckedUpdateManyWithoutUserNestedInput = {
+    create?: XOR<SessionCreateWithoutUserInput, SessionUncheckedCreateWithoutUserInput> | SessionCreateWithoutUserInput[] | SessionUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: SessionCreateOrConnectWithoutUserInput | SessionCreateOrConnectWithoutUserInput[]
+    upsert?: SessionUpsertWithWhereUniqueWithoutUserInput | SessionUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: SessionCreateManyUserInputEnvelope
+    set?: SessionWhereUniqueInput | SessionWhereUniqueInput[]
+    disconnect?: SessionWhereUniqueInput | SessionWhereUniqueInput[]
+    delete?: SessionWhereUniqueInput | SessionWhereUniqueInput[]
+    connect?: SessionWhereUniqueInput | SessionWhereUniqueInput[]
+    update?: SessionUpdateWithWhereUniqueWithoutUserInput | SessionUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: SessionUpdateManyWithWhereWithoutUserInput | SessionUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: SessionScalarWhereInput | SessionScalarWhereInput[]
   }
 
   export type NestedIntFilter<$PrismaModel = never> = {
@@ -18661,10 +18661,10 @@ export namespace Prisma {
     emailVerified?: Date | string | null
     image?: string | null
     accounts?: AccountCreateNestedManyWithoutUserInput
-    sessions?: SessionCreateNestedManyWithoutUserInput
     bookmarks?: BookmarkCreateNestedManyWithoutUserInput
     highlights?: HighlightCreateNestedManyWithoutUserInput
     notes?: NoteCreateNestedManyWithoutUserInput
+    sessions?: SessionCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutPostsInput = {
@@ -18674,10 +18674,10 @@ export namespace Prisma {
     emailVerified?: Date | string | null
     image?: string | null
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
-    sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
     bookmarks?: BookmarkUncheckedCreateNestedManyWithoutUserInput
     highlights?: HighlightUncheckedCreateNestedManyWithoutUserInput
     notes?: NoteUncheckedCreateNestedManyWithoutUserInput
+    sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutPostsInput = {
@@ -18703,10 +18703,10 @@ export namespace Prisma {
     emailVerified?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     image?: NullableStringFieldUpdateOperationsInput | string | null
     accounts?: AccountUpdateManyWithoutUserNestedInput
-    sessions?: SessionUpdateManyWithoutUserNestedInput
     bookmarks?: BookmarkUpdateManyWithoutUserNestedInput
     highlights?: HighlightUpdateManyWithoutUserNestedInput
     notes?: NoteUpdateManyWithoutUserNestedInput
+    sessions?: SessionUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutPostsInput = {
@@ -18716,10 +18716,10 @@ export namespace Prisma {
     emailVerified?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     image?: NullableStringFieldUpdateOperationsInput | string | null
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
-    sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
     bookmarks?: BookmarkUncheckedUpdateManyWithoutUserNestedInput
     highlights?: HighlightUncheckedUpdateManyWithoutUserNestedInput
     notes?: NoteUncheckedUpdateManyWithoutUserNestedInput
+    sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type VerseCreateWithoutTranslationInput = {
@@ -18728,10 +18728,10 @@ export namespace Prisma {
     verse: number
     text: string
     globalOrder: number
-    book: BookCreateNestedOneWithoutVersesInput
     bookmarks?: BookmarkCreateNestedManyWithoutVerseInput
     highlights?: HighlightCreateNestedManyWithoutVerseInput
     notes?: NoteCreateNestedManyWithoutVerseInput
+    book: BookCreateNestedOneWithoutVersesInput
   }
 
   export type VerseUncheckedCreateWithoutTranslationInput = {
@@ -18791,10 +18791,10 @@ export namespace Prisma {
     verse: number
     text: string
     globalOrder: number
-    translation: TranslationCreateNestedOneWithoutVersesInput
     bookmarks?: BookmarkCreateNestedManyWithoutVerseInput
     highlights?: HighlightCreateNestedManyWithoutVerseInput
     notes?: NoteCreateNestedManyWithoutVerseInput
+    translation: TranslationCreateNestedOneWithoutVersesInput
   }
 
   export type VerseUncheckedCreateWithoutBookInput = {
@@ -18833,58 +18833,6 @@ export namespace Prisma {
   export type VerseUpdateManyWithWhereWithoutBookInput = {
     where: VerseScalarWhereInput
     data: XOR<VerseUpdateManyMutationInput, VerseUncheckedUpdateManyWithoutBookInput>
-  }
-
-  export type TranslationCreateWithoutVersesInput = {
-    id?: string
-    slug: string
-    name: string
-    language?: string
-    abbreviation: string
-    isPublic?: boolean
-    createdAt?: Date | string
-    updatedAt?: Date | string
-  }
-
-  export type TranslationUncheckedCreateWithoutVersesInput = {
-    id?: string
-    slug: string
-    name: string
-    language?: string
-    abbreviation: string
-    isPublic?: boolean
-    createdAt?: Date | string
-    updatedAt?: Date | string
-  }
-
-  export type TranslationCreateOrConnectWithoutVersesInput = {
-    where: TranslationWhereUniqueInput
-    create: XOR<TranslationCreateWithoutVersesInput, TranslationUncheckedCreateWithoutVersesInput>
-  }
-
-  export type BookCreateWithoutVersesInput = {
-    id: number
-    slug: string
-    name: string
-    abbreviation: string
-    testament: string
-    category: string
-    order: number
-  }
-
-  export type BookUncheckedCreateWithoutVersesInput = {
-    id: number
-    slug: string
-    name: string
-    abbreviation: string
-    testament: string
-    category: string
-    order: number
-  }
-
-  export type BookCreateOrConnectWithoutVersesInput = {
-    where: BookWhereUniqueInput
-    create: XOR<BookCreateWithoutVersesInput, BookUncheckedCreateWithoutVersesInput>
   }
 
   export type BookmarkCreateWithoutVerseInput = {
@@ -18959,68 +18907,56 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
-  export type TranslationUpsertWithoutVersesInput = {
-    update: XOR<TranslationUpdateWithoutVersesInput, TranslationUncheckedUpdateWithoutVersesInput>
-    create: XOR<TranslationCreateWithoutVersesInput, TranslationUncheckedCreateWithoutVersesInput>
-    where?: TranslationWhereInput
+  export type BookCreateWithoutVersesInput = {
+    id: number
+    slug: string
+    name: string
+    abbreviation: string
+    testament: string
+    category: string
+    order: number
   }
 
-  export type TranslationUpdateToOneWithWhereWithoutVersesInput = {
-    where?: TranslationWhereInput
-    data: XOR<TranslationUpdateWithoutVersesInput, TranslationUncheckedUpdateWithoutVersesInput>
+  export type BookUncheckedCreateWithoutVersesInput = {
+    id: number
+    slug: string
+    name: string
+    abbreviation: string
+    testament: string
+    category: string
+    order: number
   }
 
-  export type TranslationUpdateWithoutVersesInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    slug?: StringFieldUpdateOperationsInput | string
-    name?: StringFieldUpdateOperationsInput | string
-    language?: StringFieldUpdateOperationsInput | string
-    abbreviation?: StringFieldUpdateOperationsInput | string
-    isPublic?: BoolFieldUpdateOperationsInput | boolean
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type TranslationUncheckedUpdateWithoutVersesInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    slug?: StringFieldUpdateOperationsInput | string
-    name?: StringFieldUpdateOperationsInput | string
-    language?: StringFieldUpdateOperationsInput | string
-    abbreviation?: StringFieldUpdateOperationsInput | string
-    isPublic?: BoolFieldUpdateOperationsInput | boolean
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type BookUpsertWithoutVersesInput = {
-    update: XOR<BookUpdateWithoutVersesInput, BookUncheckedUpdateWithoutVersesInput>
+  export type BookCreateOrConnectWithoutVersesInput = {
+    where: BookWhereUniqueInput
     create: XOR<BookCreateWithoutVersesInput, BookUncheckedCreateWithoutVersesInput>
-    where?: BookWhereInput
   }
 
-  export type BookUpdateToOneWithWhereWithoutVersesInput = {
-    where?: BookWhereInput
-    data: XOR<BookUpdateWithoutVersesInput, BookUncheckedUpdateWithoutVersesInput>
+  export type TranslationCreateWithoutVersesInput = {
+    id?: string
+    slug: string
+    name: string
+    language?: string
+    abbreviation: string
+    isPublic?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
   }
 
-  export type BookUpdateWithoutVersesInput = {
-    id?: IntFieldUpdateOperationsInput | number
-    slug?: StringFieldUpdateOperationsInput | string
-    name?: StringFieldUpdateOperationsInput | string
-    abbreviation?: StringFieldUpdateOperationsInput | string
-    testament?: StringFieldUpdateOperationsInput | string
-    category?: StringFieldUpdateOperationsInput | string
-    order?: IntFieldUpdateOperationsInput | number
+  export type TranslationUncheckedCreateWithoutVersesInput = {
+    id?: string
+    slug: string
+    name: string
+    language?: string
+    abbreviation: string
+    isPublic?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
   }
 
-  export type BookUncheckedUpdateWithoutVersesInput = {
-    id?: IntFieldUpdateOperationsInput | number
-    slug?: StringFieldUpdateOperationsInput | string
-    name?: StringFieldUpdateOperationsInput | string
-    abbreviation?: StringFieldUpdateOperationsInput | string
-    testament?: StringFieldUpdateOperationsInput | string
-    category?: StringFieldUpdateOperationsInput | string
-    order?: IntFieldUpdateOperationsInput | number
+  export type TranslationCreateOrConnectWithoutVersesInput = {
+    where: TranslationWhereUniqueInput
+    create: XOR<TranslationCreateWithoutVersesInput, TranslationUncheckedCreateWithoutVersesInput>
   }
 
   export type BookmarkUpsertWithWhereUniqueWithoutVerseInput = {
@@ -19104,6 +19040,70 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"Note"> | Date | string
   }
 
+  export type BookUpsertWithoutVersesInput = {
+    update: XOR<BookUpdateWithoutVersesInput, BookUncheckedUpdateWithoutVersesInput>
+    create: XOR<BookCreateWithoutVersesInput, BookUncheckedCreateWithoutVersesInput>
+    where?: BookWhereInput
+  }
+
+  export type BookUpdateToOneWithWhereWithoutVersesInput = {
+    where?: BookWhereInput
+    data: XOR<BookUpdateWithoutVersesInput, BookUncheckedUpdateWithoutVersesInput>
+  }
+
+  export type BookUpdateWithoutVersesInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    slug?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    abbreviation?: StringFieldUpdateOperationsInput | string
+    testament?: StringFieldUpdateOperationsInput | string
+    category?: StringFieldUpdateOperationsInput | string
+    order?: IntFieldUpdateOperationsInput | number
+  }
+
+  export type BookUncheckedUpdateWithoutVersesInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    slug?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    abbreviation?: StringFieldUpdateOperationsInput | string
+    testament?: StringFieldUpdateOperationsInput | string
+    category?: StringFieldUpdateOperationsInput | string
+    order?: IntFieldUpdateOperationsInput | number
+  }
+
+  export type TranslationUpsertWithoutVersesInput = {
+    update: XOR<TranslationUpdateWithoutVersesInput, TranslationUncheckedUpdateWithoutVersesInput>
+    create: XOR<TranslationCreateWithoutVersesInput, TranslationUncheckedCreateWithoutVersesInput>
+    where?: TranslationWhereInput
+  }
+
+  export type TranslationUpdateToOneWithWhereWithoutVersesInput = {
+    where?: TranslationWhereInput
+    data: XOR<TranslationUpdateWithoutVersesInput, TranslationUncheckedUpdateWithoutVersesInput>
+  }
+
+  export type TranslationUpdateWithoutVersesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    language?: StringFieldUpdateOperationsInput | string
+    abbreviation?: StringFieldUpdateOperationsInput | string
+    isPublic?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type TranslationUncheckedUpdateWithoutVersesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    language?: StringFieldUpdateOperationsInput | string
+    abbreviation?: StringFieldUpdateOperationsInput | string
+    isPublic?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type UserCreateWithoutBookmarksInput = {
     id?: string
     name?: string | null
@@ -19111,10 +19111,10 @@ export namespace Prisma {
     emailVerified?: Date | string | null
     image?: string | null
     accounts?: AccountCreateNestedManyWithoutUserInput
-    sessions?: SessionCreateNestedManyWithoutUserInput
-    posts?: PostCreateNestedManyWithoutCreatedByInput
     highlights?: HighlightCreateNestedManyWithoutUserInput
     notes?: NoteCreateNestedManyWithoutUserInput
+    posts?: PostCreateNestedManyWithoutCreatedByInput
+    sessions?: SessionCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutBookmarksInput = {
@@ -19124,10 +19124,10 @@ export namespace Prisma {
     emailVerified?: Date | string | null
     image?: string | null
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
-    sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
-    posts?: PostUncheckedCreateNestedManyWithoutCreatedByInput
     highlights?: HighlightUncheckedCreateNestedManyWithoutUserInput
     notes?: NoteUncheckedCreateNestedManyWithoutUserInput
+    posts?: PostUncheckedCreateNestedManyWithoutCreatedByInput
+    sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutBookmarksInput = {
@@ -19141,10 +19141,10 @@ export namespace Prisma {
     verse: number
     text: string
     globalOrder: number
-    translation: TranslationCreateNestedOneWithoutVersesInput
-    book: BookCreateNestedOneWithoutVersesInput
     highlights?: HighlightCreateNestedManyWithoutVerseInput
     notes?: NoteCreateNestedManyWithoutVerseInput
+    book: BookCreateNestedOneWithoutVersesInput
+    translation: TranslationCreateNestedOneWithoutVersesInput
   }
 
   export type VerseUncheckedCreateWithoutBookmarksInput = {
@@ -19182,10 +19182,10 @@ export namespace Prisma {
     emailVerified?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     image?: NullableStringFieldUpdateOperationsInput | string | null
     accounts?: AccountUpdateManyWithoutUserNestedInput
-    sessions?: SessionUpdateManyWithoutUserNestedInput
-    posts?: PostUpdateManyWithoutCreatedByNestedInput
     highlights?: HighlightUpdateManyWithoutUserNestedInput
     notes?: NoteUpdateManyWithoutUserNestedInput
+    posts?: PostUpdateManyWithoutCreatedByNestedInput
+    sessions?: SessionUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutBookmarksInput = {
@@ -19195,10 +19195,10 @@ export namespace Prisma {
     emailVerified?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     image?: NullableStringFieldUpdateOperationsInput | string | null
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
-    sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
-    posts?: PostUncheckedUpdateManyWithoutCreatedByNestedInput
     highlights?: HighlightUncheckedUpdateManyWithoutUserNestedInput
     notes?: NoteUncheckedUpdateManyWithoutUserNestedInput
+    posts?: PostUncheckedUpdateManyWithoutCreatedByNestedInput
+    sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type VerseUpsertWithoutBookmarksInput = {
@@ -19218,10 +19218,10 @@ export namespace Prisma {
     verse?: IntFieldUpdateOperationsInput | number
     text?: StringFieldUpdateOperationsInput | string
     globalOrder?: IntFieldUpdateOperationsInput | number
-    translation?: TranslationUpdateOneRequiredWithoutVersesNestedInput
-    book?: BookUpdateOneRequiredWithoutVersesNestedInput
     highlights?: HighlightUpdateManyWithoutVerseNestedInput
     notes?: NoteUpdateManyWithoutVerseNestedInput
+    book?: BookUpdateOneRequiredWithoutVersesNestedInput
+    translation?: TranslationUpdateOneRequiredWithoutVersesNestedInput
   }
 
   export type VerseUncheckedUpdateWithoutBookmarksInput = {
@@ -19243,10 +19243,10 @@ export namespace Prisma {
     emailVerified?: Date | string | null
     image?: string | null
     accounts?: AccountCreateNestedManyWithoutUserInput
-    sessions?: SessionCreateNestedManyWithoutUserInput
-    posts?: PostCreateNestedManyWithoutCreatedByInput
     bookmarks?: BookmarkCreateNestedManyWithoutUserInput
     notes?: NoteCreateNestedManyWithoutUserInput
+    posts?: PostCreateNestedManyWithoutCreatedByInput
+    sessions?: SessionCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutHighlightsInput = {
@@ -19256,10 +19256,10 @@ export namespace Prisma {
     emailVerified?: Date | string | null
     image?: string | null
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
-    sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
-    posts?: PostUncheckedCreateNestedManyWithoutCreatedByInput
     bookmarks?: BookmarkUncheckedCreateNestedManyWithoutUserInput
     notes?: NoteUncheckedCreateNestedManyWithoutUserInput
+    posts?: PostUncheckedCreateNestedManyWithoutCreatedByInput
+    sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutHighlightsInput = {
@@ -19273,10 +19273,10 @@ export namespace Prisma {
     verse: number
     text: string
     globalOrder: number
-    translation: TranslationCreateNestedOneWithoutVersesInput
-    book: BookCreateNestedOneWithoutVersesInput
     bookmarks?: BookmarkCreateNestedManyWithoutVerseInput
     notes?: NoteCreateNestedManyWithoutVerseInput
+    book: BookCreateNestedOneWithoutVersesInput
+    translation: TranslationCreateNestedOneWithoutVersesInput
   }
 
   export type VerseUncheckedCreateWithoutHighlightsInput = {
@@ -19314,10 +19314,10 @@ export namespace Prisma {
     emailVerified?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     image?: NullableStringFieldUpdateOperationsInput | string | null
     accounts?: AccountUpdateManyWithoutUserNestedInput
-    sessions?: SessionUpdateManyWithoutUserNestedInput
-    posts?: PostUpdateManyWithoutCreatedByNestedInput
     bookmarks?: BookmarkUpdateManyWithoutUserNestedInput
     notes?: NoteUpdateManyWithoutUserNestedInput
+    posts?: PostUpdateManyWithoutCreatedByNestedInput
+    sessions?: SessionUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutHighlightsInput = {
@@ -19327,10 +19327,10 @@ export namespace Prisma {
     emailVerified?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     image?: NullableStringFieldUpdateOperationsInput | string | null
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
-    sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
-    posts?: PostUncheckedUpdateManyWithoutCreatedByNestedInput
     bookmarks?: BookmarkUncheckedUpdateManyWithoutUserNestedInput
     notes?: NoteUncheckedUpdateManyWithoutUserNestedInput
+    posts?: PostUncheckedUpdateManyWithoutCreatedByNestedInput
+    sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type VerseUpsertWithoutHighlightsInput = {
@@ -19350,10 +19350,10 @@ export namespace Prisma {
     verse?: IntFieldUpdateOperationsInput | number
     text?: StringFieldUpdateOperationsInput | string
     globalOrder?: IntFieldUpdateOperationsInput | number
-    translation?: TranslationUpdateOneRequiredWithoutVersesNestedInput
-    book?: BookUpdateOneRequiredWithoutVersesNestedInput
     bookmarks?: BookmarkUpdateManyWithoutVerseNestedInput
     notes?: NoteUpdateManyWithoutVerseNestedInput
+    book?: BookUpdateOneRequiredWithoutVersesNestedInput
+    translation?: TranslationUpdateOneRequiredWithoutVersesNestedInput
   }
 
   export type VerseUncheckedUpdateWithoutHighlightsInput = {
@@ -19375,10 +19375,10 @@ export namespace Prisma {
     emailVerified?: Date | string | null
     image?: string | null
     accounts?: AccountCreateNestedManyWithoutUserInput
-    sessions?: SessionCreateNestedManyWithoutUserInput
-    posts?: PostCreateNestedManyWithoutCreatedByInput
     bookmarks?: BookmarkCreateNestedManyWithoutUserInput
     highlights?: HighlightCreateNestedManyWithoutUserInput
+    posts?: PostCreateNestedManyWithoutCreatedByInput
+    sessions?: SessionCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutNotesInput = {
@@ -19388,10 +19388,10 @@ export namespace Prisma {
     emailVerified?: Date | string | null
     image?: string | null
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
-    sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
-    posts?: PostUncheckedCreateNestedManyWithoutCreatedByInput
     bookmarks?: BookmarkUncheckedCreateNestedManyWithoutUserInput
     highlights?: HighlightUncheckedCreateNestedManyWithoutUserInput
+    posts?: PostUncheckedCreateNestedManyWithoutCreatedByInput
+    sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutNotesInput = {
@@ -19405,10 +19405,10 @@ export namespace Prisma {
     verse: number
     text: string
     globalOrder: number
-    translation: TranslationCreateNestedOneWithoutVersesInput
-    book: BookCreateNestedOneWithoutVersesInput
     bookmarks?: BookmarkCreateNestedManyWithoutVerseInput
     highlights?: HighlightCreateNestedManyWithoutVerseInput
+    book: BookCreateNestedOneWithoutVersesInput
+    translation: TranslationCreateNestedOneWithoutVersesInput
   }
 
   export type VerseUncheckedCreateWithoutNotesInput = {
@@ -19446,10 +19446,10 @@ export namespace Prisma {
     emailVerified?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     image?: NullableStringFieldUpdateOperationsInput | string | null
     accounts?: AccountUpdateManyWithoutUserNestedInput
-    sessions?: SessionUpdateManyWithoutUserNestedInput
-    posts?: PostUpdateManyWithoutCreatedByNestedInput
     bookmarks?: BookmarkUpdateManyWithoutUserNestedInput
     highlights?: HighlightUpdateManyWithoutUserNestedInput
+    posts?: PostUpdateManyWithoutCreatedByNestedInput
+    sessions?: SessionUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutNotesInput = {
@@ -19459,10 +19459,10 @@ export namespace Prisma {
     emailVerified?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     image?: NullableStringFieldUpdateOperationsInput | string | null
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
-    sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
-    posts?: PostUncheckedUpdateManyWithoutCreatedByNestedInput
     bookmarks?: BookmarkUncheckedUpdateManyWithoutUserNestedInput
     highlights?: HighlightUncheckedUpdateManyWithoutUserNestedInput
+    posts?: PostUncheckedUpdateManyWithoutCreatedByNestedInput
+    sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type VerseUpsertWithoutNotesInput = {
@@ -19482,10 +19482,10 @@ export namespace Prisma {
     verse?: IntFieldUpdateOperationsInput | number
     text?: StringFieldUpdateOperationsInput | string
     globalOrder?: IntFieldUpdateOperationsInput | number
-    translation?: TranslationUpdateOneRequiredWithoutVersesNestedInput
-    book?: BookUpdateOneRequiredWithoutVersesNestedInput
     bookmarks?: BookmarkUpdateManyWithoutVerseNestedInput
     highlights?: HighlightUpdateManyWithoutVerseNestedInput
+    book?: BookUpdateOneRequiredWithoutVersesNestedInput
+    translation?: TranslationUpdateOneRequiredWithoutVersesNestedInput
   }
 
   export type VerseUncheckedUpdateWithoutNotesInput = {
@@ -19506,11 +19506,11 @@ export namespace Prisma {
     email?: string | null
     emailVerified?: Date | string | null
     image?: string | null
-    sessions?: SessionCreateNestedManyWithoutUserInput
-    posts?: PostCreateNestedManyWithoutCreatedByInput
     bookmarks?: BookmarkCreateNestedManyWithoutUserInput
     highlights?: HighlightCreateNestedManyWithoutUserInput
     notes?: NoteCreateNestedManyWithoutUserInput
+    posts?: PostCreateNestedManyWithoutCreatedByInput
+    sessions?: SessionCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutAccountsInput = {
@@ -19519,11 +19519,11 @@ export namespace Prisma {
     email?: string | null
     emailVerified?: Date | string | null
     image?: string | null
-    sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
-    posts?: PostUncheckedCreateNestedManyWithoutCreatedByInput
     bookmarks?: BookmarkUncheckedCreateNestedManyWithoutUserInput
     highlights?: HighlightUncheckedCreateNestedManyWithoutUserInput
     notes?: NoteUncheckedCreateNestedManyWithoutUserInput
+    posts?: PostUncheckedCreateNestedManyWithoutCreatedByInput
+    sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutAccountsInput = {
@@ -19548,11 +19548,11 @@ export namespace Prisma {
     email?: NullableStringFieldUpdateOperationsInput | string | null
     emailVerified?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     image?: NullableStringFieldUpdateOperationsInput | string | null
-    sessions?: SessionUpdateManyWithoutUserNestedInput
-    posts?: PostUpdateManyWithoutCreatedByNestedInput
     bookmarks?: BookmarkUpdateManyWithoutUserNestedInput
     highlights?: HighlightUpdateManyWithoutUserNestedInput
     notes?: NoteUpdateManyWithoutUserNestedInput
+    posts?: PostUpdateManyWithoutCreatedByNestedInput
+    sessions?: SessionUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutAccountsInput = {
@@ -19561,11 +19561,11 @@ export namespace Prisma {
     email?: NullableStringFieldUpdateOperationsInput | string | null
     emailVerified?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     image?: NullableStringFieldUpdateOperationsInput | string | null
-    sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
-    posts?: PostUncheckedUpdateManyWithoutCreatedByNestedInput
     bookmarks?: BookmarkUncheckedUpdateManyWithoutUserNestedInput
     highlights?: HighlightUncheckedUpdateManyWithoutUserNestedInput
     notes?: NoteUncheckedUpdateManyWithoutUserNestedInput
+    posts?: PostUncheckedUpdateManyWithoutCreatedByNestedInput
+    sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserCreateWithoutSessionsInput = {
@@ -19575,10 +19575,10 @@ export namespace Prisma {
     emailVerified?: Date | string | null
     image?: string | null
     accounts?: AccountCreateNestedManyWithoutUserInput
-    posts?: PostCreateNestedManyWithoutCreatedByInput
     bookmarks?: BookmarkCreateNestedManyWithoutUserInput
     highlights?: HighlightCreateNestedManyWithoutUserInput
     notes?: NoteCreateNestedManyWithoutUserInput
+    posts?: PostCreateNestedManyWithoutCreatedByInput
   }
 
   export type UserUncheckedCreateWithoutSessionsInput = {
@@ -19588,10 +19588,10 @@ export namespace Prisma {
     emailVerified?: Date | string | null
     image?: string | null
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
-    posts?: PostUncheckedCreateNestedManyWithoutCreatedByInput
     bookmarks?: BookmarkUncheckedCreateNestedManyWithoutUserInput
     highlights?: HighlightUncheckedCreateNestedManyWithoutUserInput
     notes?: NoteUncheckedCreateNestedManyWithoutUserInput
+    posts?: PostUncheckedCreateNestedManyWithoutCreatedByInput
   }
 
   export type UserCreateOrConnectWithoutSessionsInput = {
@@ -19617,10 +19617,10 @@ export namespace Prisma {
     emailVerified?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     image?: NullableStringFieldUpdateOperationsInput | string | null
     accounts?: AccountUpdateManyWithoutUserNestedInput
-    posts?: PostUpdateManyWithoutCreatedByNestedInput
     bookmarks?: BookmarkUpdateManyWithoutUserNestedInput
     highlights?: HighlightUpdateManyWithoutUserNestedInput
     notes?: NoteUpdateManyWithoutUserNestedInput
+    posts?: PostUpdateManyWithoutCreatedByNestedInput
   }
 
   export type UserUncheckedUpdateWithoutSessionsInput = {
@@ -19630,10 +19630,10 @@ export namespace Prisma {
     emailVerified?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     image?: NullableStringFieldUpdateOperationsInput | string | null
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
-    posts?: PostUncheckedUpdateManyWithoutCreatedByNestedInput
     bookmarks?: BookmarkUncheckedUpdateManyWithoutUserNestedInput
     highlights?: HighlightUncheckedUpdateManyWithoutUserNestedInput
     notes?: NoteUncheckedUpdateManyWithoutUserNestedInput
+    posts?: PostUncheckedUpdateManyWithoutCreatedByNestedInput
   }
 
   export type AccountCreateWithoutUserInput = {
@@ -19673,51 +19673,6 @@ export namespace Prisma {
 
   export type AccountCreateManyUserInputEnvelope = {
     data: AccountCreateManyUserInput | AccountCreateManyUserInput[]
-    skipDuplicates?: boolean
-  }
-
-  export type SessionCreateWithoutUserInput = {
-    id?: string
-    sessionToken: string
-    expires: Date | string
-  }
-
-  export type SessionUncheckedCreateWithoutUserInput = {
-    id?: string
-    sessionToken: string
-    expires: Date | string
-  }
-
-  export type SessionCreateOrConnectWithoutUserInput = {
-    where: SessionWhereUniqueInput
-    create: XOR<SessionCreateWithoutUserInput, SessionUncheckedCreateWithoutUserInput>
-  }
-
-  export type SessionCreateManyUserInputEnvelope = {
-    data: SessionCreateManyUserInput | SessionCreateManyUserInput[]
-    skipDuplicates?: boolean
-  }
-
-  export type PostCreateWithoutCreatedByInput = {
-    name: string
-    createdAt?: Date | string
-    updatedAt?: Date | string
-  }
-
-  export type PostUncheckedCreateWithoutCreatedByInput = {
-    id?: number
-    name: string
-    createdAt?: Date | string
-    updatedAt?: Date | string
-  }
-
-  export type PostCreateOrConnectWithoutCreatedByInput = {
-    where: PostWhereUniqueInput
-    create: XOR<PostCreateWithoutCreatedByInput, PostUncheckedCreateWithoutCreatedByInput>
-  }
-
-  export type PostCreateManyCreatedByInputEnvelope = {
-    data: PostCreateManyCreatedByInput | PostCreateManyCreatedByInput[]
     skipDuplicates?: boolean
   }
 
@@ -19793,6 +19748,51 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type PostCreateWithoutCreatedByInput = {
+    name: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type PostUncheckedCreateWithoutCreatedByInput = {
+    id?: number
+    name: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type PostCreateOrConnectWithoutCreatedByInput = {
+    where: PostWhereUniqueInput
+    create: XOR<PostCreateWithoutCreatedByInput, PostUncheckedCreateWithoutCreatedByInput>
+  }
+
+  export type PostCreateManyCreatedByInputEnvelope = {
+    data: PostCreateManyCreatedByInput | PostCreateManyCreatedByInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type SessionCreateWithoutUserInput = {
+    id?: string
+    sessionToken: string
+    expires: Date | string
+  }
+
+  export type SessionUncheckedCreateWithoutUserInput = {
+    id?: string
+    sessionToken: string
+    expires: Date | string
+  }
+
+  export type SessionCreateOrConnectWithoutUserInput = {
+    where: SessionWhereUniqueInput
+    create: XOR<SessionCreateWithoutUserInput, SessionUncheckedCreateWithoutUserInput>
+  }
+
+  export type SessionCreateManyUserInputEnvelope = {
+    data: SessionCreateManyUserInput | SessionCreateManyUserInput[]
+    skipDuplicates?: boolean
+  }
+
   export type AccountUpsertWithWhereUniqueWithoutUserInput = {
     where: AccountWhereUniqueInput
     update: XOR<AccountUpdateWithoutUserInput, AccountUncheckedUpdateWithoutUserInput>
@@ -19826,59 +19826,6 @@ export namespace Prisma {
     id_token?: StringNullableFilter<"Account"> | string | null
     session_state?: StringNullableFilter<"Account"> | string | null
     refresh_token_expires_in?: IntNullableFilter<"Account"> | number | null
-  }
-
-  export type SessionUpsertWithWhereUniqueWithoutUserInput = {
-    where: SessionWhereUniqueInput
-    update: XOR<SessionUpdateWithoutUserInput, SessionUncheckedUpdateWithoutUserInput>
-    create: XOR<SessionCreateWithoutUserInput, SessionUncheckedCreateWithoutUserInput>
-  }
-
-  export type SessionUpdateWithWhereUniqueWithoutUserInput = {
-    where: SessionWhereUniqueInput
-    data: XOR<SessionUpdateWithoutUserInput, SessionUncheckedUpdateWithoutUserInput>
-  }
-
-  export type SessionUpdateManyWithWhereWithoutUserInput = {
-    where: SessionScalarWhereInput
-    data: XOR<SessionUpdateManyMutationInput, SessionUncheckedUpdateManyWithoutUserInput>
-  }
-
-  export type SessionScalarWhereInput = {
-    AND?: SessionScalarWhereInput | SessionScalarWhereInput[]
-    OR?: SessionScalarWhereInput[]
-    NOT?: SessionScalarWhereInput | SessionScalarWhereInput[]
-    id?: StringFilter<"Session"> | string
-    sessionToken?: StringFilter<"Session"> | string
-    userId?: StringFilter<"Session"> | string
-    expires?: DateTimeFilter<"Session"> | Date | string
-  }
-
-  export type PostUpsertWithWhereUniqueWithoutCreatedByInput = {
-    where: PostWhereUniqueInput
-    update: XOR<PostUpdateWithoutCreatedByInput, PostUncheckedUpdateWithoutCreatedByInput>
-    create: XOR<PostCreateWithoutCreatedByInput, PostUncheckedCreateWithoutCreatedByInput>
-  }
-
-  export type PostUpdateWithWhereUniqueWithoutCreatedByInput = {
-    where: PostWhereUniqueInput
-    data: XOR<PostUpdateWithoutCreatedByInput, PostUncheckedUpdateWithoutCreatedByInput>
-  }
-
-  export type PostUpdateManyWithWhereWithoutCreatedByInput = {
-    where: PostScalarWhereInput
-    data: XOR<PostUpdateManyMutationInput, PostUncheckedUpdateManyWithoutCreatedByInput>
-  }
-
-  export type PostScalarWhereInput = {
-    AND?: PostScalarWhereInput | PostScalarWhereInput[]
-    OR?: PostScalarWhereInput[]
-    NOT?: PostScalarWhereInput | PostScalarWhereInput[]
-    id?: IntFilter<"Post"> | number
-    name?: StringFilter<"Post"> | string
-    createdAt?: DateTimeFilter<"Post"> | Date | string
-    updatedAt?: DateTimeFilter<"Post"> | Date | string
-    createdById?: StringFilter<"Post"> | string
   }
 
   export type BookmarkUpsertWithWhereUniqueWithoutUserInput = {
@@ -19929,6 +19876,59 @@ export namespace Prisma {
     data: XOR<NoteUpdateManyMutationInput, NoteUncheckedUpdateManyWithoutUserInput>
   }
 
+  export type PostUpsertWithWhereUniqueWithoutCreatedByInput = {
+    where: PostWhereUniqueInput
+    update: XOR<PostUpdateWithoutCreatedByInput, PostUncheckedUpdateWithoutCreatedByInput>
+    create: XOR<PostCreateWithoutCreatedByInput, PostUncheckedCreateWithoutCreatedByInput>
+  }
+
+  export type PostUpdateWithWhereUniqueWithoutCreatedByInput = {
+    where: PostWhereUniqueInput
+    data: XOR<PostUpdateWithoutCreatedByInput, PostUncheckedUpdateWithoutCreatedByInput>
+  }
+
+  export type PostUpdateManyWithWhereWithoutCreatedByInput = {
+    where: PostScalarWhereInput
+    data: XOR<PostUpdateManyMutationInput, PostUncheckedUpdateManyWithoutCreatedByInput>
+  }
+
+  export type PostScalarWhereInput = {
+    AND?: PostScalarWhereInput | PostScalarWhereInput[]
+    OR?: PostScalarWhereInput[]
+    NOT?: PostScalarWhereInput | PostScalarWhereInput[]
+    id?: IntFilter<"Post"> | number
+    name?: StringFilter<"Post"> | string
+    createdAt?: DateTimeFilter<"Post"> | Date | string
+    updatedAt?: DateTimeFilter<"Post"> | Date | string
+    createdById?: StringFilter<"Post"> | string
+  }
+
+  export type SessionUpsertWithWhereUniqueWithoutUserInput = {
+    where: SessionWhereUniqueInput
+    update: XOR<SessionUpdateWithoutUserInput, SessionUncheckedUpdateWithoutUserInput>
+    create: XOR<SessionCreateWithoutUserInput, SessionUncheckedCreateWithoutUserInput>
+  }
+
+  export type SessionUpdateWithWhereUniqueWithoutUserInput = {
+    where: SessionWhereUniqueInput
+    data: XOR<SessionUpdateWithoutUserInput, SessionUncheckedUpdateWithoutUserInput>
+  }
+
+  export type SessionUpdateManyWithWhereWithoutUserInput = {
+    where: SessionScalarWhereInput
+    data: XOR<SessionUpdateManyMutationInput, SessionUncheckedUpdateManyWithoutUserInput>
+  }
+
+  export type SessionScalarWhereInput = {
+    AND?: SessionScalarWhereInput | SessionScalarWhereInput[]
+    OR?: SessionScalarWhereInput[]
+    NOT?: SessionScalarWhereInput | SessionScalarWhereInput[]
+    id?: StringFilter<"Session"> | string
+    sessionToken?: StringFilter<"Session"> | string
+    userId?: StringFilter<"Session"> | string
+    expires?: DateTimeFilter<"Session"> | Date | string
+  }
+
   export type VerseCreateManyTranslationInput = {
     id?: string
     bookId: number
@@ -19944,10 +19944,10 @@ export namespace Prisma {
     verse?: IntFieldUpdateOperationsInput | number
     text?: StringFieldUpdateOperationsInput | string
     globalOrder?: IntFieldUpdateOperationsInput | number
-    book?: BookUpdateOneRequiredWithoutVersesNestedInput
     bookmarks?: BookmarkUpdateManyWithoutVerseNestedInput
     highlights?: HighlightUpdateManyWithoutVerseNestedInput
     notes?: NoteUpdateManyWithoutVerseNestedInput
+    book?: BookUpdateOneRequiredWithoutVersesNestedInput
   }
 
   export type VerseUncheckedUpdateWithoutTranslationInput = {
@@ -19986,10 +19986,10 @@ export namespace Prisma {
     verse?: IntFieldUpdateOperationsInput | number
     text?: StringFieldUpdateOperationsInput | string
     globalOrder?: IntFieldUpdateOperationsInput | number
-    translation?: TranslationUpdateOneRequiredWithoutVersesNestedInput
     bookmarks?: BookmarkUpdateManyWithoutVerseNestedInput
     highlights?: HighlightUpdateManyWithoutVerseNestedInput
     notes?: NoteUpdateManyWithoutVerseNestedInput
+    translation?: TranslationUpdateOneRequiredWithoutVersesNestedInput
   }
 
   export type VerseUncheckedUpdateWithoutBookInput = {
@@ -20112,19 +20112,6 @@ export namespace Prisma {
     refresh_token_expires_in?: number | null
   }
 
-  export type SessionCreateManyUserInput = {
-    id?: string
-    sessionToken: string
-    expires: Date | string
-  }
-
-  export type PostCreateManyCreatedByInput = {
-    id?: number
-    name: string
-    createdAt?: Date | string
-    updatedAt?: Date | string
-  }
-
   export type BookmarkCreateManyUserInput = {
     id?: string
     verseId: string
@@ -20144,6 +20131,19 @@ export namespace Prisma {
     content: string
     createdAt?: Date | string
     updatedAt?: Date | string
+  }
+
+  export type PostCreateManyCreatedByInput = {
+    id?: number
+    name: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type SessionCreateManyUserInput = {
+    id?: string
+    sessionToken: string
+    expires: Date | string
   }
 
   export type AccountUpdateWithoutUserInput = {
@@ -20189,44 +20189,6 @@ export namespace Prisma {
     id_token?: NullableStringFieldUpdateOperationsInput | string | null
     session_state?: NullableStringFieldUpdateOperationsInput | string | null
     refresh_token_expires_in?: NullableIntFieldUpdateOperationsInput | number | null
-  }
-
-  export type SessionUpdateWithoutUserInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    sessionToken?: StringFieldUpdateOperationsInput | string
-    expires?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type SessionUncheckedUpdateWithoutUserInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    sessionToken?: StringFieldUpdateOperationsInput | string
-    expires?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type SessionUncheckedUpdateManyWithoutUserInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    sessionToken?: StringFieldUpdateOperationsInput | string
-    expires?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type PostUpdateWithoutCreatedByInput = {
-    name?: StringFieldUpdateOperationsInput | string
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type PostUncheckedUpdateWithoutCreatedByInput = {
-    id?: IntFieldUpdateOperationsInput | number
-    name?: StringFieldUpdateOperationsInput | string
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type PostUncheckedUpdateManyWithoutCreatedByInput = {
-    id?: IntFieldUpdateOperationsInput | number
-    name?: StringFieldUpdateOperationsInput | string
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type BookmarkUpdateWithoutUserInput = {
@@ -20290,6 +20252,44 @@ export namespace Prisma {
     content?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PostUpdateWithoutCreatedByInput = {
+    name?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PostUncheckedUpdateWithoutCreatedByInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    name?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type PostUncheckedUpdateManyWithoutCreatedByInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    name?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type SessionUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    sessionToken?: StringFieldUpdateOperationsInput | string
+    expires?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type SessionUncheckedUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    sessionToken?: StringFieldUpdateOperationsInput | string
+    expires?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type SessionUncheckedUpdateManyWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    sessionToken?: StringFieldUpdateOperationsInput | string
+    expires?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
 
