@@ -6,6 +6,7 @@ import { Geist, Ibarra_Real_Nova } from "next/font/google";
 import { TRPCReactProvider } from "~/trpc/react";
 import { LiturgicalProvider } from "~/components/liturgical-provider";
 import { Toaster } from "~/components/ui/sonner";
+import { Analytics } from "@vercel/analytics/next";
 
 export const metadata: Metadata = {
   title: "The Catholic Bible Codex – Read, Study, and Pray with the Full Catholic Bible",
@@ -54,6 +55,7 @@ export default function RootLayout({
           <LiturgicalProvider>
             {children}
             <Toaster position="top-center" richColors />
+            <Analytics />
           </LiturgicalProvider>
         </TRPCReactProvider>
       </body>
