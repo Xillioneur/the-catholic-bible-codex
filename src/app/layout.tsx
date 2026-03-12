@@ -8,25 +8,25 @@ import { LiturgicalProvider } from "~/components/liturgical-provider";
 import { Toaster } from "~/components/ui/sonner";
 
 export const metadata: Metadata = {
-  title: "Catholic Bible Codex – Read, Study, and Pray with the Full Catholic Bible",
+  title: "The Catholic Bible Codex – Read, Study, and Pray with the Full Catholic Bible",
   description: "Experience the Sacred Scriptures in a modern, ultra-fast PWA. Featuring the full 73-book canon, daily Mass readings, patristic commentary, and offline-first study tools.",
   metadataBase: new URL("https://the-catholic-bible-codex.vercel.app"),
   alternates: {
     canonical: "/",
   },
   openGraph: {
-    title: "Catholic Bible Codex – The Premium Catholic Scripture Experience",
+    title: "The Catholic Bible Codex – The Premium Catholic Scripture Experience",
     description: "Immerse yourself in the Word of God with a digital sanctuary designed for the faithful. 100% offline-first with NABRE, RSV-2CE, and Douay-Rheims.",
     url: "https://the-catholic-bible-codex.vercel.app",
-    siteName: "Catholic Bible Codex",
+    siteName: "The Catholic Bible Codex",
     locale: "en_US",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Catholic Bible Codex – Modern Catholic Bible PWA",
+    title: "The Catholic Bible Codex – Modern Catholic Bible PWA",
     description: "Immersive, offline-first Catholic Scripture experience with daily Mass readings.",
-    creator: "@Willie",
+    creator: "@liwawil",
   },
   icons: [
     { rel: "icon", url: "/favicon.svg", type: "image/svg+xml" },

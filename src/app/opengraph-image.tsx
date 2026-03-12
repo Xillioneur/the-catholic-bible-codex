@@ -14,84 +14,91 @@ export default async function Image() {
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          backgroundColor: "#1E3A8A",
-          backgroundImage: "radial-gradient(circle at center, #2563EB 0%, #1E3A8A 100%)",
+          backgroundColor: "#0F172A", // Deep Midnight Blue
+          backgroundImage: "radial-gradient(circle at center, #1E293B 0%, #0F172A 100%)",
           color: "white",
-          padding: "60px",
+          padding: "40px",
         }}
       >
+        {/* The Golden Border - Inspired by the measured walls of Jerusalem */}
         <div
           style={{
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
-            border: "4px solid rgba(255, 255, 255, 0.15)",
-            borderRadius: "60px",
-            padding: "80px",
-            backgroundColor: "rgba(255, 255, 255, 0.03)",
-            width: "1000px",
+            border: "2px solid #EAB308", // Celestial Gold
+            borderRadius: "4px",
+            padding: "60px",
+            width: "1120px",
+            height: "550px",
+            position: "relative",
           }}
         >
-          {/* Logo Cross */}
-          <div style={{ display: "flex", marginBottom: "40px" }}>
-            <svg width="100" height="100" viewBox="0 0 32 32" fill="none">
-              <path d="M16 4V28" stroke="white" strokeWidth="3.5" strokeLinecap="round" />
-              <path d="M9 12H23" stroke="white" strokeWidth="3.5" strokeLinecap="round" />
+          {/* Decorative Corner Accents */}
+          <div style={{ position: "absolute", top: "-10px", left: "-10px", width: "40px", height: "40px", borderTop: "4px solid #EAB308", borderLeft: "4px solid #EAB308" }} />
+          <div style={{ position: "absolute", top: "-10px", right: "-10px", width: "40px", height: "40px", borderTop: "4px solid #EAB308", borderRight: "4px solid #EAB308" }} />
+          <div style={{ position: "absolute", bottom: "-10px", left: "-10px", width: "40px", height: "40px", borderBottom: "4px solid #EAB308", borderLeft: "4px solid #EAB308" }} />
+          <div style={{ position: "absolute", bottom: "-10px", right: "-10px", width: "40px", height: "40px", borderBottom: "4px solid #EAB308", borderRight: "4px solid #EAB308" }} />
+
+          {/* The Cross of Light */}
+          <div style={{ display: "flex", marginBottom: "30px" }}>
+            <svg width="80" height="80" viewBox="0 0 32 32" fill="none">
+              <path d="M16 2V30" stroke="#EAB308" strokeWidth="2" strokeLinecap="square" />
+              <path d="M8 10H24" stroke="#EAB308" strokeWidth="2" strokeLinecap="square" />
             </svg>
           </div>
 
-          {/* Headline */}
+          {/* Official Name */}
           <div
             style={{
-              fontSize: "84px",
+              fontSize: "96px",
               fontWeight: "900",
               textAlign: "center",
-              letterSpacing: "-0.04em",
+              letterSpacing: "-0.02em",
+              color: "white",
+              lineHeight: 1,
               marginBottom: "10px",
-              lineHeight: 1.1,
             }}
           >
-            Verbum Domini
+            The Catholic Bible Codex
           </div>
 
-          {/* Sub-headline */}
           <div
             style={{
-              fontSize: "36px",
-              fontWeight: "500",
-              opacity: 0.9,
+              fontSize: "24px",
+              fontWeight: "700",
+              color: "#EAB308",
               textAlign: "center",
-              letterSpacing: "0.15em",
+              letterSpacing: "0.4em",
               textTransform: "uppercase",
-              marginBottom: "60px",
+              marginBottom: "50px",
             }}
           >
-            Catholic Bible Codex
+            Sanctuarium Verbi
           </div>
 
-          {/* Call to Action */}
+          {/* Call to Action - Compact & Clean */}
           <div
             style={{
               display: "flex",
-              backgroundColor: "white",
-              color: "#1E3A8A",
-              padding: "20px 50px",
-              borderRadius: "100px",
-              fontSize: "28px",
-              fontWeight: "800",
+              backgroundColor: "#EAB308",
+              color: "#0F172A",
+              padding: "16px 40px",
+              borderRadius: "2px",
+              fontSize: "20px",
+              fontWeight: "900",
               textTransform: "uppercase",
-              letterSpacing: "0.1em",
-              boxShadow: "0 20px 50px rgba(0,0,0,0.3)",
+              letterSpacing: "0.2em",
             }}
           >
-            Start Reading Now
+            Enter the Sanctuary
           </div>
         </div>
 
-        {/* Footer info */}
-        <div style={{ position: "absolute", bottom: "40px", fontSize: "20px", opacity: 0.6, letterSpacing: "0.1em" }}>
-          THE COMPLETE CATHOLIC CANON • OFFLINE-FIRST
+        {/* Biblical Order Info */}
+        <div style={{ position: "absolute", bottom: "60px", fontSize: "14px", color: "white", opacity: 0.4, letterSpacing: "0.3em", fontWeight: "bold" }}>
+          73 BOOKS • COMPLETE CANON • OFFLINE-FIRST
         </div>
       </div>
     ),
