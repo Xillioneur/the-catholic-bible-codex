@@ -42,7 +42,7 @@ export default async function Image() {
           <div style={{ position: "absolute", bottom: "-10px", right: "-10px", width: "40px", height: "40px", borderBottom: "4px solid #EAB308", borderRight: "4px solid #EAB308" }} />
 
           {/* The Cross of Light */}
-          <div style={{ display: "flex", marginBottom: "30px" }}>
+          <div style={{ display: "flex", marginBottom: "40px" }}>
             <svg width="80" height="80" viewBox="0 0 32 32" fill="none">
               <path d="M16 2V30" stroke="#EAB308" strokeWidth="2" strokeLinecap="square" />
               <path d="M8 10H24" stroke="#EAB308" strokeWidth="2" strokeLinecap="square" />
@@ -58,41 +58,28 @@ export default async function Image() {
               letterSpacing: "-0.02em",
               color: "white",
               lineHeight: 1,
-              marginBottom: "10px",
+              marginBottom: "60px",
             }}
           >
             The Catholic Bible Codex
           </div>
 
-          <div
-            style={{
-              fontSize: "24px",
-              fontWeight: "700",
-              color: "#EAB308",
-              textAlign: "center",
-              letterSpacing: "0.4em",
-              textTransform: "uppercase",
-              marginBottom: "50px",
-            }}
-          >
-            Sanctuarium Verbi
-          </div>
-
-          {/* Call to Action - Compact & Clean */}
+          {/* Improved CTA - Stronger and Cleaner */}
           <div
             style={{
               display: "flex",
-              backgroundColor: "#EAB308",
+              backgroundColor: "white",
               color: "#0F172A",
-              padding: "16px 40px",
-              borderRadius: "2px",
-              fontSize: "20px",
+              padding: "20px 60px",
+              borderRadius: "4px",
+              fontSize: "24px",
               fontWeight: "900",
               textTransform: "uppercase",
-              letterSpacing: "0.2em",
+              letterSpacing: "0.25em",
+              boxShadow: "0 20px 40px rgba(0,0,0,0.4)",
             }}
           >
-            Enter the Sanctuary
+            Open the Word
           </div>
         </div>
 
