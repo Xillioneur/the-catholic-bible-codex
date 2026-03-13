@@ -1,83 +1,127 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, memo } from "react";
 import { useReaderStore } from "~/hooks/use-reader-store";
 import { VerseOverlay } from "./verse-overlay";
 import { db } from "~/lib/db";
 import { useLiveQuery } from "dexie-react-hooks";
-import { ScriptureGuide } from "./scripture-guide";
-import { useBibleReader } from "~/hooks/use-bible-reader";
+import { useBibleReader, type BibleRow } from "~/hooks/use-bible-reader";
+import { BookHeader, ChapterHeader } from "./bible/section-header";
 import { VerseItem } from "./bible/verse-item";
 import { LoadingScreen } from "./bible/loading-screen";
-import { BookHeader, ChapterHeader } from "./bible/section-header";
+import { cn } from "~/lib/utils";
 
 export function BibleReader() {
-  const parentRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const { rows, isLoading, rowVirtualizer } = useBibleReader(containerRef);
   const [activeVerse, setActiveVerse] = useState<any | null>(null);
 
-  const { 
-    rows, 
-    isLoading, 
-    rowVirtualizer, 
-    currentOrder 
-  } = useBibleReader(parentRef);
-
+  const bookmarks = useLiveQuery(() => db.bookmarks.toArray()) ?? [];
+  const highlights = useLiveQuery(() => db.highlights.toArray()) ?? [];
+  const notes = useLiveQuery(() => db.notes.toArray()) ?? [];
   const liturgicalReadings = useReaderStore((state) => state.liturgicalReadings);
   const searchHighlight = useReaderStore((state) => state.searchHighlight);
 
-  const localHighlights = useLiveQuery(() => db.highlights.toArray()) ?? [];
-  const localBookmarks = useLiveQuery(() => db.bookmarks.toArray()) ?? [];
-  const localNotes = useLiveQuery(() => db.notes.toArray()) ?? [];
-
   if (isLoading) return <LoadingScreen />;
 
-  const virtualRows = rowVirtualizer.getVirtualItems();
-
   return (
-    <>
-      <div ref={parentRef} className="h-full w-full overflow-auto bg-transparent scroll-smooth selection:bg-primary/10 scrollbar-none">
-        <div style={{ height: `${rowVirtualizer.getTotalSize()}px`, width: "100%", position: "relative" }} className="max-w-4xl mx-auto">
-          {virtualRows.map((virtualRow) => {
-            const row = rows[virtualRow.index];
-            if (!row) return null;
+    <div 
+      ref={containerRef} 
+      className="h-full overflow-y-auto scrollbar-none bg-white dark:bg-zinc-950 selection:bg-primary/20 selection:text-primary"
+    >
+      <div
+        className="w-full relative"
+        style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
+      >
+        {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+          const row = rows[virtualRow.index];
+          if (!row) return null;
 
-            return (
-              <div
-                key={virtualRow.index}
-                style={{ 
-                  position: "absolute", top: 0, left: 0, width: "100%", height: `${virtualRow.size}px`, transform: `translateY(${virtualRow.start}px)`,
-                  willChange: "transform"
-                }}
-              >
-                {row.type === "book-header" && <BookHeader book={row.book} />}
-                {row.type === "chapter-header" && <ChapterHeader chapter={row.chapter} />}
-                {row.type === "verse" && (
-                  <VerseItem 
-                    verse={row.verse}
-                    hasHighlight={localHighlights.some(h => h.verseId === row.verse.id)}
-                    isLiturgical={liturgicalReadings.some(r => r.orders.includes(row.verse.globalOrder))}
-                    isSearchTarget={searchHighlight?.targetOrder === row.verse.globalOrder}
-                    searchQuery={searchHighlight?.query}
-                    hasBookmark={localBookmarks.some(b => b.verseId === row.verse.id)}
-                    hasNote={localNotes.some(n => n.verseId === row.verse.id)}
-                    onClick={() => setActiveVerse(row.verse)}
-                  />
-                )}
-              </div>
-            );
-          })}
-        </div>
+          return (
+            <div
+              key={virtualRow.key}
+              data-index={virtualRow.index}
+              ref={rowVirtualizer.measureElement}
+              className="absolute top-0 left-0 w-full"
+              style={{ transform: `translateY(${virtualRow.start}px)` }}
+            >
+              {row.type === "book-header" && <BookHeader book={row.book} />}
+              {row.type === "chapter-header" && <ChapterHeader chapter={row.chapter} />}
+              {row.type === "prose-block" && (
+                <div className="max-w-4xl mx-auto px-8 md:px-16 py-4 flex flex-wrap items-baseline gap-x-1.5 leading-[1.8]">
+                  {row.verses.map((v) => (
+                    <InlineVerse 
+                      key={v.id} 
+                      verse={v}
+                      hasBookmark={bookmarks.some(b => b.verseId === v.id)}
+                      hasHighlight={highlights.some(h => h.verseId === v.id)}
+                      hasNote={notes.some(n => n.verseId === v.id)}
+                      isLiturgical={liturgicalReadings.some(r => r.orders.includes(v.globalOrder))}
+                      isSearchTarget={searchHighlight?.targetOrder === v.globalOrder}
+                      searchQuery={searchHighlight?.query}
+                      onClick={() => setActiveVerse(v)}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
-
-      <ScriptureGuide currentOrder={currentOrder} />
 
       {activeVerse && (
         <VerseOverlay 
-          verseId={activeVerse.id} bookId={activeVerse.bookId} bookName={activeVerse.book.name}
-          chapter={activeVerse.chapter} verse={activeVerse.verse} text={activeVerse.text}
+          verseId={activeVerse.id} 
+          bookId={activeVerse.bookId} 
+          bookName={activeVerse.book.name}
+          chapter={activeVerse.chapter} 
+          verse={activeVerse.verse} 
+          text={activeVerse.text}
           onClose={() => setActiveVerse(null)}
         />
       )}
-    </>
+    </div>
   );
 }
+
+const InlineVerse = memo(({ 
+  verse, 
+  hasBookmark, 
+  hasHighlight, 
+  hasNote, 
+  isLiturgical, 
+  isSearchTarget, 
+  searchQuery, 
+  onClick 
+}: { 
+  verse: any, 
+  hasBookmark: boolean, 
+  hasHighlight: boolean, 
+  hasNote: boolean, 
+  isLiturgical: boolean, 
+  isSearchTarget: boolean, 
+  searchQuery?: string,
+  onClick: () => void 
+}) => {
+  const fontSize = useReaderStore((state) => state.fontSize);
+
+  return (
+    <span 
+      onClick={onClick}
+      className={cn(
+        "inline cursor-pointer transition-all duration-300 rounded px-0.5 -mx-0.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 font-serif",
+        hasHighlight && "bg-yellow-400/10 border-b border-yellow-400/30",
+        isLiturgical && "text-primary font-medium",
+        isSearchTarget && "ring-2 ring-primary/20 bg-primary/5 rounded-md"
+      )}
+      style={{ fontSize: `${fontSize}px` }}
+    >
+      <sup className="text-[0.6em] font-black mr-1 text-zinc-400 opacity-60 tabular-nums">
+        {verse.verse}
+      </sup>
+      {verse.text}
+    </span>
+  );
+});
+
+InlineVerse.displayName = "InlineVerse";
