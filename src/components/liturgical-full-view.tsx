@@ -201,7 +201,7 @@ function ReadingSection({ title, citation, icon: Icon, highlight, isPsalm, verse
                 )}
                 {segment.map((v, i) => (
                   <span key={v.id} className={cn("inline mr-2", isPsalm && "block mb-2 last:mb-0")}>
-                    {!isPsalm && <sup className="text-[0.6em] text-zinc-400 mr-1.5 tabular-nums font-sans">{v.verse}</sup>}
+                    <sup className="text-[0.6em] text-zinc-400 mr-1.5 tabular-nums font-sans">{v.verse}</sup>
                     {v.text}
                   </span>
                 ))}
