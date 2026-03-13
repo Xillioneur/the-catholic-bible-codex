@@ -14,12 +14,9 @@ export function ReaderLayout() {
       {/* The Floating Sidebar - Truly floating now */}
       <SidebarNav />
       
-      {/* Centered Reader Area */}
-      <div className={cn(
-        "flex-1 h-full transition-all duration-700 ease-in-out",
-        isCollapsed ? "pl-20" : "pl-72"
-      )}>
-        <div className="max-w-5xl mx-auto h-full">
+      {/* Centered Reader Area - Now truly independent of sidebar state */}
+      <div className="flex-1 h-full">
+        <div className="max-w-5xl mx-auto h-full px-4 sm:px-8">
           <BibleReader />
         </div>
       </div>
