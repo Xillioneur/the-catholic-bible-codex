@@ -70,16 +70,16 @@ export function SidebarNav() {
         "md:left-0 md:top-0 md:bottom-0 md:flex md:flex-col md:justify-start md:translate-x-0",
         isCollapsed ? "md:-translate-x-full" : "md:translate-x-0",
         // Mobile: Bottom Bar
-        "left-0 right-0 bottom-0 flex justify-center translate-y-0 pb-[env(safe-area-inset-bottom)]"
+        "left-0 right-0 bottom-0 flex justify-center translate-y-0"
       )}>
         
         {/* MAIN CONTAINER */}
         <div className={cn(
-          "bg-white/80 dark:bg-zinc-950/80 backdrop-blur-2xl border-zinc-200/30 dark:border-zinc-800/30 flex pointer-events-auto shadow-2xl transition-all duration-700",
+          "bg-white/90 dark:bg-zinc-950/90 backdrop-blur-2xl border-zinc-200/30 dark:border-zinc-800/30 flex pointer-events-auto shadow-2xl transition-all duration-700",
           // Desktop Styling
           "md:w-14 md:h-full md:flex-col md:items-center md:py-6 md:gap-6 md:border-r",
-          // Mobile Styling
-          "w-full h-16 items-center justify-around px-4 border-t rounded-t-3xl md:rounded-none"
+          // Mobile Styling: Increased height and added safe-area padding
+          "w-full min-h-[4.5rem] items-center justify-around px-6 border-t rounded-t-[2rem] md:rounded-none pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2"
         )}>
           
           {/* BRANDING (Hidden on Mobile) */}
