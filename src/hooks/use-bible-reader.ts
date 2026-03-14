@@ -11,7 +11,7 @@ import { db } from "~/lib/db";
 export type BibleRow = 
   | { type: "book-header"; book: any }
   | { type: "chapter-header"; book: any; chapter: number }
-  | { type: "prose-block"; book: any; chapter: number; verses: any[] };
+  | { type: "prose-block"; book: any; chapter: number; verses: any[]; firstOrder: number; lastOrder: number };
 
 export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>) {
   const translationSlug = useReaderStore((state) => state.translationSlug);
@@ -23,10 +23,57 @@ export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>
   const setCurrentOrderStore = useReaderStore((state) => state.setCurrentOrder);
   const setTotalVerseCount = useReaderStore((state) => state.setTotalVerseCount);
 
-  const [currentOrder, setCurrentOrder] = useState<number>(1);
+  const [rows, setRows] = useState<BibleRow[]>([]);
+  const [rowCount, setRowCount] = useState(0);
+  const [isWorkerReady, setIsWorkerReady] = useState(false);
+  const [isHydrated, setIsHydrated] = useState(false);
+
+  const workerRef = useRef<Worker | null>(null);
   const lastSyncTime = useRef(0);
   const initialScrollDone = useRef(false);
 
+  // 1. Multithreaded Worker Lifecycle
+  useEffect(() => {
+    workerRef.current = new Worker(new URL("../workers/bible-worker.ts", import.meta.url));
+    
+    workerRef.current.onmessage = (e) => {
+      const { type, payload } = e.data;
+      if (type === "READY") {
+        setRowCount(payload.count);
+        setIsWorkerReady(true);
+        // Pre-fetch initial chunk
+        workerRef.current?.postMessage({ type: "GET_ROWS", payload: { startIndex: 0, limit: 100 } });
+      } else if (type === "ROWS_DATA") {
+        const { startIndex, items } = payload;
+        setRows(prev => {
+          const next = [...prev];
+          for (let i = 0; i < items.length; i++) {
+            next[startIndex + i] = items[i];
+          }
+          return next;
+        });
+      } else if (type === "ORDER_INDEX") {
+        const { index } = payload;
+        if (index !== -1) {
+          rowVirtualizer.scrollToIndex(index, { align: "start" });
+        }
+      } else if (type === "NOT_HYDRATED") {
+        setIsHydrated(false);
+      }
+    };
+
+    return () => workerRef.current?.terminate();
+  }, []);
+
+  // 2. Worker Initialization
+  useEffect(() => {
+    if (workerRef.current) {
+      setIsWorkerReady(false);
+      workerRef.current.postMessage({ type: "INITIALIZE", payload: { slug: translationSlug } });
+    }
+  }, [translationSlug]);
+
+  // 3. Background Sync (Fallback/Hydration)
   const { data: totalVerseCount } = api.bible.getVerseCount.useQuery(
     { translationSlug },
     { staleTime: Infinity }
@@ -41,151 +88,104 @@ export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>
         translationSlug, 
         totalVerseCount, 
         (input) => utils.bible.getVersesByOrderRange.fetch(input)
-      );
+      ).then(() => {
+        setIsHydrated(true);
+        // Re-init worker once hydrated
+        workerRef.current?.postMessage({ type: "INITIALIZE", payload: { slug: translationSlug } });
+      });
     }
   }, [totalVerseCount, translationSlug, utils]);
 
-  const allVerses = useLiveQuery(
-    () => db.verses.where("translationId").equals(translationSlug).sortBy("globalOrder"),
-    [translationSlug]
-  );
-
-  const isLoading = !allVerses || allVerses.length === 0;
-
-  // 4. Grouping into Prose Blocks
-  const flattenedRows = useMemo(() => {
-    if (!allVerses) return [];
-    const rows: BibleRow[] = [];
-    let lastBookId: number | null = null;
-    let lastChapter: number | null = null;
-    let currentProseVerses: any[] = [];
-
-    const flushProse = () => {
-      if (currentProseVerses.length > 0) {
-        const first = currentProseVerses[0];
-        rows.push({ 
-          type: "prose-block", 
-          book: first.book, 
-          chapter: first.chapter, 
-          verses: [...currentProseVerses] 
-        });
-        currentProseVerses = [];
-      }
-    };
-
-    for (let i = 0; i < allVerses.length; i++) {
-      const v = allVerses[i]!;
-      
-      if (v.bookId !== lastBookId) {
-        flushProse();
-        rows.push({ type: "book-header", book: v.book });
-        rows.push({ type: "chapter-header", book: v.book, chapter: v.chapter });
-        lastBookId = v.bookId;
-        lastChapter = v.chapter;
-      } else if (v.chapter !== lastChapter) {
-        flushProse();
-        rows.push({ type: "chapter-header", book: v.book, chapter: v.chapter });
-        lastChapter = v.chapter;
-      }
-
-      currentProseVerses.push(v);
-
-      // Simple paragraph logic: group every 5 verses or on chapter/book breaks
-      if (currentProseVerses.length >= 5) {
-        flushProse();
-      }
-    }
-    flushProse();
-    return rows;
-  }, [allVerses]);
-
-  // 5. Virtualization
+  // 4. Minecraft-like Chunk Loading
   const rowVirtualizer = useVirtualizer({
-    count: flattenedRows.length,
+    count: rowCount,
     getScrollElement: () => parentRef.current,
     estimateSize: (index) => {
-      const row = flattenedRows[index];
+      const row = rows[index];
       if (row?.type === "book-header") return 400;
       if (row?.type === "chapter-header") return 150;
-      if (row?.type === "prose-block") return 100 * row.verses.length; // rough estimate
-      return 100;
+      if (row?.type === "prose-block") return 30 * row.verses.length; 
+      return 150;
     },
-    overscan: 10,
+    overscan: 20,
   });
 
   const virtualItems = rowVirtualizer.getVirtualItems();
 
-  // 6. INITIAL SCROLL TO LITURGICAL
+  // Load missing chunks as we scroll
   useEffect(() => {
-    if (!initialScrollDone.current && liturgicalReadings.length > 0 && flattenedRows.length > 0) {
-      const firstReading = liturgicalReadings.find(r => r.type === "First Reading");
-      if (firstReading && firstReading.orders.length > 0) {
-        const order = firstReading.orders[0];
-        const index = flattenedRows.findIndex(r => 
-          r.type === "prose-block" && r.verses.some(v => v.globalOrder === order)
-        );
-        if (index !== -1) {
-          rowVirtualizer.scrollToIndex(index, { align: "start" });
-          initialScrollDone.current = true;
+    if (virtualItems.length > 0 && isWorkerReady) {
+      const firstIndex = virtualItems[0].index;
+      const lastIndex = virtualItems[virtualItems.length - 1].index;
+      
+      // Check if we need to fetch data for these indices
+      const missingIndices: number[] = [];
+      for (let i = firstIndex; i <= lastIndex; i++) {
+        if (!rows[i]) {
+          missingIndices.push(i);
         }
       }
+
+      if (missingIndices.length > 0) {
+        const start = Math.min(...missingIndices);
+        const limit = Math.max(...missingIndices) - start + 1;
+        workerRef.current?.postMessage({ 
+          type: "GET_ROWS", 
+          payload: { startIndex: start, limit: Math.max(limit, 50) } 
+        });
+      }
     }
-  }, [liturgicalReadings, flattenedRows, rowVirtualizer]);
+  }, [virtualItems, rows, isWorkerReady]);
 
-  // 7. REACTIVE SCROLL SYNC
+  // 5. Initial Scroll
   useEffect(() => {
-    if (virtualItems.length === 0 || !parentRef.current || flattenedRows.length === 0) return;
+    if (!initialScrollDone.current && liturgicalReadings.length > 0 && isWorkerReady && rowCount > 0) {
+      const firstReading = liturgicalReadings.find(r => r.type === "First Reading");
+      if (firstReading && firstReading.orders.length > 0) {
+        workerRef.current?.postMessage({ type: "FIND_ORDER", payload: { order: firstReading.orders[0] } });
+        initialScrollDone.current = true;
+      }
+    }
+  }, [liturgicalReadings, isWorkerReady, rowCount]);
 
+  // 6. Navigation
+  useEffect(() => {
+    if (scrollToOrder !== null && isWorkerReady) {
+      workerRef.current?.postMessage({ type: "FIND_ORDER", payload: { order: scrollToOrder } });
+      setScrollToOrder(null);
+    }
+  }, [scrollToOrder, isWorkerReady, setScrollToOrder]);
+
+  // 7. Sync Store
+  useEffect(() => {
+    if (virtualItems.length === 0 || !parentRef.current || rowCount === 0) return;
     const now = Date.now();
-    if (now - lastSyncTime.current < 100) return;
+    if (now - lastSyncTime.current < 150) return;
     lastSyncTime.current = now;
 
-    const scrollTop = parentRef.current.scrollTop;
-    const visibleItem = virtualItems.find(item => item.start >= scrollTop - 10) ?? virtualItems[0];
-    if (!visibleItem) return;
-
-    const row = flattenedRows[visibleItem.index];
+    const visibleItem = virtualItems[0];
+    const row = rows[visibleItem.index];
     if (!row) return;
 
     const state = useReaderStore.getState();
-    
-    if (state.totalVerseCount !== flattenedRows.length) {
-      setTotalVerseCount(flattenedRows.length);
-    }
-
-    if (state.currentOrder !== visibleItem.index + 1) {
-      setCurrentOrderStore(visibleItem.index + 1);
-    }
+    if (state.totalVerseCount !== rowCount) setTotalVerseCount(rowCount);
+    if (state.currentOrder !== visibleItem.index + 1) setCurrentOrderStore(visibleItem.index + 1);
 
     if (row.type === "prose-block") {
-      const firstVerse = row.verses[0];
-      setCurrentOrder(firstVerse.globalOrder);
-      if (state.currentBookId !== firstVerse.bookId) setCurrentBookId(firstVerse.bookId);
-      if (state.currentChapter !== firstVerse.chapter) setCurrentChapter(firstVerse.chapter);
-    } else if (row.type === "chapter-header" || row.type === "book-header") {
+      const v = row.verses[0];
+      if (state.currentBookId !== v.bookId) setCurrentBookId(v.bookId);
+      if (state.currentChapter !== v.chapter) setCurrentChapter(v.chapter);
+    } else {
       if (state.currentBookId !== row.book.id) setCurrentBookId(row.book.id);
-      const targetChapter = row.type === "chapter-header" ? row.chapter : 1;
-      if (state.currentChapter !== targetChapter) setCurrentChapter(targetChapter);
+      const ch = row.type === "chapter-header" ? row.chapter : 1;
+      if (state.currentChapter !== ch) setCurrentChapter(ch);
     }
-  }, [virtualItems, flattenedRows, parentRef, setTotalVerseCount, setCurrentOrderStore, setCurrentBookId, setCurrentChapter]);
-
-  // 8. Navigation
-  useEffect(() => {
-    if (scrollToOrder !== null && flattenedRows.length > 0) {
-      const index = flattenedRows.findIndex(r => 
-        r.type === "prose-block" && r.verses.some(v => v.globalOrder === scrollToOrder)
-      );
-      if (index !== -1) {
-        rowVirtualizer.scrollToIndex(index, { align: "start" });
-      }
-      setScrollToOrder(null);
-    }
-  }, [scrollToOrder, flattenedRows, rowVirtualizer, setScrollToOrder]);
+  }, [virtualItems, rows, rowCount]);
 
   return {
-    rows: flattenedRows,
-    isLoading,
+    rows,
+    isLoading: !isWorkerReady && !isHydrated,
     rowVirtualizer,
-    currentOrder
+    currentOrder: 0 // handled by store now
   };
 }
