@@ -5,8 +5,6 @@ import { createPortal } from "react-dom";
 import { X, Scroll, Music, Church } from "lucide-react";
 import { cn } from "~/lib/utils";
 import { useReaderStore } from "~/hooks/use-reader-store";
-import { db } from "~/lib/db";
-import { useLiveQuery } from "dexie-react-hooks";
 
 interface DailyAllViewProps {
   info: any;
@@ -17,7 +15,6 @@ interface DailyAllViewProps {
 export function DailyAllView({ info, onClose, onSelectReading }: DailyAllViewProps) {
   const [mounted, setMounted] = useState(false);
   const liturgicalReadings = useReaderStore((state) => state.liturgicalReadings);
-  const translationSlug = useReaderStore((state) => state.translationSlug);
 
   useEffect(() => {
     setMounted(true);
@@ -26,19 +23,6 @@ export function DailyAllView({ info, onClose, onSelectReading }: DailyAllViewPro
       document.body.style.overflow = "unset";
     };
   }, []);
-
-  const allOrders = useMemo(() => 
-    liturgicalReadings.flatMap(r => r.orders), 
-    [liturgicalReadings]
-  );
-
-  const verses = useLiveQuery(
-    () => db.verses
-      .where("translationId").equals(translationSlug)
-      .and(v => allOrders.includes(v.globalOrder))
-      .toArray(),
-    [translationSlug, allOrders]
-  ) ?? [];
 
   const content = (
     <div className="fixed inset-0 z-[999] flex flex-col bg-white dark:bg-zinc-950 animate-in fade-in duration-300 pointer-events-auto overflow-hidden">
@@ -73,7 +57,7 @@ export function DailyAllView({ info, onClose, onSelectReading }: DailyAllViewPro
             title="First Reading" 
             citation={info.readings.firstReading} 
             icon={Scroll}
-            verses={verses.filter(v => liturgicalReadings.find(r => r.type === "First Reading")?.orders.includes(v.globalOrder))}
+            verses={liturgicalReadings.find(r => r.type === "First Reading")?.verses ?? []}
             onSelect={() => onSelectReading("First Reading")} 
           />
           
@@ -83,7 +67,7 @@ export function DailyAllView({ info, onClose, onSelectReading }: DailyAllViewPro
               citation={info.readings.psalm} 
               icon={Music}
               isPsalm
-              verses={verses.filter(v => liturgicalReadings.find(r => r.type === "Responsorial Psalm")?.orders.includes(v.globalOrder))}
+              verses={liturgicalReadings.find(r => r.type === "Responsorial Psalm")?.verses ?? []}
               onSelect={() => onSelectReading("Responsorial Psalm")} 
             />
           )}
@@ -93,7 +77,7 @@ export function DailyAllView({ info, onClose, onSelectReading }: DailyAllViewPro
               title="Second Reading" 
               citation={info.readings.secondReading} 
               icon={Scroll}
-              verses={verses.filter(v => liturgicalReadings.find(r => r.type === "Second Reading")?.orders.includes(v.globalOrder))}
+              verses={liturgicalReadings.find(r => r.type === "Second Reading")?.verses ?? []}
               onSelect={() => onSelectReading("Second Reading")} 
             />
           )}
@@ -104,7 +88,7 @@ export function DailyAllView({ info, onClose, onSelectReading }: DailyAllViewPro
               citation={info.readings.gospel} 
               icon={Church} 
               highlight
-              verses={verses.filter(v => liturgicalReadings.find(r => r.type === "The Holy Gospel")?.orders.includes(v.globalOrder))}
+              verses={liturgicalReadings.find(r => r.type === "The Holy Gospel")?.verses ?? []}
               onSelect={() => onSelectReading("The Holy Gospel")} 
             />
           )}
@@ -150,8 +134,6 @@ function ReadingSection({ title, citation, icon: Icon, highlight, isPsalm, verse
     for (let i = 1; i < sorted.length; i++) {
       const prev = sorted[i - 1];
       const curr = sorted[i];
-      
-      // If globalOrder is not sequential, it's a skip
       if (curr.globalOrder !== prev.globalOrder + 1) {
         segments.push(currentSegment);
         currentSegment = [curr];

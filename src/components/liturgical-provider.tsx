@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, ReactNode } from "react";
 import { api } from "~/trpc/react";
 import { type LiturgicalInfo, getLiturgicalColorOklch } from "~/lib/liturgical";
 import { useReaderStore } from "~/hooks/use-reader-store";
+import { db } from "~/lib/db";
 
 interface LiturgicalContextType {
   info: LiturgicalInfo | null;
@@ -43,12 +44,26 @@ export function LiturgicalProvider({ children }: { children: ReactNode }) {
           .filter(p => !!p.citation)
           .map(async (p) => {
             try {
+              // 1. Resolve global orders
               const orders = await utils.bible.resolveReadingHighlight.fetch({
                 translationSlug,
                 citation: p.citation!
               });
-              return { type: p.type, citation: p.citation!, orders };
+
+              // 2. Pre-fetch full verse objects from local DB for instant UI
+              const verses = await db.verses
+                .where("translationId").equals(translationSlug)
+                .and(v => orders.includes(v.globalOrder))
+                .toArray();
+
+              return { 
+                type: p.type, 
+                citation: p.citation!, 
+                orders,
+                verses: verses.sort((a, b) => a.globalOrder - b.globalOrder)
+              };
             } catch (e) {
+              console.error(`[LITURGICAL] Resolution failed for ${p.citation}`, e);
               return null;
             }
           })

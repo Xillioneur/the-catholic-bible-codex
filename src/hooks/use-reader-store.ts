@@ -4,6 +4,7 @@ interface Reading {
   type: string;
   citation: string;
   orders: number[];
+  verses?: any[]; // Full cached verse data for instant loading
 }
 
 interface ReaderState {
