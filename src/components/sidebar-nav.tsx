@@ -78,8 +78,8 @@ export function SidebarNav() {
           "bg-white/90 dark:bg-zinc-950/90 backdrop-blur-2xl border-zinc-200/30 dark:border-zinc-800/30 flex pointer-events-auto shadow-2xl transition-all duration-700",
           // Desktop Styling
           "md:w-14 md:h-full md:flex-col md:items-center md:py-6 md:gap-6 md:border-r",
-          // Mobile Styling: Increased height and added safe-area padding
-          "w-full min-h-[4.5rem] items-center justify-around px-6 border-t rounded-t-[2rem] md:rounded-none pb-[calc(0.5rem+env(safe-area-inset-bottom))] pt-2"
+          // Mobile Styling: Precision height and safe-area balance
+          "w-full h-[calc(3.75rem+env(safe-area-inset-bottom))] items-center justify-around px-6 border-t rounded-t-[2rem] md:rounded-none pb-[env(safe-area-inset-bottom)]"
         )}>
           
           {/* BRANDING (Hidden on Mobile) */}
@@ -283,9 +283,9 @@ function RailButton({ icon, active, onClick, label }: { icon: React.ReactNode, a
         {icon}
       </div>
       <span className={cn(
-        "text-[7px] font-black uppercase tracking-tight transition-opacity duration-300",
+        "text-[7px] font-black uppercase tracking-tight transition-opacity duration-300 hidden md:block",
         "md:opacity-0 md:group-hover:opacity-100",
-        active ? "opacity-100" : "opacity-60 md:opacity-0"
+        active ? "md:opacity-100" : "md:opacity-0"
       )}>
         {label}
       </span>
