@@ -67,7 +67,7 @@ export function SidebarNav() {
       <nav className={cn(
         "fixed z-[100] transition-all duration-700 ease-[cubic-bezier(0.2,1,0.3,1)] pointer-events-none",
         // Desktop: Left Rail
-        "md:left-0 md:top-0 md:bottom-0 md:flex md:translate-x-0",
+        "md:left-0 md:top-0 md:bottom-0 md:flex md:flex-col md:justify-start md:translate-x-0",
         isCollapsed ? "md:-translate-x-full" : "md:translate-x-0",
         // Mobile: Bottom Bar
         "left-0 right-0 bottom-0 flex justify-center translate-y-0 pb-[env(safe-area-inset-bottom)]"
