@@ -146,31 +146,31 @@ function SearchContent() {
   }, [debouncedQuery, setSearchHighlight, setScrollToOrder, setIsSearchOpen]);
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-start justify-center pt-[12vh] px-4 sm:px-6">
+    <div className="fixed inset-0 z-[200] flex items-start justify-center pt-[8vh] md:pt-[12vh] px-2 sm:px-6">
       <div className="fixed inset-0 bg-zinc-950/20 backdrop-blur-md animate-in fade-in duration-500" onClick={() => setIsSearchOpen(false)} />
       
-      <div className="glass w-full max-w-xl rounded-[2rem] shadow-2xl border border-white/40 dark:border-zinc-800/40 overflow-hidden animate-in zoom-in-95 slide-in-from-top-2 duration-500 relative z-10 flex flex-col h-[60vh] max-h-[600px]">
+      <div className="glass w-full max-w-xl rounded-[2rem] shadow-2xl border border-white/40 dark:border-zinc-800/40 overflow-hidden animate-in zoom-in-95 slide-in-from-top-2 duration-500 relative z-10 flex flex-col h-[80vh] md:h-[60vh] max-h-[700px]">
         
         {/* COMPACT INTEGRATED HEADER */}
-        <div className="px-5 py-4 flex flex-col gap-4 border-b border-zinc-100/50 dark:border-zinc-800/50">
-          <div className="flex items-center gap-4">
+        <div className="px-4 md:px-5 py-4 flex flex-col gap-4 border-b border-zinc-100/50 dark:border-zinc-800/50">
+          <div className="flex items-center gap-3 md:gap-4">
             <Search className="h-4 w-4 text-primary opacity-60 flex-shrink-0" />
             <input 
               autoFocus
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Search the Word..."
-              className="flex-1 bg-transparent border-none outline-none text-base font-medium text-zinc-900 dark:text-zinc-50 placeholder:text-zinc-400"
+              placeholder="Search..."
+              className="flex-1 bg-transparent border-none outline-none text-base font-medium text-zinc-900 dark:text-zinc-50 placeholder:text-zinc-400 min-w-0"
             />
             {isFetching && <Loader2 className="h-3.5 w-3.5 animate-spin text-primary opacity-40" />}
-            <button onClick={() => setIsSearchOpen(false)} className="h-7 w-7 flex items-center justify-center rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
-              <X className="h-3.5 w-3.5 text-zinc-400" />
+            <button onClick={() => setIsSearchOpen(false)} className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
+              <X className="h-4 w-4 text-zinc-400" />
             </button>
           </div>
 
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center justify-between gap-2 overflow-x-auto scrollbar-none">
             {/* MINI SCOPE SELECTOR */}
-            <div className="flex items-center gap-1.5 p-0.5 bg-zinc-100/50 dark:bg-zinc-800/50 rounded-full">
+            <div className="flex items-center gap-1 p-0.5 bg-zinc-100/50 dark:bg-zinc-800/50 rounded-full flex-shrink-0">
               {(["global", "ot", "nt", "book", "chapter"] as const).map((m) => (
                 <button 
                   key={m}

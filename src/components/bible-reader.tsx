@@ -27,7 +27,7 @@ export function BibleReader() {
   return (
     <div 
       ref={containerRef} 
-      className="h-full overflow-y-auto scrollbar-none bg-white dark:bg-zinc-950 selection:bg-primary/20 selection:text-primary"
+      className="h-full overflow-y-auto scrollbar-none bg-white dark:bg-zinc-950 selection:bg-primary/20 selection:text-primary pb-20 md:pb-0"
     >
       <div
         className="w-full relative"
@@ -48,7 +48,7 @@ export function BibleReader() {
               {row.type === "book-header" && <BookHeader book={row.book} />}
               {row.type === "chapter-header" && <ChapterHeader chapter={row.chapter} />}
               {row.type === "prose-block" && (
-                <div className="max-w-4xl mx-auto px-8 md:px-16 py-4 flex flex-wrap items-baseline gap-x-1.5 leading-[1.8]">
+                <div className="max-w-4xl mx-auto px-6 sm:px-12 md:px-16 py-4 flex flex-wrap items-baseline gap-x-1.5 leading-[1.8]">
                   {row.verses.map((v) => (
                     <InlineVerse 
                       key={v.id} 
