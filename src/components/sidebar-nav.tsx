@@ -149,8 +149,7 @@ export function SidebarNav() {
           <div className={cn(
             "fixed glass shadow-2xl border border-white/40 dark:border-zinc-800/40 flex flex-col animate-in duration-500 pointer-events-auto z-[101]",
             "md:left-16 md:top-0 md:bottom-0 md:w-64 md:slide-in-from-left-2",
-            // Mobile Position: Full height with bottom padding for nav bar
-            "left-0 right-0 top-0 bottom-20 rounded-b-[2.5rem] slide-in-from-bottom-2"
+            "left-4 right-4 bottom-24 h-[60vh] rounded-[2.5rem] slide-in-from-bottom-2"
           )}>
             <div className="p-5 flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800/50">
               <h2 className="text-[8px] font-black uppercase tracking-[0.4em] text-zinc-400">{activeTab}</h2>
