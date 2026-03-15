@@ -25,89 +25,86 @@ export function DailyAllView({ info, onClose, onSelectReading }: DailyAllViewPro
   }, []);
 
   const content = (
-    <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 md:p-8 pointer-events-none">
-      <div className="fixed inset-0 bg-zinc-950/40 backdrop-blur-md animate-in fade-in duration-500 pointer-events-auto" onClick={onClose} />
+    <div className="fixed inset-0 z-[999] flex flex-col bg-white dark:bg-zinc-950 animate-in fade-in duration-300 pointer-events-auto overflow-hidden">
       
-      <div className="glass w-full max-w-2xl max-h-[85vh] rounded-[2.5rem] shadow-2xl border border-white/20 dark:border-zinc-800/40 overflow-hidden relative z-10 flex flex-col animate-in zoom-in-95 duration-500 pointer-events-auto">
-        
-        {/* COMPACT HEADER */}
-        <div className="w-full border-b border-zinc-100 dark:border-zinc-800/50 bg-white/50 dark:bg-zinc-950/50 backdrop-blur-xl z-30">
-          <header className="px-6 py-6 flex items-center justify-between">
-            <div className="flex flex-col gap-0.5">
-              <div className="flex items-center gap-2">
-                <span className="text-[9px] font-black uppercase tracking-[0.3em] text-primary">Daily Bread</span>
-                <div className="h-px w-4 bg-primary/20" />
-                <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest">{info.season}</span>
-              </div>
-              <h1 className="text-lg md:text-xl font-serif font-black italic text-zinc-900 dark:text-zinc-50">
-                {info.day}
-              </h1>
+      {/* ULTRA-COMPACT HEADER */}
+      <div className="w-full border-b border-zinc-100 dark:border-zinc-900/50 bg-white/80 dark:bg-zinc-950/80 backdrop-blur-xl z-30">
+        <header className="max-w-5xl mx-auto px-6 py-4 md:py-6 flex items-center justify-between">
+          <div className="flex flex-col gap-0.5">
+            <div className="flex items-center gap-2">
+              <span className="text-[8px] font-black uppercase tracking-[0.3em] text-primary">Daily Bread</span>
+              <div className="h-px w-3 bg-primary/20" />
+              <span className="text-[8px] font-bold text-zinc-400 uppercase tracking-widest">{info.season}</span>
             </div>
-            <button 
-              onClick={onClose}
-              className="h-10 w-10 rounded-full flex items-center justify-center bg-zinc-50 dark:bg-zinc-900 text-zinc-400 hover:text-primary transition-all border border-zinc-100 dark:border-zinc-800"
-            >
-              <X className="h-4 w-4" />
-            </button>
-          </header>
-        </div>
-
-        {/* BODY */}
-        <div className="flex-1 overflow-y-auto scrollbar-elegant py-8 bg-white/30 dark:bg-zinc-950/30">
-          <div className="px-6 space-y-12">
-            <ReadingSection 
-              title="First Reading" 
-              citation={info.readings.firstReading} 
-              icon={Scroll}
-              verses={liturgicalReadings.find(r => r.type === "First Reading")?.verses ?? []}
-              onSelect={() => onSelectReading("First Reading")} 
-            />
-            
-            {info.readings.psalm && (
-              <ReadingSection 
-                title="Responsorial Psalm" 
-                citation={info.readings.psalm} 
-                icon={Music}
-                isPsalm
-                verses={liturgicalReadings.find(r => r.type === "Responsorial Psalm")?.verses ?? []}
-                onSelect={() => onSelectReading("Responsorial Psalm")} 
-              />
-            )}
-
-            {info.readings.secondReading && (
-              <ReadingSection 
-                title="Second Reading" 
-                citation={info.readings.secondReading} 
-                icon={Scroll}
-                verses={liturgicalReadings.find(r => r.type === "Second Reading")?.verses ?? []}
-                onSelect={() => onSelectReading("Second Reading")} 
-              />
-            )}
-            
-            {info.readings.gospel && (
-              <ReadingSection 
-                title="The Holy Gospel" 
-                citation={info.readings.gospel} 
-                icon={Church} 
-                highlight
-                verses={liturgicalReadings.find(r => r.type === "The Holy Gospel")?.verses ?? []}
-                onSelect={() => onSelectReading("The Holy Gospel")} 
-              />
-            )}
-
-            <div className="h-12" />
+            <h1 className="text-base md:text-xl font-serif font-black italic text-zinc-900 dark:text-zinc-50 tracking-tight truncate max-w-[240px] md:max-w-none">
+              {info.day}
+            </h1>
           </div>
-        </div>
-
-        {/* FOOTER */}
-        <div className="w-full border-t border-zinc-100 dark:border-zinc-900/50 bg-white dark:bg-zinc-950 p-4 flex justify-center z-30">
           <button 
             onClick={onClose}
-            className="px-10 py-2.5 rounded-full bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 font-black text-[9px] uppercase tracking-[0.2em] shadow-lg active:scale-95 transition-all"
+            className="h-8 w-8 md:h-10 md:w-10 rounded-full flex items-center justify-center bg-zinc-50 dark:bg-zinc-900 text-zinc-400 hover:text-primary transition-all border border-zinc-100 dark:border-zinc-800"
           >
-            Return to Sanctuary
+            <X className="h-4 w-4" />
           </button>
+        </header>
+      </div>
+
+      {/* EXPANSIVE BODY */}
+      <div className="flex-1 overflow-y-auto scrollbar-elegant py-8 md:py-12 bg-zinc-50/10 dark:bg-zinc-900/5">
+        <div className="max-w-3xl mx-auto px-6 space-y-12 md:space-y-20">
+          
+          <ReadingSection 
+            title="First Reading" 
+            citation={info.readings.firstReading} 
+            icon={Scroll}
+            verses={liturgicalReadings.find(r => r.type === "First Reading")?.verses ?? []}
+            onSelect={() => onSelectReading("First Reading")} 
+          />
+          
+          {info.readings.psalm && (
+            <ReadingSection 
+              title="Responsorial Psalm" 
+              citation={info.readings.psalm} 
+              icon={Music}
+              isPsalm
+              verses={liturgicalReadings.find(r => r.type === "Responsorial Psalm")?.verses ?? []}
+              onSelect={() => onSelectReading("Responsorial Psalm")} 
+            />
+          )}
+
+          {info.readings.secondReading && (
+            <ReadingSection 
+              title="Second Reading" 
+              citation={info.readings.secondReading} 
+              icon={Scroll}
+              verses={liturgicalReadings.find(r => r.type === "Second Reading")?.verses ?? []}
+              onSelect={() => onSelectReading("Second Reading")} 
+            />
+          )}
+          
+          {info.readings.gospel && (
+            <ReadingSection 
+              title="The Holy Gospel" 
+              citation={info.readings.gospel} 
+              icon={Church} 
+              highlight
+              verses={liturgicalReadings.find(r => r.type === "The Holy Gospel")?.verses ?? []}
+              onSelect={() => onSelectReading("The Holy Gospel")} 
+            />
+          )}
+
+          <div className="h-24" />
         </div>
+      </div>
+
+      {/* ULTRA-LEAN FLOATING FOOTER */}
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-40 pointer-events-none">
+        <button 
+          onClick={onClose}
+          className="px-8 py-2.5 rounded-full bg-primary text-white font-black text-[9px] uppercase tracking-[0.3em] shadow-2xl shadow-primary/40 active:scale-95 transition-all hover:scale-[1.02] pointer-events-auto border border-white/20"
+        >
+          Close
+        </button>
       </div>
     </div>
   );
@@ -157,20 +154,20 @@ function ReadingSection({ title, citation, icon: Icon, highlight, isPsalm, verse
           )}>
             <Icon className="h-4 w-4" />
           </div>
-          <div className="flex flex-col gap-0.5">
-            <span className={cn("text-[9px] font-black uppercase tracking-[0.3em]", highlight ? "text-primary" : "text-zinc-400")}>{title}</span>
-            <span className="text-[11px] font-serif font-bold italic text-zinc-900 dark:text-zinc-100">{citation}</span>
+          <div className="flex flex-col">
+            <span className={cn("text-[9px] font-black uppercase tracking-[0.2em]", highlight ? "text-primary" : "text-zinc-400")}>{title}</span>
+            <span className="text-[11px] font-serif font-black italic text-zinc-900 dark:text-zinc-100 tracking-tight">{citation}</span>
           </div>
         </div>
-        <button onClick={onSelect} className="px-3 py-1 rounded-lg bg-primary/5 text-[7px] font-black text-primary hover:bg-primary/10 uppercase tracking-widest transition-colors">
-          Jump
+        <button onClick={onSelect} className="text-[8px] font-black text-primary hover:underline uppercase tracking-widest transition-all">
+          Reader
         </button>
       </div>
       
       <div className="space-y-6">
         {verseSegments.length > 0 ? (
           <div className={cn(
-            "font-serif text-sm md:text-base leading-[1.7] text-zinc-800 dark:text-zinc-200",
+            "font-serif text-base md:text-lg leading-[1.7] text-zinc-800 dark:text-zinc-200",
             isPsalm && "italic text-center max-w-xl mx-auto"
           )}>
             {verseSegments.map((segment, sIdx) => (
