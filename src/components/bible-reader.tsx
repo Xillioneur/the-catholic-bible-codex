@@ -77,6 +77,7 @@ export function BibleReader() {
           chapter={activeVerse.chapter} 
           verse={activeVerse.verse} 
           text={activeVerse.text}
+          globalOrder={activeVerse.globalOrder}
           onClose={() => setActiveVerse(null)}
         />
       )}

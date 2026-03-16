@@ -23,6 +23,7 @@ export interface LocalBookmark {
   bookId: number;
   chapter: number;
   verse: number;
+  globalOrder: number;
   translationSlug: string;
   createdAt: number;
 }

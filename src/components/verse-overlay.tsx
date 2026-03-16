@@ -7,13 +7,10 @@ import {
   Bookmark as BookmarkIcon, 
   Highlighter, 
   MessageSquare, 
-  Share2, 
   ExternalLink, 
   X, 
-  Trash2, 
   Scroll, 
   BookOpen,
-  ChevronUp,
   MoreHorizontal
 } from "lucide-react";
 import { db } from "~/lib/db";
@@ -27,10 +24,11 @@ interface VerseOverlayProps {
   chapter: number;
   verse: number;
   text: string;
+  globalOrder: number;
   onClose: () => void;
 }
 
-export function VerseOverlay({ verseId, bookId, bookName, chapter, verse, text, onClose }: VerseOverlayProps) {
+export function VerseOverlay({ verseId, bookId, bookName, chapter, verse, text, globalOrder, onClose }: VerseOverlayProps) {
   const translationSlug = useReaderStore((state) => state.translationSlug);
   const [noteContent, setNoteContent] = useState("");
   const [isEditingNote, setIsEditingNote] = useState(false);
@@ -44,7 +42,15 @@ export function VerseOverlay({ verseId, bookId, bookName, chapter, verse, text, 
     if (bookmark) {
       await db.bookmarks.delete(bookmark.id!);
     } else {
-      await db.bookmarks.add({ verseId, bookId, chapter, verse, translationSlug, createdAt: Date.now() });
+      await db.bookmarks.add({ 
+        verseId, 
+        bookId, 
+        chapter, 
+        verse, 
+        globalOrder, 
+        translationSlug, 
+        createdAt: Date.now() 
+      });
     }
   };
 

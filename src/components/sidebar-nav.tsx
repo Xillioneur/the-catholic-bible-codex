@@ -26,6 +26,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "~/lib/db";
 import { useLiturgical } from "./liturgical-provider";
 import { DailyAllView } from "./liturgical-full-view";
+import { LibraryFullView } from "./library-full-view";
 import { toast } from "sonner";
 
 export function SidebarNav() {
@@ -35,6 +36,7 @@ export function SidebarNav() {
   
   const [activeTab, setActiveTab] = useState<"library" | "bookmarks" | "settings" | "daily" | null>(null);
   const [showFullLiturgical, setShowFullLiturgical] = useState(false);
+  const [showFullLibrary, setShowFullLibrary] = useState(false);
 
   const isCollapsed = useReaderStore((state) => state.isSidebarCollapsed);
   const toggleSidebar = useReaderStore((state) => state.toggleSidebar);
@@ -86,20 +88,18 @@ export function SidebarNav() {
         </button>
       )}
 
-      {/* 2. THE RESPONSIVE NAV */}
+      {/* 2. THE RESPONSIVE NAV RAIL/PILL */}
       <nav className={cn(
         "fixed z-[100] transition-all duration-700 ease-[cubic-bezier(0.2,1,0.3,1)] pointer-events-none",
         "md:left-0 md:top-0 md:bottom-0 md:flex md:flex-col md:justify-start md:translate-x-0",
         isCollapsed ? "md:-translate-x-full" : "md:translate-x-0",
         "left-4 right-4 bottom-6 flex justify-center translate-y-0"
       )}>
-        
         <div className={cn(
           "bg-white/90 dark:bg-zinc-950/90 backdrop-blur-2xl border-zinc-200/30 dark:border-zinc-800/30 flex pointer-events-auto shadow-2xl transition-all duration-700",
           "md:w-14 md:h-full md:flex-col md:items-center md:py-6 md:gap-6 md:border-r md:rounded-none",
           "w-full h-14 items-center justify-around px-2 rounded-full border"
         )}>
-          
           <div className="hidden md:flex w-8 h-8 rounded-lg bg-primary items-center justify-center shadow-md shadow-primary/10 mb-2 overflow-hidden">
             <svg viewBox="0 0 512 512" fill="none" className="w-5 h-5">
               <circle cx="256" cy="256" r="240" fill="transparent" stroke="white" strokeWidth="16"/>
@@ -108,180 +108,162 @@ export function SidebarNav() {
             </svg>
           </div>
 
-          <RailButton 
-            icon={<Search className="h-4 w-4" />} 
-            onClick={() => { setIsSearchOpen(true); setActiveTab(null); }} 
-            label="Search"
-          />
-          <RailButton 
-            icon={<Sun className="h-4 w-4" />} 
-            active={activeTab === "daily"}
-            onClick={() => setActiveTab(activeTab === "daily" ? null : "daily")} 
-            label="Daily"
-          />
+          <RailButton icon={<Search className="h-4 w-4" />} onClick={() => { setIsSearchOpen(true); setActiveTab(null); }} label="Search" />
+          <RailButton icon={<Sun className="h-4 w-4" />} active={activeTab === "daily"} onClick={() => setActiveTab(activeTab === "daily" ? null : "daily")} label="Daily" />
           <div className="hidden md:block h-px w-6 bg-zinc-200/50 dark:bg-zinc-800/50 my-1 self-center" />
-          <RailButton 
-            icon={<LibraryIcon className="h-4 w-4" />} 
-            active={activeTab === "library"}
-            onClick={() => setActiveTab(activeTab === "library" ? null : "library")} 
-            label="Library"
-          />
-          <RailButton 
-            icon={<Bookmark className="h-4 w-4" />} 
-            active={activeTab === "bookmarks"}
-            onClick={() => setActiveTab(activeTab === "bookmarks" ? null : "bookmarks")} 
-            label="Saved"
-          />
-          <RailButton 
-            icon={<Settings2 className="h-4 w-4" />} 
-            active={activeTab === "settings"}
-            onClick={() => setActiveTab(activeTab === "settings" ? null : "settings")} 
-            label="Style"
-          />
+          <RailButton icon={<LibraryIcon className="h-4 w-4" />} active={activeTab === "library"} onClick={() => setActiveTab(activeTab === "library" ? null : "library")} label="Library" />
+          <RailButton icon={<Bookmark className="h-4 w-4" />} active={activeTab === "bookmarks"} onClick={() => setActiveTab(activeTab === "bookmarks" ? null : "bookmarks")} label="Saved" />
+          <RailButton icon={<Settings2 className="h-4 w-4" />} active={activeTab === "settings"} onClick={() => setActiveTab(activeTab === "settings" ? null : "settings")} label="Style" />
 
           <button onClick={toggleSidebar} className="hidden md:flex mt-auto p-2.5 text-zinc-400 hover:text-primary transition-all active:scale-75">
             <ChevronLeft className="h-4 w-4 opacity-50" />
           </button>
         </div>
+      </nav>
 
-        {/* 3. THE UNIFIED FLYOUT PANEL */}
-        {activeTab && (
-          <div className={cn(
-            "fixed glass shadow-2xl border border-white/40 dark:border-zinc-800/40 flex flex-col animate-in duration-500 pointer-events-auto z-[101]",
-            "md:left-16 md:top-0 md:bottom-0 md:w-64 md:slide-in-from-left-2",
-            "left-4 right-4 bottom-24 h-[60vh] rounded-[2.5rem] slide-in-from-bottom-2"
-          )}>
-            <div className="p-5 flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800/50">
-              <h2 className="text-[8px] font-black uppercase tracking-[0.4em] text-zinc-400">{activeTab}</h2>
-              <button onClick={() => setActiveTab(null)} className="h-8 w-8 flex items-center justify-center text-zinc-400 hover:text-zinc-900 transition-colors">
-                <X className="h-4 w-4" />
-              </button>
-            </div>
+      {/* 3. THE UNIFIED FLYOUT PANEL (Moved outside for viewport stability) */}
+      {activeTab && (
+        <div className={cn(
+          "fixed glass shadow-2xl border border-white/40 dark:border-zinc-800/40 flex flex-col animate-in duration-500 pointer-events-auto z-[101]",
+          // Desktop Position
+          "md:left-16 md:top-0 md:bottom-0 md:w-64 md:slide-in-from-left-2 md:rounded-none",
+          // Mobile Position: Precision Full-Height
+          "left-4 right-4 top-[calc(env(safe-area-inset-top)+1rem)] bottom-[calc(env(safe-area-inset-bottom)+5.5rem)] rounded-[2.5rem] slide-in-from-bottom-4"
+        )}>
+          <div className="p-5 flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800/50">
+            <h2 className="text-[8px] font-black uppercase tracking-[0.4em] text-zinc-400">{activeTab}</h2>
+            <button onClick={() => setActiveTab(null)} className="h-8 w-8 flex items-center justify-center text-zinc-400 hover:text-zinc-900 transition-colors">
+              <X className="h-4 w-4" />
+            </button>
+          </div>
 
-            <div className="flex-1 overflow-y-auto px-3 pb-6 scrollbar-elegant">
-              {activeTab === "daily" && info && (
-                <div className="space-y-6 mt-4">
-                  <div className="px-3 py-2 bg-primary/5 rounded-2xl border border-primary/10">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Calendar className="h-3 w-3 text-primary" />
-                      <span className="text-[8px] font-black uppercase tracking-widest text-primary">Liturgical Day</span>
-                    </div>
-                    <p className="text-xs font-serif font-bold italic text-zinc-900 dark:text-zinc-100 leading-tight">{info.day}</p>
+          <div className="flex-1 overflow-y-auto px-3 pb-6 scrollbar-elegant">
+            {activeTab === "daily" && info && (
+              <div className="space-y-6 mt-4">
+                <div className="px-3 py-2 bg-primary/5 rounded-2xl border border-primary/10">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Calendar className="h-3 w-3 text-primary" />
+                    <span className="text-[8px] font-black uppercase tracking-widest text-primary">Liturgical Day</span>
                   </div>
-
-                  <div className="grid gap-1">
-                    <ReadingRow label="First" citation={info.readings.firstReading} icon={Scroll} onSelect={() => handleSelectReading("First Reading")} />
-                    {info.readings.psalm && <ReadingRow label="Psalm" citation={info.readings.psalm} icon={Music} onSelect={() => handleSelectReading("Responsorial Psalm")} />}
-                    {info.readings.secondReading && <ReadingRow label="Second" citation={info.readings.secondReading} icon={Scroll} onSelect={() => handleSelectReading("Second Reading")} />}
-                    {info.readings.gospel && <ReadingRow label="Gospel" citation={info.readings.gospel} icon={Church} onSelect={() => handleSelectReading("The Holy Gospel")} />}
-                  </div>
-
-                  <button 
-                    onClick={() => setShowFullLiturgical(true)}
-                    className="w-full py-3 rounded-xl bg-primary text-white font-black text-[8px] uppercase tracking-[0.2em] shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all"
-                  >
-                    View All Readings
-                  </button>
+                  <p className="text-xs font-serif font-bold italic text-zinc-900 dark:text-zinc-100 leading-tight">{info.day}</p>
                 </div>
-              )}
 
-              {activeTab === "library" && (
-                <div className="space-y-6 mt-4">
-                  <div className="flex bg-zinc-100/50 dark:bg-zinc-800/50 p-0.5 rounded-full border border-zinc-200/20 dark:border-zinc-700/20">
-                    {translations?.map((t) => (
-                      <button 
-                        key={t.id} 
-                        onClick={() => setTranslationSlug(t.slug)} 
-                        className={cn(
-                          "flex-1 py-1.5 rounded-full text-[8px] font-black uppercase transition-all", 
-                          translationSlug === t.slug ? "bg-white dark:bg-zinc-700 text-primary shadow-sm" : "text-zinc-400 hover:text-zinc-600"
-                        )}
-                      >
-                        {t.abbreviation}
-                      </button>
-                    ))}
-                  </div>
-
-                  <div className="grid gap-0.5">
-                    {books?.map(book => (
-                      <button 
-                        key={book.id}
-                        onClick={() => handleBookSelect(book.slug)}
-                        className={cn(
-                          "w-full text-left px-3 py-2 rounded-lg transition-all group flex items-center justify-between",
-                          currentBookId === book.id ? "bg-primary/5 text-primary" : "hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400"
-                        )}
-                      >
-                        <span className="font-serif italic text-[15px] tracking-tight">{book.name}</span>
-                        {currentBookId === book.id && <div className="h-1 w-1 rounded-full bg-primary" />}
-                      </button>
-                    ))}
-                  </div>
+                <div className="grid gap-1">
+                  <ReadingRow label="First" citation={info.readings.firstReading} icon={Scroll} onSelect={() => handleSelectReading("First Reading")} />
+                  {info.readings.psalm && <ReadingRow label="Psalm" citation={info.readings.psalm} icon={Music} onSelect={() => handleSelectReading("Responsorial Psalm")} />}
+                  {info.readings.secondReading && <ReadingRow label="Second" citation={info.readings.secondReading} icon={Scroll} onSelect={() => handleSelectReading("Second Reading")} />}
+                  {info.readings.gospel && <ReadingRow label="Gospel" citation={info.readings.gospel} icon={Church} onSelect={() => handleSelectReading("The Holy Gospel")} />}
                 </div>
-              )}
 
-              {activeTab === "bookmarks" && (
-                <div className="space-y-2 mt-4">
-                  {bookmarks.length > 0 ? bookmarks.map(b => (
+                <button 
+                  onClick={() => setShowFullLiturgical(true)}
+                  className="w-full py-3 rounded-xl bg-primary text-white font-black text-[8px] uppercase tracking-[0.2em] shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all"
+                >
+                  View All Readings
+                </button>
+              </div>
+            )}
+
+            {activeTab === "library" && (
+              <div className="space-y-6 mt-4">
+                <div className="flex bg-zinc-100/50 dark:bg-zinc-800/50 p-0.5 rounded-full border border-zinc-200/20 dark:border-zinc-700/20">
+                  {translations?.map((t) => (
                     <button 
-                      key={b.id}
-                      onClick={() => { setScrollToOrder(b.globalOrder ?? 1); setActiveTab(null); }}
-                      className="w-full text-left p-4 rounded-[2rem] border border-zinc-100 dark:border-zinc-800 hover:border-primary/20 hover:bg-primary/[0.01] transition-all group"
+                      key={t.id} 
+                      onClick={() => setTranslationSlug(t.slug)} 
+                      className={cn(
+                        "flex-1 py-1.5 rounded-full text-[9px] font-black uppercase transition-all", 
+                        translationSlug === t.slug ? "bg-white dark:bg-zinc-700 text-primary shadow-sm" : "text-zinc-400 hover:text-zinc-600"
+                      )}
                     >
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-[9px] font-black uppercase text-primary tracking-widest">
-                          {books?.find(bk => bk.id === b.bookId)?.abbreviation} {b.chapter}:{b.verse}
-                        </span>
-                        <History className="h-3 w-3 text-zinc-300" />
-                      </div>
-                      <p className="text-[11px] font-serif italic text-zinc-500 truncate">Saved reflection</p>
+                      {t.abbreviation}
                     </button>
-                  )) : (
-                    <div className="py-20 text-center flex flex-col items-center gap-3">
-                      <Bookmark className="h-6 w-6 text-zinc-200" />
-                      <span className="text-[8px] font-black uppercase tracking-widest text-zinc-400">Pure Presence</span>
-                    </div>
-                  )}
+                  ))}
                 </div>
-              )}
 
-              {activeTab === "settings" && (
-                <div className="space-y-8 mt-6">
-                  <div className="space-y-3 px-1">
-                    <span className="text-[9px] font-black uppercase tracking-widest text-zinc-400 block">Typography</span>
-                    <div className="p-4 rounded-[2rem] bg-zinc-50 dark:bg-zinc-800/30 flex items-center justify-between border border-zinc-100/50 dark:border-zinc-800/50">
-                      <button onClick={() => setFontSize(fontSize - 1)} className="h-8 w-8 flex items-center justify-center rounded-xl bg-white dark:bg-zinc-700 shadow-sm text-zinc-600"><Minus className="h-3 w-3" /></button>
-                      <span className="text-lg font-black tabular-nums text-zinc-900 dark:text-zinc-100">{fontSize}</span>
-                      <button onClick={() => setFontSize(fontSize + 1)} className="h-8 w-8 flex items-center justify-center rounded-xl bg-white dark:bg-zinc-700 shadow-sm text-zinc-600"><Plus className="h-3 w-3" /></button>
-                    </div>
+                <div className="grid gap-0.5">
+                  {books?.map(book => (
+                    <button 
+                      key={book.id}
+                      onClick={() => handleBookSelect(book.slug)}
+                      className={cn(
+                        "w-full text-left px-3 py-3 rounded-xl transition-all group flex items-center justify-between",
+                        currentBookId === book.id ? "bg-primary/5 text-primary" : "hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400"
+                      )}
+                    >
+                      <span className="font-serif italic text-base tracking-tight">{book.name}</span>
+                      {currentBookId === book.id && <div className="h-1.5 w-1.5 rounded-full bg-primary" />}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {activeTab === "bookmarks" && (
+              <div className="space-y-2 mt-4">
+                {bookmarks.length > 0 ? bookmarks.map(b => (
+                  <button 
+                    key={b.id}
+                    onClick={() => {
+                      if (b.globalOrder) {
+                        setScrollToOrder(b.globalOrder);
+                        setActiveTab(null);
+                      } else {
+                        toast.error("Older bookmark: please re-save.");
+                      }
+                    }}
+                    className="w-full text-left p-4 rounded-[2rem] border border-zinc-100 dark:border-zinc-800 hover:border-primary/20 hover:bg-primary/[0.01] transition-all group"
+                  >
+                    <span className="text-[9px] font-black uppercase text-primary tracking-widest block mb-1">
+                      {books?.find(bk => bk.id === b.bookId)?.abbreviation} {b.chapter}:{b.verse}
+                    </span>
+                    <p className="text-[11px] font-serif italic text-zinc-500 truncate">Saved reflection</p>
+                  </button>
+                )) : (
+                  <div className="py-20 text-center flex flex-col items-center gap-3 text-zinc-300">
+                    <Bookmark className="h-6 w-6 opacity-20" />
+                    <span className="text-[8px] font-black uppercase tracking-widest">Quiet Sanctuary</span>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeTab === "settings" && (
+              <div className="space-y-8 mt-6">
+                <div className="space-y-3 px-1">
+                  <span className="text-[9px] font-black uppercase tracking-widest text-zinc-400 block">Typography</span>
+                  <div className="p-4 rounded-[2rem] bg-zinc-50 dark:bg-zinc-800/30 flex items-center justify-between border border-zinc-100/50 dark:border-zinc-800/50">
+                    <button onClick={() => setFontSize(fontSize - 1)} className="h-8 w-8 flex items-center justify-center rounded-xl bg-white dark:bg-zinc-700 shadow-sm text-zinc-600"><Minus className="h-3 w-3" /></button>
+                    <span className="text-lg font-black tabular-nums text-zinc-900 dark:text-zinc-100">{fontSize}</span>
+                    <button onClick={() => setFontSize(fontSize + 1)} className="h-8 w-8 flex items-center justify-center rounded-xl bg-white dark:bg-zinc-700 shadow-sm text-zinc-600"><Plus className="h-3 w-3" /></button>
                   </div>
                 </div>
-              )}
-            </div>
+              </div>
+            )}
+          </div>
 
-            <div className="p-5 bg-zinc-50/30 dark:bg-zinc-950/10 border-t border-zinc-100/50 dark:border-zinc-800/50 rounded-b-[2.5rem]">
-              <div className="flex items-center gap-3">
-                <div className="h-8 w-8 rounded-full bg-primary/5 flex items-center justify-center text-primary font-black text-[10px] border border-primary/10">
-                  {currentChapter}
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-[7px] font-black uppercase tracking-[0.3em] text-zinc-400">Current Presence</span>
-                  <span className="text-xs font-serif font-bold italic truncate text-zinc-900 dark:text-zinc-100">{currentBook?.name}</span>
-                </div>
+          <div className="p-5 bg-zinc-50/30 dark:bg-zinc-950/10 border-t border-zinc-100/50 dark:border-zinc-800/50 rounded-b-[2.5rem] md:rounded-none">
+            <div className="flex items-center gap-3">
+              <div className="h-8 w-8 rounded-full bg-primary/5 flex items-center justify-center text-primary font-black text-[10px] border border-primary/10">
+                {currentChapter}
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[7px] font-black uppercase tracking-[0.3em] text-zinc-400">Presence</span>
+                <span className="text-xs font-serif font-bold italic truncate text-zinc-900 dark:text-zinc-100">{currentBook?.name}</span>
               </div>
             </div>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* 4. FULL SCRIPTURE OVERLAY */}
-        {showFullLiturgical && info && (
-          <DailyAllView 
-            info={info} 
-            onClose={() => setShowFullLiturgical(false)} 
-            onSelectReading={handleSelectReading} 
-          />
-        )}
-      </nav>
+      {/* 4. FULL SCRIPTURE OVERLAY */}
+      {showFullLiturgical && info && (
+        <DailyAllView 
+          info={info} 
+          onClose={() => setShowFullLiturgical(false)} 
+          onSelectReading={handleSelectReading} 
+        />
+      )}
     </>
   );
 }
