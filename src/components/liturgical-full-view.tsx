@@ -58,7 +58,7 @@ export function DailyAllView({ info, onClose, onSelectReading }: DailyAllViewPro
             citation={info.readings.firstReading} 
             icon={Scroll}
             verses={liturgicalReadings.find(r => r.type === "First Reading")?.verses ?? []}
-            onSelect={() => onSelectReading("First Reading")} 
+            onSelect={() => { onSelectReading("First Reading"); onClose(); }} 
           />
           
           {info.readings.psalm && (
@@ -68,7 +68,7 @@ export function DailyAllView({ info, onClose, onSelectReading }: DailyAllViewPro
               icon={Music}
               isPsalm
               verses={liturgicalReadings.find(r => r.type === "Responsorial Psalm")?.verses ?? []}
-              onSelect={() => onSelectReading("Responsorial Psalm")} 
+              onSelect={() => { onSelectReading("Responsorial Psalm"); onClose(); }} 
             />
           )}
 
@@ -78,7 +78,7 @@ export function DailyAllView({ info, onClose, onSelectReading }: DailyAllViewPro
               citation={info.readings.secondReading} 
               icon={Scroll}
               verses={liturgicalReadings.find(r => r.type === "Second Reading")?.verses ?? []}
-              onSelect={() => onSelectReading("Second Reading")} 
+              onSelect={() => { onSelectReading("Second Reading"); onClose(); }} 
             />
           )}
           
@@ -89,7 +89,7 @@ export function DailyAllView({ info, onClose, onSelectReading }: DailyAllViewPro
               icon={Church} 
               highlight
               verses={liturgicalReadings.find(r => r.type === "The Holy Gospel")?.verses ?? []}
-              onSelect={() => onSelectReading("The Holy Gospel")} 
+              onSelect={() => { onSelectReading("The Holy Gospel"); onClose(); }} 
             />
           )}
 

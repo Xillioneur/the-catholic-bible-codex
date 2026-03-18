@@ -68,7 +68,6 @@ export function SidebarNav() {
         setScrollToOrder(firstOrder);
         toast.success(`${type} Focused`);
         setActiveTab(null);
-        setShowFullLiturgical(false);
       }
     } else {
       toast.error("Reading not found");
