@@ -47,6 +47,7 @@ export function SidebarNav() {
   const currentChapter = useReaderStore((state) => state.currentChapter);
   const setIsSearchOpen = useReaderStore((state) => state.setIsSearchOpen);
   const liturgicalReadings = useReaderStore((state) => state.liturgicalReadings);
+  const setIsNavigatorVisible = useReaderStore((state) => state.setIsNavigatorVisible);
   
   const fontSize = useReaderStore((state) => state.fontSize);
   const setFontSize = useReaderStore((state) => state.setFontSize);
@@ -66,6 +67,7 @@ export function SidebarNav() {
       const firstOrder = reading.orders[0];
       if (firstOrder) {
         setScrollToOrder(firstOrder);
+        setIsNavigatorVisible(true);
         toast.success(`${type} Focused`);
         setActiveTab(null);
       }

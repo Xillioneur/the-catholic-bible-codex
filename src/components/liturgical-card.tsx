@@ -17,6 +17,7 @@ export function LiturgicalCard({ onClose }: LiturgicalCardProps) {
   const [showFullView, setShowFullView] = useState(false);
   const setScrollToOrder = useReaderStore((state) => state.setScrollToOrder);
   const liturgicalReadings = useReaderStore((state) => state.liturgicalReadings);
+  const setIsNavigatorVisible = useReaderStore((state) => state.setIsNavigatorVisible);
 
   const handleSelectReading = (type: string) => {
     const reading = liturgicalReadings.find(r => r.type === type);
@@ -24,6 +25,7 @@ export function LiturgicalCard({ onClose }: LiturgicalCardProps) {
       const firstOrder = reading.orders[0];
       if (firstOrder) {
         setScrollToOrder(firstOrder);
+        setIsNavigatorVisible(true);
         toast.success(`${type} Focused`);
         onClose();
       }

@@ -6,7 +6,7 @@ import { VerseOverlay } from "./verse-overlay";
 import { db } from "~/lib/db";
 import { useLiveQuery } from "dexie-react-hooks";
 import { useBibleReader, type BibleRow } from "~/hooks/use-bible-reader";
-import { BookHeader, ChapterHeader } from "./bible/section-header";
+import { BookHeader, ChapterHeader, LiturgicalReadingHeader } from "./bible/section-header";
 import { VerseItem } from "./bible/verse-item";
 import { LoadingScreen } from "./bible/loading-screen";
 import { cn } from "~/lib/utils";
@@ -49,19 +49,29 @@ export function BibleReader() {
               {row.type === "chapter-header" && <ChapterHeader chapter={row.chapter} />}
               {row.type === "prose-block" && (
                 <div className="max-w-4xl mx-auto px-6 sm:px-12 md:px-16 py-4 flex flex-wrap items-baseline gap-x-1.5 leading-[1.8]">
-                  {row.verses.map((v) => (
-                    <InlineVerse 
-                      key={v.id} 
-                      verse={v}
-                      hasBookmark={bookmarks.some(b => b.verseId === v.id)}
-                      hasHighlight={highlights.some(h => h.verseId === v.id)}
-                      hasNote={notes.some(n => n.verseId === v.id)}
-                      isLiturgical={liturgicalReadings.some(r => r.orders.includes(v.globalOrder))}
-                      isSearchTarget={searchHighlight?.targetOrder === v.globalOrder}
-                      searchQuery={searchHighlight?.query}
-                      onClick={() => setActiveVerse(v)}
-                    />
-                  ))}
+                  {row.verses.map((v) => {
+                    const reading = liturgicalReadings.find(r => r.orders[0] === v.globalOrder);
+                    return (
+                      <div key={v.id} className="contents">
+                        {reading && (
+                          <LiturgicalReadingHeader 
+                            type={reading.type} 
+                            citation={reading.citation} 
+                          />
+                        )}
+                        <InlineVerse 
+                          verse={v}
+                          hasBookmark={bookmarks.some(b => b.verseId === v.id)}
+                          hasHighlight={highlights.some(h => h.verseId === v.id)}
+                          hasNote={notes.some(n => n.verseId === v.id)}
+                          isLiturgical={liturgicalReadings.some(r => r.orders.includes(v.globalOrder))}
+                          isSearchTarget={searchHighlight?.targetOrder === v.globalOrder}
+                          searchQuery={searchHighlight?.query}
+                          onClick={() => setActiveVerse(v)}
+                        />
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -110,9 +120,9 @@ const InlineVerse = memo(({
     <span 
       onClick={onClick}
       className={cn(
-        "inline cursor-pointer transition-all duration-300 rounded px-0.5 -mx-0.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 font-serif",
+        "inline cursor-pointer transition-all duration-300 rounded px-1 -mx-0.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 font-serif relative",
         hasHighlight && "bg-yellow-400/10 border-b border-yellow-400/30",
-        isLiturgical && "text-primary font-medium",
+        isLiturgical && "text-primary font-medium bg-primary/5 dark:bg-primary/10 shadow-[0_0_15px_-5px_var(--primary)] ring-[0.5px] ring-primary/20",
         isSearchTarget && "ring-2 ring-primary/20 bg-primary/5 rounded-md"
       )}
       style={{ fontSize: `${fontSize}px` }}

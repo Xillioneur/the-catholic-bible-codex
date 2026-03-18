@@ -30,6 +30,14 @@ interface ReaderState {
   // ADVANCED HIGHLIGHTING (The Sanctuary Layer)
   liturgicalReadings: Reading[];
   setLiturgicalReadings: (readings: Reading[]) => void;
+  liturgicalGuide: {
+    type: string;
+    citation: string;
+    order: number;
+  } | null;
+  setLiturgicalGuide: (guide: { type: string; citation: string; order: number } | null) => void;
+  isNavigatorVisible: boolean;
+  setIsNavigatorVisible: (visible: boolean) => void;
   activeReadingType: string | null;
   setActiveReadingType: (type: string | null) => void;
   
@@ -73,6 +81,10 @@ export const useReaderStore = create<ReaderState>((set) => ({
   
   liturgicalReadings: [],
   setLiturgicalReadings: (readings) => set({ liturgicalReadings: readings }),
+  liturgicalGuide: null,
+  setLiturgicalGuide: (guide) => set({ liturgicalGuide: guide }),
+  isNavigatorVisible: true,
+  setIsNavigatorVisible: (visible) => set({ isNavigatorVisible: visible }),
   activeReadingType: null,
   setActiveReadingType: (type) => set({ activeReadingType: type }),
 

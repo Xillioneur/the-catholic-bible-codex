@@ -37,3 +37,25 @@ export const ChapterHeader = memo(({ chapter }: ChapterHeaderProps) => (
 ));
 
 ChapterHeader.displayName = "ChapterHeader";
+
+interface LiturgicalReadingHeaderProps {
+  type: string;
+  citation: string;
+}
+
+export const LiturgicalReadingHeader = memo(({ type, citation }: LiturgicalReadingHeaderProps) => (
+  <div className="w-full flex flex-col items-center gap-2 mt-12 mb-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+    <div className="flex items-center gap-3">
+      <div className="h-px w-8 bg-primary/30" />
+      <span className="text-[10px] font-black uppercase tracking-[0.4em] text-primary">
+        {type}
+      </span>
+      <div className="h-px w-8 bg-primary/30" />
+    </div>
+    <h3 className="text-2xl font-serif italic text-zinc-900 dark:text-zinc-50 tracking-tight">
+      {citation}
+    </h3>
+  </div>
+));
+
+LiturgicalReadingHeader.displayName = "LiturgicalReadingHeader";

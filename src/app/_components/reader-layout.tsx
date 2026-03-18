@@ -3,6 +3,7 @@
 import { BibleReader } from "~/components/bible-reader";
 import { SidebarNav } from "~/components/sidebar-nav";
 import { SearchDialog } from "~/components/search-dialog";
+import { LiturgicalNavigator } from "~/components/liturgical-navigator";
 import { useReaderStore } from "~/hooks/use-reader-store";
 import { cn } from "~/lib/utils";
 
@@ -22,6 +23,7 @@ export function ReaderLayout() {
       </div>
 
       <SearchDialog />
+      <LiturgicalNavigator />
     </main>
   );
 }

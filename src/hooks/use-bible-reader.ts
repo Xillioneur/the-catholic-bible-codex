@@ -169,7 +169,16 @@ export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>
 
     const state = useReaderStore.getState();
     if (state.totalVerseCount !== rowCount) setTotalVerseCount(rowCount);
-    if (state.currentOrder !== visibleItem.index + 1) setCurrentOrderStore(visibleItem.index + 1);
+    
+    // SYNC GLOBAL ORDER
+    let currentGlobalOrder = 1;
+    if (row.type === "prose-block") {
+      currentGlobalOrder = row.firstOrder;
+    } else if (row.firstOrder) {
+      currentGlobalOrder = row.firstOrder;
+    }
+    
+    if (state.currentOrder !== currentGlobalOrder) setCurrentOrderStore(currentGlobalOrder);
 
     if (row.type === "prose-block") {
       const v = row.verses[0];
