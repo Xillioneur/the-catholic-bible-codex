@@ -122,7 +122,7 @@ const InlineVerse = memo(({
       className={cn(
         "inline cursor-pointer transition-all duration-300 rounded px-1 -mx-0.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 font-serif relative",
         hasHighlight && "bg-yellow-400/10 border-b border-yellow-400/30",
-        isLiturgical && "text-primary font-medium bg-primary/5 dark:bg-primary/10 shadow-[0_0_15px_-5px_var(--primary)] ring-[0.5px] ring-primary/20",
+        isLiturgical && "text-primary font-semibold bg-primary/[0.03] dark:bg-primary/[0.08]",
         isSearchTarget && "ring-2 ring-primary/20 bg-primary/5 rounded-md"
       )}
       style={{ fontSize: `${fontSize}px` }}

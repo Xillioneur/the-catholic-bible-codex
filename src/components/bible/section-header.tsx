@@ -44,15 +44,15 @@ interface LiturgicalReadingHeaderProps {
 }
 
 export const LiturgicalReadingHeader = memo(({ type, citation }: LiturgicalReadingHeaderProps) => (
-  <div className="w-full flex flex-col items-center gap-2 mt-12 mb-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
-    <div className="flex items-center gap-3">
-      <div className="h-px w-8 bg-primary/30" />
-      <span className="text-[10px] font-black uppercase tracking-[0.4em] text-primary">
+  <div className="w-full flex flex-col items-center gap-1.5 mt-10 mb-6 animate-in fade-in slide-in-from-bottom-2 duration-700">
+    <div className="flex items-center gap-2.5">
+      <div className="h-[0.5px] w-6 bg-primary/25" />
+      <span className="text-[9px] font-black uppercase tracking-[0.4em] text-primary/80">
         {type}
       </span>
-      <div className="h-px w-8 bg-primary/30" />
+      <div className="h-[0.5px] w-6 bg-primary/25" />
     </div>
-    <h3 className="text-2xl font-serif italic text-zinc-900 dark:text-zinc-50 tracking-tight">
+    <h3 className="text-xl font-serif italic text-zinc-800 dark:text-zinc-200 tracking-tight">
       {citation}
     </h3>
   </div>
