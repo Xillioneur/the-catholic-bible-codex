@@ -127,7 +127,12 @@ const InlineVerse = memo(({
       )}
       style={{ fontSize: `${fontSize}px` }}
     >
-      <sup className="text-[0.6em] font-black mr-1 text-zinc-400 opacity-60 tabular-nums">
+      <sup className={cn(
+        "text-[0.6em] font-black mr-1 transition-all duration-300 tabular-nums px-1 rounded-sm",
+        hasBookmark 
+          ? "bg-primary text-white shadow-[0_2px_8px_-2px_rgba(var(--primary-rgb),0.4)] opacity-100 scale-110" 
+          : "text-zinc-400 opacity-60"
+      )}>
         {verse.verse}
       </sup>
       {verse.text}
