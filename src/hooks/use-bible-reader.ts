@@ -178,12 +178,8 @@ export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>
     
     // SYNC GLOBAL ORDER
     let currentGlobalOrder = 1;
-    if (row.type === "prose-block") {
+    if (row.firstOrder) {
       currentGlobalOrder = row.firstOrder;
-    } else if (row.type === "chapter-header") {
-      // We don't have firstOrder on chapter-header in the type, but we can assume it's roughly there 
-      // or just stay at current if not available
-      currentGlobalOrder = state.currentOrder;
     }
     
     if (state.currentOrder !== currentGlobalOrder) setCurrentOrderStore(currentGlobalOrder);
