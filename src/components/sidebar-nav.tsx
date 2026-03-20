@@ -152,10 +152,10 @@ export function SidebarNav() {
                 </div>
 
                 <div className="grid gap-1">
-                  <ReadingRow label="First" citation={info.readings.firstReading} icon={Scroll} onSelect={() => handleSelectReading("First Reading")} />
+                  <ReadingRow label="First" citation={info.readings.firstReading ?? ""} icon={Scroll} onSelect={() => handleSelectReading("First Reading")} />
                   {info.readings.psalm && <ReadingRow label="Psalm" citation={info.readings.psalm} icon={Music} onSelect={() => handleSelectReading("Responsorial Psalm")} />}
                   {info.readings.secondReading && <ReadingRow label="Second" citation={info.readings.secondReading} icon={Scroll} onSelect={() => handleSelectReading("Second Reading")} />}
-                  {info.readings.gospel && <ReadingRow label="Gospel" citation={info.readings.gospel} icon={Church} onSelect={() => handleSelectReading("The Holy Gospel")} />}
+                  {info.readings.gospel && <ReadingRow label="Gospel" citation={info.readings.gospel ?? ""} icon={Church} onSelect={() => handleSelectReading("The Holy Gospel")} />}
                 </div>
 
                 <button 

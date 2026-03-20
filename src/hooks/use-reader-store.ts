@@ -83,7 +83,7 @@ export const useReaderStore = create<ReaderState>((set) => ({
   setLiturgicalReadings: (readings) => set({ liturgicalReadings: readings }),
   liturgicalGuide: null,
   setLiturgicalGuide: (guide) => set({ liturgicalGuide: guide }),
-  isNavigatorVisible: true,
+  isNavigatorVisible: false,
   setIsNavigatorVisible: (visible) => set({ isNavigatorVisible: visible }),
   activeReadingType: null,
   setActiveReadingType: (type) => set({ activeReadingType: type }),

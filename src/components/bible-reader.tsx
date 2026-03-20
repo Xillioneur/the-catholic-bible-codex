@@ -5,9 +5,8 @@ import { useReaderStore } from "~/hooks/use-reader-store";
 import { VerseOverlay } from "./verse-overlay";
 import { db } from "~/lib/db";
 import { useLiveQuery } from "dexie-react-hooks";
-import { useBibleReader, type BibleRow } from "~/hooks/use-bible-reader";
+import { useBibleReader } from "~/hooks/use-bible-reader";
 import { BookHeader, ChapterHeader, LiturgicalReadingHeader } from "./bible/section-header";
-import { VerseItem } from "./bible/verse-item";
 import { LoadingScreen } from "./bible/loading-screen";
 import { cn } from "~/lib/utils";
 
@@ -63,10 +62,8 @@ export function BibleReader() {
                           verse={v}
                           hasBookmark={bookmarks.some(b => b.verseId === v.id)}
                           hasHighlight={highlights.some(h => h.verseId === v.id)}
-                          hasNote={notes.some(n => n.verseId === v.id)}
                           isLiturgical={liturgicalReadings.some(r => r.orders.includes(v.globalOrder))}
                           isSearchTarget={searchHighlight?.targetOrder === v.globalOrder}
-                          searchQuery={searchHighlight?.query}
                           onClick={() => setActiveVerse(v)}
                         />
                       </div>
@@ -84,6 +81,7 @@ export function BibleReader() {
           verseId={activeVerse.id} 
           bookId={activeVerse.bookId} 
           bookName={activeVerse.book.name}
+          bookSlug={activeVerse.book.slug}
           chapter={activeVerse.chapter} 
           verse={activeVerse.verse} 
           text={activeVerse.text}
@@ -99,19 +97,15 @@ const InlineVerse = memo(({
   verse, 
   hasBookmark, 
   hasHighlight, 
-  hasNote, 
   isLiturgical, 
   isSearchTarget, 
-  searchQuery, 
   onClick 
 }: { 
   verse: any, 
   hasBookmark: boolean, 
   hasHighlight: boolean, 
-  hasNote: boolean, 
   isLiturgical: boolean, 
   isSearchTarget: boolean, 
-  searchQuery?: string,
   onClick: () => void 
 }) => {
   const fontSize = useReaderStore((state) => state.fontSize);

@@ -19,7 +19,7 @@ self.onmessage = async (e: MessageEvent) => {
       // word1 word2 -> matches both words (AND logic)
       const isExact = query.startsWith('"') && query.endsWith('"');
       const cleanQuery = isExact ? query.slice(1, -1) : query;
-      const terms = isExact ? [cleanQuery.toLowerCase()] : cleanQuery.toLowerCase().split(/\s+/).filter(t => t.length > 0);
+      const terms = isExact ? [cleanQuery.toLowerCase()] : cleanQuery.toLowerCase().split(/\s+/).filter((t: string) => t.length > 0);
 
       const searchResults = await collection
         .filter(v => {
@@ -33,7 +33,7 @@ self.onmessage = async (e: MessageEvent) => {
             return text.includes(cleanQuery.toLowerCase());
           } else {
             // ALL terms must be present (AND logic)
-            return terms.every(term => text.includes(term));
+            return terms.every((term: string) => text.includes(term));
           }
         })
         .sortBy("globalOrder"); // Keep biblical order

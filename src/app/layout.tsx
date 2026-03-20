@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     title: "The Catholic Bible Codex – The Premium Catholic Scripture Experience",
-    description: "Immerse yourself in the Word of God with a digital sanctuary designed for the faithful. 100% offline-first with NABRE, RSV-2CE, and Douay-Rheims.",
+    description: "Immerse yourself in the Word of God with a digital sanctuary designed for the faithful. 100% offline-first with World English Bible (Catholic Edition), Douay-Rheims, and Latin Vulgate.",
     url: "https://the-catholic-bible-codex.vercel.app",
     siteName: "The Catholic Bible Codex",
     locale: "en_US",

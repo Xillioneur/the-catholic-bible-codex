@@ -214,4 +214,34 @@ export const bibleRouter = createTRPCRouter({
       }
       return verse.globalOrder;
     }),
+
+  getVerseInAllTranslations: publicProcedure
+    .input(z.object({
+      bookSlug: z.string(),
+      chapter: z.number(),
+      verse: z.number(),
+    }))
+    .query(async ({ ctx, input }) => {
+      const translations = await ctx.db.translation.findMany();
+      const book = await ctx.db.book.findFirst({ 
+        where: { slug: { equals: input.bookSlug, mode: 'insensitive' } } 
+      });
+      
+      if (!book) return [];
+
+      const results = await Promise.all(translations.map(async (t) => {
+        let chapter = input.chapter;
+        if (book.slug.toLowerCase() === "psalms" && t.slug === "drb") {
+          chapter = mapPsalmToVulgate(input.chapter);
+        }
+
+        const v = await ctx.db.verse.findFirst({
+          where: { translationId: t.id, bookId: book.id, chapter: chapter, verse: input.verse },
+          include: { translation: true }
+        });
+        return v;
+      }));
+
+      return results.filter(Boolean);
+    }),
 });

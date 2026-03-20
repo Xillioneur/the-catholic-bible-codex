@@ -115,8 +115,12 @@ export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>
   // Load missing chunks as we scroll
   useEffect(() => {
     if (virtualItems.length > 0 && isWorkerReady) {
-      const firstIndex = virtualItems[0].index;
-      const lastIndex = virtualItems[virtualItems.length - 1].index;
+      const firstItem = virtualItems[0];
+      const lastItem = virtualItems[virtualItems.length - 1];
+      if (!firstItem || !lastItem) return;
+
+      const firstIndex = firstItem.index;
+      const lastIndex = lastItem.index;
       
       // Check if we need to fetch data for these indices
       const missingIndices: number[] = [];
@@ -164,6 +168,8 @@ export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>
     lastSyncTime.current = now;
 
     const visibleItem = virtualItems[0];
+    if (!visibleItem) return;
+
     const row = rows[visibleItem.index];
     if (!row) return;
 
@@ -174,8 +180,10 @@ export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>
     let currentGlobalOrder = 1;
     if (row.type === "prose-block") {
       currentGlobalOrder = row.firstOrder;
-    } else if (row.firstOrder) {
-      currentGlobalOrder = row.firstOrder;
+    } else if (row.type === "chapter-header") {
+      // We don't have firstOrder on chapter-header in the type, but we can assume it's roughly there 
+      // or just stay at current if not available
+      currentGlobalOrder = state.currentOrder;
     }
     
     if (state.currentOrder !== currentGlobalOrder) setCurrentOrderStore(currentGlobalOrder);
