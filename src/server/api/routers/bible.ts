@@ -116,15 +116,33 @@ export const bibleRouter = createTRPCRouter({
       }
 
       // Handle the common case (single chapter)
-      const matchedVerses = await ctx.db.verse.findMany({
-        where: { 
-          translationId: translation.id, 
-          bookId: book.id, 
-          chapter: chapter, 
-          verse: { in: rawVerses } 
-        },
-        select: { globalOrder: true }
-      });
+      let matchedVerses = [];
+      
+      if (rawVerses.length > 0) {
+        matchedVerses = await ctx.db.verse.findMany({
+          where: { 
+            translationId: translation.id, 
+            bookId: book.id, 
+            chapter: chapter, 
+            verse: { in: rawVerses } 
+          },
+          select: { globalOrder: true }
+        });
+      } else {
+        // FULL CHAPTER: If no verses specified, return all verses in that chapter
+        matchedVerses = await ctx.db.verse.findMany({
+          where: {
+            translationId: translation.id,
+            bookId: book.id,
+            chapter: chapter
+          },
+          select: { globalOrder: true },
+          orderBy: { verse: "asc" }
+        });
+        
+        // Return immediately if it's a full chapter
+        return matchedVerses.map(v => v.globalOrder);
+      }
 
       // If we found everything, return. 
       // If the citation spans chapters (complex), find all verses in the range.

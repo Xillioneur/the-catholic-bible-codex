@@ -8,6 +8,7 @@ export interface LiturgicalInfo {
     firstReading?: string;
     psalm?: string;
     secondReading?: string;
+    verseBeforeGospel?: string;
     gospel?: string;
   };
 }
@@ -122,32 +123,41 @@ export function parseCitation(citation: string): { bookSlug: string; chapter: nu
 
   const slug = abbrevMap[bookPart] ?? "genesis";
   
-  // Isolate Chapter and Verses
-  const cleanRest = rest.replace(/\s+/g, '');
-  const colonIndex = cleanRest.indexOf(':');
-  
+  // SPECIAL HANDLING: Universalis "Psalm 129(130)"
+  // Extract both numbers. We'll decide which one to use later based on the translation.
   let chapter = 1;
   let versesPart = "";
 
-  if (colonIndex !== -1) {
-    // Correctly extract chapter without accidentally grabbing next segments
-    const chapterStr = cleanRest.slice(0, colonIndex);
-    chapter = parseInt(chapterStr.replace(/\D/g, '')) || 1;
-    versesPart = cleanRest.slice(colonIndex + 1);
+  // Check for the "129(130)" pattern
+  const complexPsalmMatch = rest.match(/^(\d+)\((\d+)\)/);
+  if (slug === "psalms" && complexPsalmMatch) {
+    // If it's a complex psalm, we store the 'alternative' in a way we can use.
+    // For now, let's pick the second one (modern numbering) as default, 
+    // but the router will map it correctly for DRB.
+    chapter = parseInt(complexPsalmMatch[2]!);
+    versesPart = rest.slice(complexPsalmMatch[0].length).trim();
   } else {
-    // Handle chapter-only or space-separated: "Ps 23" or "Ps 23 1-6"
-    const spaceMatch = rest.match(/^(\d+)/);
-    if (spaceMatch) {
-      chapter = parseInt(spaceMatch[1]!) || 1;
-      versesPart = rest.slice(spaceMatch[1]!.length).trim();
+    // Standard isolation
+    const cleanRest = rest.replace(/\s+/g, '');
+    const colonIndex = cleanRest.indexOf(':');
+
+    if (colonIndex !== -1) {
+      const chapterStr = cleanRest.slice(0, colonIndex);
+      chapter = parseInt(chapterStr.replace(/\D/g, '')) || 1;
+      versesPart = cleanRest.slice(colonIndex + 1);
     } else {
-      chapter = parseInt(cleanRest.replace(/\D/g, '')) || 1;
+      const spaceMatch = rest.match(/^(\d+)/);
+      if (spaceMatch) {
+        chapter = parseInt(spaceMatch[1]!) || 1;
+        versesPart = rest.slice(spaceMatch[1]!.length).trim();
+      } else {
+        chapter = parseInt(cleanRest.replace(/\D/g, '')) || 1;
+      }
     }
   }
   
   const verses: number[] = [];
   if (versesPart) {
-    // Strip only letters from the verse part to preserve ranges
     const numericPart = versesPart.replace(/[a-zA-Z]/g, '');
     const segments = numericPart.split(/[^0-9-]/);
     
@@ -170,8 +180,6 @@ export function parseCitation(citation: string): { bookSlug: string; chapter: nu
       }
     }
   }
-
-  if (verses.length === 0) verses.push(1);
   
   return {
     bookSlug: slug,

@@ -33,6 +33,7 @@ export async function getLiturgicalInfoServer(dateInput: Date = new Date()): Pro
         firstReading: data.Mass_R1?.source,
         psalm: data.Mass_Ps?.source,
         secondReading: data.Mass_R2?.source,
+        verseBeforeGospel: data.Mass_V?.source,
         gospel: data.Mass_G?.source
       };
 
@@ -43,7 +44,13 @@ export async function getLiturgicalInfoServer(dateInput: Date = new Date()): Pro
             .replace(/&#x2010;/g, "-")
             .replace(/&#xa0;/g, " ")
             .replace(/&#x2019;/g, "'")
-            .replace(/&#x2018;/g, "'");
+            .replace(/&#x2018;/g, "'")
+            .replace(/&#x2013;/g, "-")
+            .replace(/&ndash;/g, "-")
+            .replace(/&mdash;/g, "-");
+          
+          // If it's a Psalm with 129(130) format, we can simplify it for the UI if desired,
+          // but our parser handles it now. Let's keep it but ensure no strange chars.
         }
       });
 

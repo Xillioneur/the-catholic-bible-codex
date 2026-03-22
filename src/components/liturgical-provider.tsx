@@ -36,6 +36,7 @@ export function LiturgicalProvider({ children }: { children: ReactNode }) {
         { type: "First Reading", citation: info.readings.firstReading },
         { type: "Responsorial Psalm", citation: info.readings.psalm },
         { type: "Second Reading", citation: info.readings.secondReading },
+        { type: "Verse Before the Gospel", citation: info.readings.verseBeforeGospel },
         { type: "The Holy Gospel", citation: info.readings.gospel }
       ];
 
