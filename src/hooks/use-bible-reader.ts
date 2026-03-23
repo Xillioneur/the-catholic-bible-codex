@@ -9,8 +9,8 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "~/lib/db";
 
 export type BibleRow = 
-  | { type: "book-header"; book: any }
-  | { type: "chapter-header"; book: any; chapter: number }
+  | { type: "book-header"; book: any; firstOrder: number }
+  | { type: "chapter-header"; book: any; chapter: number; firstOrder: number }
   | { type: "liturgical-header"; readingType: string; citation: string; firstOrder: number }
   | { type: "prose-block"; book: any; chapter: number; verses: any[]; firstOrder: number; lastOrder: number };
 
@@ -194,22 +194,50 @@ export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>
     const state = useReaderStore.getState();
     if (state.totalVerseCount !== rowCount) setTotalVerseCount(rowCount);
     
-    // SYNC GLOBAL ORDER
-    let currentGlobalOrder = 1;
-    if (row.firstOrder) {
-      currentGlobalOrder = row.firstOrder;
+    // SYNC GLOBAL ORDER (Precise Visibility Calculation)
+    const scrollTop = parentRef.current.scrollTop;
+    let currentGlobalOrder = state.currentOrder;
+    
+    // Find the first item that is actually visible (crosses scrollTop)
+    const topVisibleItem = virtualItems.find(item => {
+      const itemEnd = item.start + item.size;
+      return itemEnd > scrollTop;
+    });
+
+    if (topVisibleItem) {
+      const row = rows[topVisibleItem.index];
+      if (row) {
+        if (row.type === "prose-block") {
+          // Calculate which verse within the block is at the top
+          const delta = Math.max(0, scrollTop - topVisibleItem.start);
+          const percentScrolled = delta / topVisibleItem.size;
+          const verseIndex = Math.min(
+            row.verses.length - 1,
+            Math.floor(percentScrolled * row.verses.length)
+          );
+          currentGlobalOrder = row.verses[verseIndex].globalOrder;
+        } else if (row.firstOrder) {
+          currentGlobalOrder = row.firstOrder;
+        }
+      }
     }
     
     if (state.currentOrder !== currentGlobalOrder) setCurrentOrderStore(currentGlobalOrder);
 
-    if (row.type === "prose-block") {
-      const v = row.verses[0];
-      if (state.currentBookId !== v.bookId) setCurrentBookId(v.bookId);
-      if (state.currentChapter !== v.chapter) setCurrentChapter(v.chapter);
-    } else {
-      if (state.currentBookId !== row.book.id) setCurrentBookId(row.book.id);
-      const ch = row.type === "chapter-header" ? row.chapter : 1;
-      if (state.currentChapter !== ch) setCurrentChapter(ch);
+    // Sync Book/Chapter based on the same precise row
+    if (topVisibleItem) {
+      const row = rows[topVisibleItem.index];
+      if (row) {
+        if (row.type === "prose-block") {
+          const v = row.verses[0];
+          if (state.currentBookId !== v.bookId) setCurrentBookId(v.bookId);
+          if (state.currentChapter !== v.chapter) setCurrentChapter(v.chapter);
+        } else if (row.type === "book-header" || row.type === "chapter-header") {
+          if (state.currentBookId !== row.book.id) setCurrentBookId(row.book.id);
+          const ch = row.type === "chapter-header" ? row.chapter : 1;
+          if (state.currentChapter !== ch) setCurrentChapter(ch);
+        }
+      }
     }
   }, [virtualItems, rows, rowCount]);
 

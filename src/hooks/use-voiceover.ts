@@ -144,7 +144,12 @@ export function useVoiceover() {
     setIsMinimized(false);
     isAutoAdvancing.current = false;
     setCurrentOrder(order);
-    if (!isPlaying) setIsPlaying(true);
+    if (!isPlaying) {
+      setIsPlaying(true);
+    } else {
+      // Force restart if already playing
+      speak(order);
+    }
   };
 
   return {

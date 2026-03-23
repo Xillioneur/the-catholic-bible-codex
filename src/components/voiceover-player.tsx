@@ -32,6 +32,7 @@ import {
 } from "./ui/tooltip";
 import { cn } from "~/lib/utils";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "sonner";
 
 export function VoiceoverPlayer() {
   const { togglePlay, skipForward, skipBackward, jumpToOrder, stop, isPlaying, isActive, speed } = useVoiceover();
@@ -102,7 +103,12 @@ export function VoiceoverPlayer() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => jumpToOrder(currentReaderOrder)}
+                        onClick={() => {
+                          if (currentReaderOrder) {
+                            jumpToOrder(currentReaderOrder);
+                            toast.success("Synced to current reading position");
+                          }
+                        }}
                         className="h-10 w-10 rounded-full text-zinc-400 hover:text-primary hover:bg-primary/5 transition-all"
                       >
                         <Target className="h-5 w-5" />
