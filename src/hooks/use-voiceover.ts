@@ -40,11 +40,24 @@ export function useVoiceover() {
     return (
       voices.find((v) => v.name.includes("Google") && v.lang.startsWith("en")) ||
       voices.find((v) => v.name.includes("Premium") && v.lang.startsWith("en")) ||
+      voices.find((v) => v.name.includes("Samantha")) || // iOS High Quality
+      voices.find((v) => v.name.includes("Daniel")) || // iOS High Quality
       voices.find((v) => v.lang.startsWith("en-US")) ||
       voices[0] ||
       null
     );
   }, []);
+
+  // iOS Safari requires a direct user interaction to "unlock" the audio context.
+  // We call this immediately on button click.
+  const unlockAudio = useCallback(() => {
+    if (synthRef.current && !isPlaying) {
+      const utterance = new SpeechSynthesisUtterance(" ");
+      utterance.volume = 0;
+      utterance.rate = 1; // Normal rate for unlock
+      synthRef.current.speak(utterance);
+    }
+  }, [isPlaying]);
 
   const speak = useCallback(async (order: number) => {
     if (!synthRef.current) return;
@@ -106,11 +119,12 @@ export function useVoiceover() {
         synthRef.current.cancel();
       }
     } else {
+      unlockAudio();
       setIsActive(true);
       setIsMinimized(false);
       setIsPlaying(true);
     }
-  }, [isPlaying, setIsPlaying, setIsActive, setIsMinimized]);
+  }, [isPlaying, setIsPlaying, setIsActive, setIsMinimized, unlockAudio]);
   useEffect(() => {
     if (isPlaying) {
       if (!isActive) setIsActive(true);
@@ -140,6 +154,7 @@ export function useVoiceover() {
   }, [speed]);
 
   const jumpToOrder = (order: number) => {
+    unlockAudio();
     setIsActive(true);
     setIsMinimized(false);
     isAutoAdvancing.current = false;
