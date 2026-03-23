@@ -23,6 +23,7 @@ export function useVoiceover() {
   const synthRef = useRef<typeof window.speechSynthesis | null>(null);
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
   const isAutoAdvancing = useRef(false);
+  const watchdogRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -33,6 +34,9 @@ export function useVoiceover() {
         synthRef.current.onvoiceschanged = handleVoicesChanged;
       }
     }
+    return () => {
+      if (watchdogRef.current) clearInterval(watchdogRef.current);
+    };
   }, []);
 
   const getBestVoice = useCallback(() => {
@@ -60,11 +64,38 @@ export function useVoiceover() {
     }
   }, [isPlaying]);
 
+  const startWatchdog = useCallback(() => {
+    if (watchdogRef.current) clearInterval(watchdogRef.current);
+    watchdogRef.current = setInterval(() => {
+      if (synthRef.current && isPlaying) {
+        if (!synthRef.current.speaking) {
+          // If we think we're playing but not speaking, verify/resume
+          return; 
+        }
+        if (synthRef.current.paused) {
+          synthRef.current.resume();
+        } else {
+          // iOS Keep-Alive: Gentle nudge only
+          synthRef.current.resume();
+        }
+      }
+    }, 5000);
+  }, [isPlaying]);
+
+  const stopWatchdog = useCallback(() => {
+    if (watchdogRef.current) clearInterval(watchdogRef.current);
+  }, []);
+
   const speak = useCallback(async (order: number) => {
     if (!synthRef.current) return;
 
+    startWatchdog();
     isAutoAdvancing.current = true;
-    synthRef.current.cancel();
+    
+    // Only cancel if actually speaking to avoid destabilizing iOS queue
+    if (synthRef.current.speaking) {
+      synthRef.current.cancel();
+    }
 
     const verse = await db.verses
       .where("[translationId+globalOrder]")
@@ -102,6 +133,7 @@ export function useVoiceover() {
   }, [translationSlug, speed, getBestVoice, setVerse, setCurrentOrder, isFollowEnabled, setScrollToOrder]);
 
   const stop = useCallback(() => {
+    stopWatchdog();
     setIsPlaying(false);
     setIsActive(false);
     setIsMinimized(false);
@@ -115,6 +147,7 @@ export function useVoiceover() {
 
   const togglePlay = useCallback(() => {
     if (isPlaying) {
+      stopWatchdog();
       setIsPlaying(false);
       if (synthRef.current) {
         isAutoAdvancing.current = false;
@@ -126,9 +159,11 @@ export function useVoiceover() {
       setIsMinimized(false);
       setIsPlaying(true);
     }
-  }, [isPlaying, setIsPlaying, setIsActive, setIsMinimized, unlockAudio]);
+  }, [isPlaying, setIsPlaying, setIsActive, setIsMinimized, unlockAudio, stopWatchdog]);
+
   useEffect(() => {
     if (isPlaying) {
+      startWatchdog();
       if (!isActive) setIsActive(true);
       if (currentOrder === null) {
         setCurrentOrder(globalCurrentOrder);
@@ -136,12 +171,14 @@ export function useVoiceover() {
         speak(currentOrder);
       }
     } else {
+      stopWatchdog();
       if (synthRef.current) {
         isAutoAdvancing.current = false;
         synthRef.current.cancel();
       }
     }
   }, [isPlaying]);
+
 
   useEffect(() => {
     if (isPlaying && currentOrder !== null) {
@@ -172,8 +209,14 @@ export function useVoiceover() {
   return {
     togglePlay,
     stop,
-    skipForward: () => setCurrentOrder((currentOrder ?? globalCurrentOrder) + 1),
-    skipBackward: () => setCurrentOrder(Math.max(1, (currentOrder ?? globalCurrentOrder) - 1)),
+    skipForward: () => {
+      unlockAudio();
+      setCurrentOrder((currentOrder ?? globalCurrentOrder) + 1);
+    },
+    skipBackward: () => {
+      unlockAudio();
+      setCurrentOrder(Math.max(1, (currentOrder ?? globalCurrentOrder) - 1));
+    },
     jumpToOrder,
     isPlaying,
     isActive,
