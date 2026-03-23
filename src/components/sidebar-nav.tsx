@@ -85,6 +85,16 @@ export function SidebarNav() {
     }
   };
 
+  const unlockAudio = useCallback(() => {
+    if (typeof window !== "undefined" && window.speechSynthesis) {
+      // iOS Safari Unlock: Must be called directly in the click handler
+      const utterance = new SpeechSynthesisUtterance(" ");
+      utterance.volume = 0;
+      utterance.rate = 1;
+      window.speechSynthesis.speak(utterance);
+    }
+  }, []);
+
   const currentBook = useMemo(() => books?.find(b => b.id === currentBookId), [books, currentBookId]);
 
   return (
@@ -125,7 +135,10 @@ export function SidebarNav() {
           <RailButton 
             icon={<Volume2 className={cn("h-4 w-4 transition-all", isVoiceoverPlaying && "animate-pulse text-primary")} />} 
             active={isVoiceoverPlaying} 
-            onClick={() => setIsVoiceoverPlaying(!isVoiceoverPlaying)} 
+            onClick={() => {
+              if (!isVoiceoverPlaying) unlockAudio();
+              setIsVoiceoverPlaying(!isVoiceoverPlaying);
+            }} 
             label="Listen" 
           />
 
