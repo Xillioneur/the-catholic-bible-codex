@@ -21,6 +21,7 @@ export function useVoiceover() {
   const globalCurrentOrder = useReaderStore((state) => state.currentOrder);
 
   const synthRef = useRef<typeof window.speechSynthesis | null>(null);
+  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
   const isAutoAdvancing = useRef(false);
 
   useEffect(() => {
@@ -96,6 +97,7 @@ export function useVoiceover() {
       }
     };
 
+    utteranceRef.current = utterance;
     synthRef.current.speak(utterance);
   }, [translationSlug, speed, getBestVoice, setVerse, setCurrentOrder, isFollowEnabled, setScrollToOrder]);
 
