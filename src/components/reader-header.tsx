@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { api } from "~/trpc/react";
 import { LiturgicalCard } from "./liturgical-card";
-import { CalendarDays, ChevronDown, Search } from "lucide-react";
+import { CalendarDays, ChevronDown, Search, Volume2 } from "lucide-react";
 import { useReaderStore } from "~/hooks/use-reader-store";
 import { cn } from "~/lib/utils";
 
@@ -18,6 +18,9 @@ export function ReaderHeader() {
   const currentBookId = useReaderStore((state) => state.currentBookId);
   const currentChapter = useReaderStore((state) => state.currentChapter);
   const setIsSearchOpen = useReaderStore((state) => state.setIsSearchOpen);
+  
+  const isVoiceoverPlaying = useReaderStore((state) => state.isVoiceoverPlaying);
+  const setIsVoiceoverPlaying = useReaderStore((state) => state.setIsVoiceoverPlaying);
 
   const utils = api.useUtils();
 
@@ -103,6 +106,21 @@ export function ReaderHeader() {
               ))}
             </select>
           </div>
+
+          <div className="h-4 w-px bg-zinc-200 dark:bg-zinc-800 mx-1" />
+
+          <button 
+            onClick={() => setIsVoiceoverPlaying(!isVoiceoverPlaying)}
+            className={cn(
+              "flex h-8 items-center gap-2 rounded-lg px-3 text-[9px] font-black uppercase tracking-widest transition-all",
+              isVoiceoverPlaying 
+                ? "bg-primary text-white shadow-sm" 
+                : "bg-transparent text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-900"
+            )}
+          >
+            <Volume2 className={cn("h-3.5 w-3.5", isVoiceoverPlaying && "animate-pulse")} />
+            <span className="hidden lg:inline">Listen</span>
+          </button>
 
           <button 
             onClick={() => setShowDaily(!showDaily)}

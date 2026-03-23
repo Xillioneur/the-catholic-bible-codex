@@ -17,9 +17,9 @@ export function BibleReader() {
 
   const bookmarks = useLiveQuery(() => db.bookmarks.toArray()) ?? [];
   const highlights = useLiveQuery(() => db.highlights.toArray()) ?? [];
-  const notes = useLiveQuery(() => db.notes.toArray()) ?? [];
   const liturgicalReadings = useReaderStore((state) => state.liturgicalReadings);
   const searchHighlight = useReaderStore((state) => state.searchHighlight);
+  const voiceoverCurrentOrder = useReaderStore((state) => state.voiceoverCurrentOrder);
 
   if (isLoading) return <LoadingScreen />;
 
@@ -63,6 +63,7 @@ export function BibleReader() {
                           hasHighlight={highlights.some(h => h.verseId === v.id)}
                           isLiturgical={liturgicalReadings.some(r => r.orders.includes(v.globalOrder))}
                           isSearchTarget={searchHighlight?.targetOrder === v.globalOrder}
+                          isVoiceoverActive={voiceoverCurrentOrder === v.globalOrder}
                           onClick={() => setActiveVerse(v)}
                         />
                       </div>
@@ -98,6 +99,7 @@ const InlineVerse = memo(({
   hasHighlight, 
   isLiturgical, 
   isSearchTarget, 
+  isVoiceoverActive,
   onClick 
 }: { 
   verse: any, 
@@ -105,6 +107,7 @@ const InlineVerse = memo(({
   hasHighlight: boolean, 
   isLiturgical: boolean, 
   isSearchTarget: boolean, 
+  isVoiceoverActive: boolean,
   onClick: () => void 
 }) => {
   const fontSize = useReaderStore((state) => state.fontSize);
@@ -116,7 +119,8 @@ const InlineVerse = memo(({
         "inline cursor-pointer transition-all duration-300 rounded px-1 -mx-0.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 font-serif relative",
         hasHighlight && "bg-yellow-400/10 border-b border-yellow-400/30",
         isLiturgical && "text-primary font-semibold bg-primary/[0.03] dark:bg-primary/[0.08]",
-        isSearchTarget && "ring-2 ring-primary/20 bg-primary/5 rounded-md"
+        isSearchTarget && "ring-2 ring-primary/20 bg-primary/5 rounded-md",
+        isVoiceoverActive && "bg-primary/10 ring-1 ring-primary/30"
       )}
       style={{ fontSize: `${fontSize}px` }}
     >
@@ -124,7 +128,8 @@ const InlineVerse = memo(({
         "text-[0.6em] font-black mr-1 transition-all duration-300 tabular-nums px-1 rounded-sm",
         hasBookmark 
           ? "bg-primary text-white shadow-[0_2px_8px_-2px_rgba(var(--primary-rgb),0.4)] opacity-100 scale-110" 
-          : "text-zinc-400 opacity-60"
+          : "text-zinc-400 opacity-60",
+        isVoiceoverActive && "bg-primary text-white"
       )}>
         {verse.verse}
       </sup>

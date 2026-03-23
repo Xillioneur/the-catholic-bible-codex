@@ -11,12 +11,14 @@ import {
   X, 
   Scroll, 
   BookOpen,
-  MoreHorizontal
+  MoreHorizontal,
+  Volume2
 } from "lucide-react";
 import { db } from "~/lib/db";
 import { useLiveQuery } from "dexie-react-hooks";
 import { getCatechismUrl, getCatenaAureaUrl, getPatristicCommentaryUrl } from "~/lib/bible-utils";
 import { api } from "~/trpc/react";
+import { useVoiceover } from "~/hooks/use-voiceover";
 
 interface VerseOverlayProps {
   verseId: string;
@@ -31,6 +33,7 @@ interface VerseOverlayProps {
 }
 
 export function VerseOverlay({ verseId, bookId, bookName, bookSlug, chapter, verse, text, globalOrder, onClose }: VerseOverlayProps) {
+  const { jumpToOrder } = useVoiceover();
   const translationSlug = useReaderStore((state) => state.translationSlug);
   const [noteContent, setNoteContent] = useState("");
   const [isEditingNote, setIsEditingNote] = useState(false);
@@ -211,6 +214,13 @@ export function VerseOverlay({ verseId, bookId, bookName, bookSlug, chapter, ver
           className={cn("p-2.5 rounded-full transition-all active:scale-90", bookmark ? "text-primary bg-primary/10" : "hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400")}
         >
           <BookmarkIcon className={cn("h-4 w-4", bookmark && "fill-primary")} />
+        </button>
+
+        <button 
+          onClick={() => { jumpToOrder(globalOrder); onClose(); }}
+          className="p-2.5 rounded-full hover:bg-primary/10 text-primary transition-all active:scale-90"
+        >
+          <Volume2 className="h-4 w-4" />
         </button>
 
         <div className="w-px h-4 bg-zinc-200 dark:bg-zinc-800 mx-1" />

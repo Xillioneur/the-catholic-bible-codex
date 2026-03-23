@@ -59,6 +59,22 @@ interface ReaderState {
   setFontSize: (size: number) => void;
   theme: "sanctuary" | "traditional" | "midnight";
   setTheme: (theme: "sanctuary" | "traditional" | "midnight") => void;
+
+  // VOICEOVER
+  isVoiceoverPlaying: boolean;
+  setIsVoiceoverPlaying: (playing: boolean) => void;
+  isVoiceoverActive: boolean;
+  setIsVoiceoverActive: (active: boolean) => void;
+  isVoiceoverMinimized: boolean;
+  setIsVoiceoverMinimized: (minimized: boolean) => void;
+  voiceoverSpeed: number;
+  setVoiceoverSpeed: (speed: number) => void;
+  voiceoverCurrentOrder: number | null;
+  setVoiceoverCurrentOrder: (order: number | null) => void;
+  voiceoverCurrentVerse: any | null;
+  setVoiceoverCurrentVerse: (verse: any | null) => void;
+  isVoiceoverFollowEnabled: boolean;
+  setIsVoiceoverFollowEnabled: (enabled: boolean) => void;
 }
 
 export const useReaderStore = create<ReaderState>((set) => ({
@@ -100,4 +116,20 @@ export const useReaderStore = create<ReaderState>((set) => ({
   setFontSize: (size) => set({ fontSize: size }),
   theme: "sanctuary",
   setTheme: (theme) => set({ theme }),
+
+  // VOICEOVER
+  isVoiceoverPlaying: false,
+  setIsVoiceoverPlaying: (playing) => set({ isVoiceoverPlaying: playing }),
+  isVoiceoverActive: false,
+  setIsVoiceoverActive: (active) => set({ isVoiceoverActive: active }),
+  isVoiceoverMinimized: false,
+  setIsVoiceoverMinimized: (minimized) => set({ isVoiceoverMinimized: minimized }),
+  voiceoverSpeed: 1.0,
+  setVoiceoverSpeed: (speed) => set({ voiceoverSpeed: speed }),
+  voiceoverCurrentOrder: null,
+  setVoiceoverCurrentOrder: (order) => set({ voiceoverCurrentOrder: order }),
+  voiceoverCurrentVerse: null,
+  setVoiceoverCurrentVerse: (verse) => set({ voiceoverCurrentVerse: verse }),
+  isVoiceoverFollowEnabled: true,
+  setIsVoiceoverFollowEnabled: (enabled) => set({ isVoiceoverFollowEnabled: enabled }),
 }));

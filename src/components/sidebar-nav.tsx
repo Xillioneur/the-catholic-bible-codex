@@ -19,7 +19,9 @@ import {
   Church,
   ChevronRight,
   Calendar,
-  Trash2
+  Trash2,
+  Volume2,
+  Headphones
 } from "lucide-react";
 import { useReaderStore } from "~/hooks/use-reader-store";
 import { cn } from "~/lib/utils";
@@ -49,6 +51,12 @@ export function SidebarNav() {
   const setIsSearchOpen = useReaderStore((state) => state.setIsSearchOpen);
   const liturgicalReadings = useReaderStore((state) => state.liturgicalReadings);
   const setIsNavigatorVisible = useReaderStore((state) => state.setIsNavigatorVisible);
+  
+  const isVoiceoverPlaying = useReaderStore((state) => state.isVoiceoverPlaying);
+  const setIsVoiceoverPlaying = useReaderStore((state) => state.setIsVoiceoverPlaying);
+  const isVoiceoverActive = useReaderStore((state) => state.isVoiceoverActive);
+  const isVoiceoverMinimized = useReaderStore((state) => state.isVoiceoverMinimized);
+  const setIsVoiceoverMinimized = useReaderStore((state) => state.setIsVoiceoverMinimized);
   
   const fontSize = useReaderStore((state) => state.fontSize);
   const setFontSize = useReaderStore((state) => state.setFontSize);
@@ -113,6 +121,14 @@ export function SidebarNav() {
 
           <RailButton icon={<Search className="h-4 w-4" />} onClick={() => { setIsSearchOpen(true); setActiveTab(null); }} label="Search" />
           <RailButton icon={<Sun className="h-4 w-4" />} active={activeTab === "daily"} onClick={() => setActiveTab(activeTab === "daily" ? null : "daily")} label="Daily" />
+          
+          <RailButton 
+            icon={<Volume2 className={cn("h-4 w-4 transition-all", isVoiceoverPlaying && "animate-pulse text-primary")} />} 
+            active={isVoiceoverPlaying} 
+            onClick={() => setIsVoiceoverPlaying(!isVoiceoverPlaying)} 
+            label="Listen" 
+          />
+
           <div className="hidden md:block h-px w-6 bg-zinc-200/50 dark:bg-zinc-800/50 my-1 self-center" />
           <RailButton icon={<LibraryIcon className="h-4 w-4" />} active={activeTab === "library"} onClick={() => setActiveTab(activeTab === "library" ? null : "library")} label="Library" />
           <RailButton icon={<Bookmark className="h-4 w-4" />} active={activeTab === "bookmarks"} onClick={() => setActiveTab(activeTab === "bookmarks" ? null : "bookmarks")} label="Saved" />
@@ -270,7 +286,20 @@ export function SidebarNav() {
         </div>
       )}
 
-      {/* 4. FULL SCRIPTURE OVERLAY */}
+      {/* 4. FLOATING LISTEN BUTTON (Restores Minimized Player) */}
+      {isVoiceoverActive && isVoiceoverMinimized && (
+        <button 
+          onClick={() => setIsVoiceoverMinimized(false)}
+          className="fixed right-6 bottom-24 z-[100] h-14 w-14 rounded-full bg-primary text-white shadow-2xl flex items-center justify-center animate-in slide-in-from-bottom-10 duration-700 hover:scale-110 active:scale-95 transition-all"
+        >
+          <Headphones className="h-6 w-6" />
+          <div className="absolute -top-1 -right-1 h-4 w-4 bg-white dark:bg-zinc-900 rounded-full flex items-center justify-center">
+            <div className={cn("h-2 w-2 rounded-full bg-primary", isVoiceoverPlaying && "animate-pulse")} />
+          </div>
+        </button>
+      )}
+
+      {/* 5. FULL SCRIPTURE OVERLAY */}
       {showFullLiturgical && info && (
         <DailyAllView 
           info={info} 

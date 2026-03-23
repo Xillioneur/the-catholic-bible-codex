@@ -4,6 +4,7 @@ import { BibleReader } from "~/components/bible-reader";
 import { SidebarNav } from "~/components/sidebar-nav";
 import { SearchDialog } from "~/components/search-dialog";
 import { LiturgicalNavigator } from "~/components/liturgical-navigator";
+import { VoiceoverPlayer } from "~/components/voiceover-player";
 
 export function ReaderLayout() {
   return (
@@ -20,6 +21,7 @@ export function ReaderLayout() {
 
       <SearchDialog />
       <LiturgicalNavigator />
+      <VoiceoverPlayer />
     </main>
   );
 }
