@@ -4,6 +4,33 @@ import path from "path";
 
 const calendarCache: Record<number, any[]> = {};
 
+function decodeHtmlEntities(text: string): string {
+  if (!text) return "";
+  return text
+    .replace(/<[^>]*>?/gm, "") // Strip HTML tags
+    .replace(/&nbsp;/g, " ")
+    .replace(/&#160;/g, " ")
+    .replace(/&#xa0;/g, " ")
+    .replace(/&#x2010;/g, "-")
+    .replace(/&#x2011;/g, "-")
+    .replace(/&#x2013;/g, "-")
+    .replace(/&#x2014;/g, "-")
+    .replace(/&ndash;/g, "-")
+    .replace(/&mdash;/g, "-")
+    .replace(/&#x2018;/g, "'")
+    .replace(/&#x2019;/g, "'")
+    .replace(/&lsquo;/g, "'")
+    .replace(/&rsquo;/g, "'")
+    .replace(/&#x201c;/g, '"')
+    .replace(/&#x201d;/g, '"')
+    .replace(/&ldquo;/g, '"')
+    .replace(/&rdquo;/g, '"')
+    .replace(/&amp;/g, "&")
+    .replace(/&#38;/g, "&")
+    .replace(/\s+/g, " ") // Collapse multiple spaces
+    .trim();
+}
+
 export async function getLiturgicalInfoServer(dateInput: Date = new Date()): Promise<LiturgicalInfo> {
   const day = String(dateInput.getDate()).padStart(2, '0');
   const month = String(dateInput.getMonth() + 1).padStart(2, '0');
@@ -30,31 +57,14 @@ export async function getLiturgicalInfoServer(dateInput: Date = new Date()): Pro
       const data = JSON.parse(jsonStr);
 
       const readings: any = {
-        firstReading: data.Mass_R1?.source,
-        psalm: data.Mass_Ps?.source,
-        secondReading: data.Mass_R2?.source,
-        verseBeforeGospel: data.Mass_V?.source,
-        gospel: data.Mass_G?.source
+        firstReading: decodeHtmlEntities(data.Mass_R1?.source),
+        psalm: decodeHtmlEntities(data.Mass_Ps?.source),
+        secondReading: decodeHtmlEntities(data.Mass_R2?.source),
+        verseBeforeGospel: decodeHtmlEntities(data.Mass_V?.source),
+        gospel: decodeHtmlEntities(data.Mass_G?.source)
       };
 
-      // Clean up sources (replace entities)
-      Object.keys(readings).forEach(k => {
-        if (readings[k]) {
-          readings[k] = readings[k]
-            .replace(/&#x2010;/g, "-")
-            .replace(/&#xa0;/g, " ")
-            .replace(/&#x2019;/g, "'")
-            .replace(/&#x2018;/g, "'")
-            .replace(/&#x2013;/g, "-")
-            .replace(/&ndash;/g, "-")
-            .replace(/&mdash;/g, "-");
-          
-          // If it's a Psalm with 129(130) format, we can simplify it for the UI if desired,
-          // but our parser handles it now. Let's keep it but ensure no strange chars.
-        }
-      });
-
-      const dayTitle = (data.day || "").replace(/<[^>]*>?/gm, '').trim();
+      const dayTitle = decodeHtmlEntities(data.day);
       let season = "Ordinary Time";
       let liturgicalColor: LiturgicalColor = "green";
 
