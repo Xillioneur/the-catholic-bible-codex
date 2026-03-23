@@ -114,6 +114,7 @@ const InlineVerse = memo(({
 
   return (
     <span 
+      id={`verse-${verse.globalOrder}`}
       onClick={onClick}
       className={cn(
         "inline cursor-pointer transition-all duration-300 rounded px-1 -mx-0.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 font-serif relative",

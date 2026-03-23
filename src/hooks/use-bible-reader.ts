@@ -173,8 +173,16 @@ export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>
   // 6. Navigation
   useEffect(() => {
     if (scrollToOrder !== null && isWorkerReady) {
-      workerRef.current?.postMessage({ type: "FIND_ORDER", payload: { order: scrollToOrder } });
-      setScrollToOrder(null);
+      // Hybrid Scroll: Try to find the specific verse element first
+      const element = document.getElementById(`verse-${scrollToOrder}`);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth", block: "center" });
+        setScrollToOrder(null);
+      } else {
+        // Fallback to Worker/Virtualizer if verse is off-screen (not rendered)
+        workerRef.current?.postMessage({ type: "FIND_ORDER", payload: { order: scrollToOrder } });
+        setScrollToOrder(null);
+      }
     }
   }, [scrollToOrder, isWorkerReady, setScrollToOrder]);
 
