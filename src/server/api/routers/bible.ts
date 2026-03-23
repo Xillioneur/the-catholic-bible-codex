@@ -184,6 +184,100 @@ export const bibleRouter = createTRPCRouter({
       return resultOrders;
     }),
 
+  resolveBatchReadings: publicProcedure
+    .input(z.object({
+      translationSlug: z.string(),
+      readings: z.array(z.object({
+        type: z.string(),
+        citation: z.string(),
+      }))
+    }))
+    .query(async ({ ctx, input }) => {
+      const translation = await ctx.db.translation.findUnique({ where: { slug: input.translationSlug } });
+      if (!translation) return [];
+
+      const results = await Promise.all(
+        input.readings.map(async (reading) => {
+          try {
+            const { bookSlug, chapter: startChapter, verses: rawVerses } = parseCitation(reading.citation);
+            const book = await ctx.db.book.findFirst({ where: { slug: { equals: bookSlug, mode: 'insensitive' } } });
+            
+            if (!book) return null;
+
+            let chapter = startChapter;
+            if (book.slug.toLowerCase() === "psalms" && input.translationSlug === "drb") {
+              chapter = mapPsalmToVulgate(startChapter);
+            }
+
+            let orders: number[] = [];
+            
+            if (rawVerses.length > 0) {
+              const matchedVerses = await ctx.db.verse.findMany({
+                where: { 
+                  translationId: translation.id, 
+                  bookId: book.id, 
+                  chapter: chapter, 
+                  verse: { in: rawVerses } 
+                },
+                select: { globalOrder: true },
+                orderBy: { globalOrder: "asc" }
+              });
+              
+              if (matchedVerses.length === rawVerses.length) {
+                orders = matchedVerses.map(v => v.globalOrder);
+              } else {
+                // COMPLEX FALLBACK for ranges spanning chapters
+                const firstVerseNum = Math.min(...rawVerses);
+                const rangeVerses = await ctx.db.verse.findMany({
+                  where: {
+                    translationId: translation.id,
+                    bookId: book.id,
+                    chapter: { gte: chapter },
+                  },
+                  orderBy: [{ chapter: 'asc' }, { verse: 'asc' }],
+                  take: 100
+                });
+
+                let collecting = false;
+                let versesFound = 0;
+                for (const v of rangeVerses) {
+                  if (v.chapter === chapter && v.verse === firstVerseNum) collecting = true;
+                  if (collecting) {
+                    orders.push(v.globalOrder);
+                    versesFound++;
+                    if (versesFound >= rawVerses.length) break;
+                  }
+                }
+              }
+            } else {
+              // FULL CHAPTER
+              const chapterVerses = await ctx.db.verse.findMany({
+                where: {
+                  translationId: translation.id,
+                  bookId: book.id,
+                  chapter: chapter
+                },
+                select: { globalOrder: true },
+                orderBy: { verse: "asc" }
+              });
+              orders = chapterVerses.map(v => v.globalOrder);
+            }
+
+            return {
+              type: reading.type,
+              citation: reading.citation,
+              orders
+            };
+          } catch (e) {
+            console.error(`[BATCH-RESOLVE] Failed for ${reading.citation}`, e);
+            return null;
+          }
+        })
+      );
+
+      return results.filter(Boolean);
+    }),
+
   getBooks: publicProcedure.query(async ({ ctx }) => {
     return ctx.db.book.findMany({ orderBy: { order: "asc" } });
   }),

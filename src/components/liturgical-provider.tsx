@@ -32,45 +32,47 @@ export function LiturgicalProvider({ children }: { children: ReactNode }) {
     if (!info) return;
 
     const resolveAll = async () => {
-      const readingPairs = [
-        { type: "First Reading", citation: info.readings.firstReading },
-        { type: "Responsorial Psalm", citation: info.readings.psalm },
-        { type: "Second Reading", citation: info.readings.secondReading },
-        { type: "Verse Before the Gospel", citation: info.readings.verseBeforeGospel },
-        { type: "The Holy Gospel", citation: info.readings.gospel }
-      ];
+      try {
+        const readingPairs = [
+          { type: "First Reading", citation: info.readings.firstReading },
+          { type: "Responsorial Psalm", citation: info.readings.psalm },
+          { type: "Second Reading", citation: info.readings.secondReading },
+          { type: "Verse Before the Gospel", citation: info.readings.verseBeforeGospel },
+          { type: "The Holy Gospel", citation: info.readings.gospel }
+        ].filter(p => !!p.citation) as { type: string; citation: string }[];
 
-      const resolvedReadings = await Promise.all(
-        readingPairs
-          .filter(p => !!p.citation)
-          .map(async (p) => {
-            try {
-              // 1. Resolve global orders
-              const orders = await utils.bible.resolveReadingHighlight.fetch({
-                translationSlug,
-                citation: p.citation!
-              });
+        // 1. SINGLE BATCH CALL for all orders
+        const resolvedOrders = await utils.bible.resolveBatchReadings.fetch({
+          translationSlug,
+          readings: readingPairs
+        });
 
-              // 2. Pre-fetch full verse objects from local DB for instant UI
-              const verses = await db.verses
-                .where("translationId").equals(translationSlug)
-                .and(v => orders.includes(v.globalOrder))
-                .toArray();
+        // 2. OPTIMIZED DEXIE FETCH
+        // Collect all unique globalOrders across all readings to fetch from IndexedDB in one go
+        const allOrders = resolvedOrders.flatMap(r => r.orders);
+        
+        // Use Dexie's 'anyOf' for efficient multi-key lookup
+        const allVerses = await db.verses
+          .where("translationId").equals(translationSlug)
+          .and(v => allOrders.includes(v.globalOrder))
+          .toArray();
 
-              return { 
-                type: p.type, 
-                citation: p.citation!, 
-                orders,
-                verses: verses.sort((a, b) => a.globalOrder - b.globalOrder)
-              };
-            } catch (e) {
-              console.error(`[LITURGICAL] Resolution failed for ${p.citation}`, e);
-              return null;
-            }
-          })
-      );
+        // 3. MAP BACK TO READINGS
+        const finalReadings = resolvedOrders.map(ro => {
+          const readingVerses = allVerses
+            .filter(v => ro.orders.includes(v.globalOrder))
+            .sort((a, b) => a.globalOrder - b.globalOrder);
+            
+          return {
+            ...ro,
+            verses: readingVerses
+          };
+        });
 
-      setLiturgicalReadings(resolvedReadings.filter(r => r !== null) as any);
+        setLiturgicalReadings(finalReadings as any);
+      } catch (e) {
+        console.error(`[LITURGICAL] Batch resolution failed`, e);
+      }
     };
 
     void resolveAll();

@@ -46,18 +46,17 @@ export function BibleReader() {
             >
               {row.type === "book-header" && <BookHeader book={row.book} />}
               {row.type === "chapter-header" && <ChapterHeader chapter={row.chapter} />}
+              {row.type === "liturgical-header" && (
+                <LiturgicalReadingHeader 
+                  type={row.readingType} 
+                  citation={row.citation} 
+                />
+              )}
               {row.type === "prose-block" && (
                 <div className="max-w-4xl mx-auto px-6 sm:px-12 md:px-16 py-4 flex flex-wrap items-baseline gap-x-1.5 leading-[1.8]">
                   {row.verses.map((v) => {
-                    const reading = liturgicalReadings.find(r => r.orders[0] === v.globalOrder);
                     return (
                       <div key={v.id} className="contents">
-                        {reading && (
-                          <LiturgicalReadingHeader 
-                            type={reading.type} 
-                            citation={reading.citation} 
-                          />
-                        )}
                         <InlineVerse 
                           verse={v}
                           hasBookmark={bookmarks.some(b => b.verseId === v.id)}

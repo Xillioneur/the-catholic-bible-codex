@@ -9,12 +9,8 @@ self.onmessage = async (e: MessageEvent) => {
   const { type, payload } = e.data;
 
   if (type === "INITIALIZE") {
-    const { slug } = payload;
-    if (translationSlug === slug && isReady) {
-      self.postMessage({ type: "READY", payload: { count: rows.length } });
-      return;
-    }
-
+    const { slug, liturgicalReadings = [] } = payload;
+    
     translationSlug = slug;
     isReady = false;
     
@@ -52,6 +48,18 @@ self.onmessage = async (e: MessageEvent) => {
       };
 
       for (const v of allVerses) {
+        // INJECT LITURGICAL HEADERS
+        const reading = liturgicalReadings.find((r: any) => r.orders[0] === v.globalOrder);
+        if (reading) {
+          flushProse();
+          processedRows.push({ 
+            type: "liturgical-header", 
+            readingType: reading.type, 
+            citation: reading.citation, 
+            firstOrder: v.globalOrder 
+          });
+        }
+
         if (v.bookId !== lastBookId) {
           flushProse();
           processedRows.push({ type: "book-header", book: v.book, firstOrder: v.globalOrder });

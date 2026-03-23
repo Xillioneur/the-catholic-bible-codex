@@ -11,6 +11,7 @@ import { db } from "~/lib/db";
 export type BibleRow = 
   | { type: "book-header"; book: any }
   | { type: "chapter-header"; book: any; chapter: number }
+  | { type: "liturgical-header"; readingType: string; citation: string; firstOrder: number }
   | { type: "prose-block"; book: any; chapter: number; verses: any[]; firstOrder: number; lastOrder: number };
 
 export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>) {
@@ -19,9 +20,13 @@ export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>
   const setScrollToOrder = useReaderStore((state) => state.setScrollToOrder);
   const setCurrentBookId = useReaderStore((state) => state.setCurrentBookId);
   const setCurrentChapter = useReaderStore((state) => state.setCurrentChapter);
+  const liturgicalReadings = useReaderStore((state) => state.liturgicalReadings);
   
+  const fontSize = useReaderStore((state) => state.fontSize);
   const setCurrentOrderStore = useReaderStore((state) => state.setCurrentOrder);
   const setTotalVerseCount = useReaderStore((state) => state.setTotalVerseCount);
+
+  const utils = api.useUtils();
 
   const [rows, setRows] = useState<BibleRow[]>([]);
   const [rowCount, setRowCount] = useState(0);
@@ -31,6 +36,26 @@ export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>
   const workerRef = useRef<Worker | null>(null);
   const lastSyncTime = useRef(0);
   const initialScrollDone = useRef(false);
+
+  // 4. Minecraft-like Chunk Loading
+  const rowVirtualizer = useVirtualizer({
+    count: rowCount,
+    getScrollElement: () => parentRef.current,
+    estimateSize: useCallback((index) => {
+      const row = rows[index];
+      if (row?.type === "book-header") return 400;
+      if (row?.type === "chapter-header") return 150;
+      if (row?.type === "liturgical-header") return 120;
+      if (row?.type === "prose-block") {
+        // Average verse height is roughly 1.8 * fontSize * (line length estimation)
+        // A prose block has 5 verses. 
+        return (fontSize * 1.8 * 2.5) * row.verses.length; 
+      }
+      return 200;
+    }, [rows, fontSize]),
+    overscan: 20,
+    paddingEnd: 100,
+  });
 
   // 1. Multithreaded Worker Lifecycle
   useEffect(() => {
@@ -55,7 +80,11 @@ export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>
       } else if (type === "ORDER_INDEX") {
         const { index } = payload;
         if (index !== -1) {
-          rowVirtualizer.scrollToIndex(index, { align: "start" });
+          // IMPORTANT: Use a small timeout to allow React to process any row updates
+          // and the virtualizer to have the latest heights.
+          requestAnimationFrame(() => {
+            rowVirtualizer.scrollToIndex(index, { align: "start", behavior: "auto" });
+          });
         }
       } else if (type === "NOT_HYDRATED") {
         setIsHydrated(false);
@@ -63,24 +92,27 @@ export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>
     };
 
     return () => workerRef.current?.terminate();
-  }, []);
+  }, [rowVirtualizer]);
 
   // 2. Worker Initialization
   useEffect(() => {
     if (workerRef.current) {
       setIsWorkerReady(false);
-      workerRef.current.postMessage({ type: "INITIALIZE", payload: { slug: translationSlug } });
+      workerRef.current.postMessage({ 
+        type: "INITIALIZE", 
+        payload: { 
+          slug: translationSlug,
+          liturgicalReadings
+        } 
+      });
     }
-  }, [translationSlug]);
+  }, [translationSlug, liturgicalReadings]);
 
   // 3. Background Sync (Fallback/Hydration)
   const { data: totalVerseCount } = api.bible.getVerseCount.useQuery(
     { translationSlug },
     { staleTime: Infinity }
   );
-
-  const utils = api.useUtils();
-  const liturgicalReadings = useReaderStore((state) => state.liturgicalReadings);
 
   useEffect(() => {
     if (totalVerseCount) {
@@ -95,20 +127,6 @@ export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>
       });
     }
   }, [totalVerseCount, translationSlug, utils]);
-
-  // 4. Minecraft-like Chunk Loading
-  const rowVirtualizer = useVirtualizer({
-    count: rowCount,
-    getScrollElement: () => parentRef.current,
-    estimateSize: (index) => {
-      const row = rows[index];
-      if (row?.type === "book-header") return 400;
-      if (row?.type === "chapter-header") return 150;
-      if (row?.type === "prose-block") return 30 * row.verses.length; 
-      return 150;
-    },
-    overscan: 20,
-  });
 
   const virtualItems = rowVirtualizer.getVirtualItems();
 
