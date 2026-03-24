@@ -101,21 +101,21 @@ export function VoiceoverPlayer() {
               />
             </div>
 
-            <div className="flex items-center gap-3 px-2 py-1">
+            <div className="flex items-center gap-2 sm:gap-3 px-2 py-1">
               {/* Verse Badge - Now a Jump Button */}
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <button 
                       onClick={handleJumpToChapter}
-                      className="hidden sm:flex flex-col items-center justify-center h-12 w-12 rounded-[1.5rem] bg-zinc-50 dark:bg-zinc-800 border border-zinc-100 dark:border-zinc-700/50 shrink-0 hover:bg-primary/5 hover:border-primary/20 transition-all active:scale-90 group/ch"
+                      className="flex flex-col items-center justify-center h-10 w-10 sm:h-12 sm:w-12 rounded-xl sm:rounded-[1.5rem] bg-zinc-50 dark:bg-zinc-800 border border-zinc-100 dark:border-zinc-700/50 shrink-0 hover:bg-primary/5 hover:border-primary/20 transition-all active:scale-90 group/ch"
                     >
                       {isLiturgical ? (
-                        <Church className="h-5 w-5 text-primary" />
+                        <Church className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                       ) : (
                         <>
-                          <span className="text-[8px] font-black leading-none text-zinc-400 mb-0.5 group-hover/ch:text-primary transition-colors">CH</span>
-                          <span className="text-sm font-black text-zinc-900 dark:text-zinc-100 group-hover/ch:text-primary transition-colors">{currentVerse.chapter}</span>
+                          <span className="text-[6px] sm:text-[8px] font-black leading-none text-zinc-400 mb-0.5 group-hover/ch:text-primary transition-colors">CH</span>
+                          <span className="text-xs sm:text-sm font-black text-zinc-900 dark:text-zinc-100 group-hover/ch:text-primary transition-colors">{currentVerse.chapter}</span>
                         </>
                       )}
                     </button>
@@ -129,11 +129,11 @@ export function VoiceoverPlayer() {
               {/* Title & Info */}
               <div className="flex-1 min-w-0 px-2 flex flex-col justify-center">
                 <div className="flex items-center gap-2">
-                  <h3 className="text-xs font-black uppercase tracking-[0.2em] text-primary truncate">
+                  <h3 className="text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] text-primary truncate">
                     {isLiturgical ? "Liturgical Reading" : currentVerse.book.name}
                   </h3>
                   <div className="h-1 w-1 rounded-full bg-zinc-300 dark:bg-zinc-700 shrink-0" />
-                  <span className="text-xs font-bold text-zinc-400 tabular-nums shrink-0">
+                  <span className="text-[10px] sm:text-xs font-bold text-zinc-400 tabular-nums shrink-0">
                     {currentVerse.book.name} {currentVerse.chapter}:{currentVerse.verse}
                   </span>
                 </div>
@@ -189,16 +189,16 @@ export function VoiceoverPlayer() {
                 <Button
                   onClick={togglePlay}
                   className={cn(
-                    "h-12 w-12 rounded-[1.5rem] transition-all duration-300 shadow-xl active:scale-95",
+                    "h-10 w-10 sm:h-12 sm:w-12 rounded-xl sm:rounded-[1.5rem] transition-all duration-300 shadow-xl active:scale-95",
                     isPlaying 
                       ? "bg-primary text-white shadow-primary/20 hover:bg-primary/90" 
                       : "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900 hover:opacity-90"
                   )}
                 >
                   {isPlaying ? (
-                    <Pause className="h-5 w-5 fill-current" />
+                    <Pause className="h-4 w-4 sm:h-5 sm:w-5 fill-current" />
                   ) : (
-                    <Play className="h-5 w-5 fill-current ml-0.5" />
+                    <Play className="h-4 w-4 sm:h-5 sm:w-5 fill-current ml-0.5" />
                   )}
                 </Button>
 
