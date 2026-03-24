@@ -30,6 +30,8 @@ export function useVoiceover() {
   const [verseProgress, setVerseProgress] = useState(0);
   const lastSpokenRef = useRef<{ order: number; speed: number } | null>(null);
   const sessionRef = useRef<number>(0);
+  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const isLockedRef = useRef(false);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -44,6 +46,16 @@ export function useVoiceover() {
       if (watchdogRef.current) clearInterval(watchdogRef.current);
       if (advanceTimeoutRef.current) clearTimeout(advanceTimeoutRef.current);
     };
+  }, []);
+
+  const unlockAudio = useCallback(() => {
+    if (!synthRef.current) return;
+    // iOS Safari requires a direct user interaction to start speech
+    synthRef.current.cancel();
+    const utterance = new SpeechSynthesisUtterance(" ");
+    utterance.volume = 0;
+    utterance.rate = 1;
+    synthRef.current.speak(utterance);
   }, []);
 
   const getBestVoice = useCallback(() => {
@@ -69,6 +81,7 @@ export function useVoiceover() {
 
   const stop = useCallback(() => {
     isAutoAdvancing.current = false;
+    isLockedRef.current = false;
     if (watchdogRef.current) clearInterval(watchdogRef.current);
     if (advanceTimeoutRef.current) clearTimeout(advanceTimeoutRef.current);
     setIsPlaying(false);
@@ -85,73 +98,60 @@ export function useVoiceover() {
   }, [setIsPlaying, setIsActive, setIsMinimized, setVerse, setCurrentOrder, setPlaylist]);
 
   const speak = useCallback(async (order: number) => {
-    if (!synthRef.current || !isAutoAdvancing.current) return;
+    if (!synthRef.current || !isAutoAdvancing.current || isLockedRef.current) return;
 
+    isLockedRef.current = true;
     sessionRef.current++;
     const currentSession = sessionRef.current;
+    
+    // Update ref immediately to prevent re-entry
     lastSpokenRef.current = { order, speed };
 
-    const verse = await db.verses
-      .where("[translationId+globalOrder]")
-      .equals([translationSlug, order])
-      .first();
+    try {
+      const verse = await db.verses
+        .where("[translationId+globalOrder]")
+        .equals([translationSlug, order])
+        .first();
 
-    if (!verse) {
-      stop();
-      return;
-    }
+      if (!verse || !isAutoAdvancing.current || currentSession !== sessionRef.current) {
+        if (!verse) stop();
+        isLockedRef.current = false;
+        return;
+      }
 
-    if (!isAutoAdvancing.current || currentSession !== sessionRef.current) return;
+      // Prepare UI
+      setVerse(verse);
+      setVerseProgress(0);
 
-    // Clear any previous state
-    synthRef.current.cancel();
-    setVerse(verse);
-    setVerseProgress(0);
+      // On iOS, cancel() followed immediately by speak() can be flaky.
+      // But we must clear previous if it's somehow stuck.
+      synthRef.current.cancel();
 
-    const utterance = new SpeechSynthesisUtterance(verse.text);
-    const voice = getBestVoice();
-    if (voice) utterance.voice = voice;
-    utterance.rate = speed;
-    
-    const getNextOrder = (current: number) => {
-      if (playlist && playlist.length > 0) {
-        const idx = playlist.indexOf(current);
-        if (idx !== -1 && idx < playlist.length - 1) {
-          return playlist[idx + 1];
+      const utterance = new SpeechSynthesisUtterance(verse.text);
+      utteranceRef.current = utterance; // KEEP REF TO PREVENT GC (Essential for iOS)
+      
+      const voice = getBestVoice();
+      if (voice) utterance.voice = voice;
+      utterance.rate = speed;
+      utterance.volume = 1;
+      
+      const getNextOrder = (current: number) => {
+        if (playlist && playlist.length > 0) {
+          const idx = playlist.indexOf(current);
+          if (idx !== -1 && idx < playlist.length - 1) {
+            return playlist[idx + 1];
+          }
+          return null;
         }
-        return null;
-      }
-      return current + 1;
-    };
+        return current + 1;
+      };
 
-    if (advanceTimeoutRef.current) clearTimeout(advanceTimeoutRef.current);
-    
-    // Watchdog: If onend doesn't fire, advance after estimated time
-    const estimatedMs = (verse.text.length * 100) / speed + 5000;
-    advanceTimeoutRef.current = setTimeout(() => {
-      if (isAutoAdvancing.current && currentSession === sessionRef.current && synthRef.current && !synthRef.current.speaking) {
-        const next = getNextOrder(order);
-        if (next !== null) {
-          setCurrentOrder(next);
-          if (isFollowEnabled) setScrollToOrder(next);
-        } else {
-          stop();
-        }
-      }
-    }, estimatedMs);
-
-    utterance.onboundary = (event) => {
-      if (currentSession === sessionRef.current) {
-        const progress = (event.charIndex / verse.text.length) * 100;
-        setVerseProgress(progress);
-      }
-    };
-
-    utterance.onend = () => {
-      if (currentSession === sessionRef.current) {
-        setVerseProgress(100);
-        if (advanceTimeoutRef.current) clearTimeout(advanceTimeoutRef.current);
-        if (isAutoAdvancing.current) {
+      if (advanceTimeoutRef.current) clearTimeout(advanceTimeoutRef.current);
+      
+      // Watchdog: If onend doesn't fire, advance after estimated time
+      const estimatedMs = (verse.text.length * 100) / speed + 5000;
+      advanceTimeoutRef.current = setTimeout(() => {
+        if (isAutoAdvancing.current && currentSession === sessionRef.current && synthRef.current && !synthRef.current.speaking) {
           const next = getNextOrder(order);
           if (next !== null) {
             setCurrentOrder(next);
@@ -160,23 +160,55 @@ export function useVoiceover() {
             stop();
           }
         }
-      }
-    };
+      }, estimatedMs);
 
-    utterance.onerror = (event) => {
-      if (advanceTimeoutRef.current) clearTimeout(advanceTimeoutRef.current);
-      if (event.error !== "interrupted" && isAutoAdvancing.current && currentSession === sessionRef.current) {
-        console.error("SpeechSynthesis error:", event);
-        // Retry current verse once after short delay
-        setTimeout(() => {
-          if (isAutoAdvancing.current && currentSession === sessionRef.current) {
-            speak(order);
+      utterance.onboundary = (event) => {
+        if (currentSession === sessionRef.current) {
+          const progress = (event.charIndex / verse.text.length) * 100;
+          setVerseProgress(progress);
+        }
+      };
+
+      utterance.onstart = () => {
+        isLockedRef.current = false;
+      };
+
+      utterance.onend = () => {
+        isLockedRef.current = false;
+        if (currentSession === sessionRef.current) {
+          setVerseProgress(100);
+          if (advanceTimeoutRef.current) clearTimeout(advanceTimeoutRef.current);
+          if (isAutoAdvancing.current) {
+            const next = getNextOrder(order);
+            if (next !== null) {
+              setCurrentOrder(next);
+              if (isFollowEnabled) setScrollToOrder(next);
+            } else {
+              stop();
+            }
           }
-        }, 500);
-      }
-    };
+        }
+      };
 
-    synthRef.current.speak(utterance);
+      utterance.onerror = (event) => {
+        isLockedRef.current = false;
+        if (advanceTimeoutRef.current) clearTimeout(advanceTimeoutRef.current);
+        if (event.error !== "interrupted" && isAutoAdvancing.current && currentSession === sessionRef.current) {
+          console.error("SpeechSynthesis error:", event);
+          setTimeout(() => {
+            if (isAutoAdvancing.current && currentSession === sessionRef.current) {
+              speak(order);
+            }
+          }, 500);
+        }
+      };
+
+      // Final speak command
+      synthRef.current.speak(utterance);
+    } catch (err) {
+      console.error("Voiceover error:", err);
+      isLockedRef.current = false;
+    }
   }, [translationSlug, speed, getBestVoice, isFollowEnabled, setCurrentOrder, setScrollToOrder, setVerse, stop, playlist]);
 
   useEffect(() => {
@@ -197,6 +229,7 @@ export function useVoiceover() {
       void speak(orderToSpeak);
     } else {
       isAutoAdvancing.current = false;
+      isLockedRef.current = false;
       lastSpokenRef.current = null;
       if (synthRef.current) synthRef.current.cancel();
       if (advanceTimeoutRef.current) clearTimeout(advanceTimeoutRef.current);
@@ -204,6 +237,7 @@ export function useVoiceover() {
   }, [isPlaying, currentOrder, speed, voicesLoaded, speak, setIsActive, isActive, setCurrentOrder, globalCurrentOrder]);
 
   const jumpToOrder = (order: number, newPlaylist?: number[]) => {
+    unlockAudio(); // Critical for iOS Safari
     isAutoAdvancing.current = true;
     if (newPlaylist) setPlaylist(newPlaylist);
     if (isFollowEnabled) setScrollToOrder(order);
@@ -222,11 +256,12 @@ export function useVoiceover() {
     if (isPlaying) {
       setIsPlaying(false);
     } else {
+      unlockAudio(); // Critical for iOS Safari
       setIsActive(true);
       setIsMinimized(false);
       setIsPlaying(true);
     }
-  }, [isPlaying, setIsActive, setIsMinimized, setIsPlaying]);
+  }, [isPlaying, setIsActive, setIsMinimized, setIsPlaying, unlockAudio]);
 
   return {
     togglePlay,
