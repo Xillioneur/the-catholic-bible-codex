@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useReaderStore } from "~/hooks/use-reader-store";
-import { Scroll, Music, Church, Loader2, AlertCircle, Calendar, ChevronRight } from "lucide-react";
+import { Scroll, Music, Church, Loader2, AlertCircle, Calendar, ChevronRight, Volume2 } from "lucide-react";
 import { useLiturgical } from "./liturgical-provider";
 import { cn } from "~/lib/utils";
 import { toast } from "sonner";
 import { DailyAllView } from "./liturgical-full-view";
+import { useVoiceover } from "~/hooks/use-voiceover";
 
 interface LiturgicalCardProps {
   onClose: () => void;
@@ -18,6 +19,7 @@ export function LiturgicalCard({ onClose }: LiturgicalCardProps) {
   const setScrollToOrder = useReaderStore((state) => state.setScrollToOrder);
   const liturgicalReadings = useReaderStore((state) => state.liturgicalReadings);
   const setIsNavigatorVisible = useReaderStore((state) => state.setIsNavigatorVisible);
+  const { jumpToOrder } = useVoiceover();
 
   const handleSelectReading = (type: string) => {
     const reading = liturgicalReadings.find(r => r.type === type);
@@ -33,6 +35,17 @@ export function LiturgicalCard({ onClose }: LiturgicalCardProps) {
       toast.error("Reading not found");
     }
   };
+
+  const handleListenAll = useCallback(() => {
+    const allOrders = liturgicalReadings.flatMap(r => r.orders).sort((a, b) => a - b);
+    if (allOrders.length > 0) {
+      jumpToOrder(allOrders[0], allOrders);
+      toast.success("Daily Bread: Voiceover Started");
+      onClose();
+    } else {
+      toast.error("Readings not yet loaded");
+    }
+  }, [liturgicalReadings, jumpToOrder, onClose]);
 
   if (isLoading) return (
     <div className="glass rounded-3xl p-6 flex flex-col items-center justify-center min-w-[240px] aspect-square">
@@ -88,7 +101,12 @@ export function LiturgicalCard({ onClose }: LiturgicalCardProps) {
               {info.day}
             </span>
           </div>
-          <Calendar className="h-4 w-4 text-primary opacity-20" />
+          <button 
+            onClick={handleListenAll}
+            className="h-8 w-8 rounded-full bg-primary/10 text-primary flex items-center justify-center hover:bg-primary hover:text-white transition-all active:scale-90"
+          >
+            <Volume2 className="h-3.5 w-3.5" />
+          </button>
         </div>
 
         <div className="p-2 space-y-0.5">
@@ -100,8 +118,15 @@ export function LiturgicalCard({ onClose }: LiturgicalCardProps) {
 
         <div className="p-3 pt-1 flex flex-col gap-2">
           <button 
+            onClick={handleListenAll}
+            className="w-full h-10 rounded-xl bg-primary/10 text-primary border border-primary/20 font-black text-[8px] uppercase tracking-[0.2em] hover:bg-primary hover:text-white transition-all flex items-center justify-center gap-2"
+          >
+            <Volume2 className="h-3.5 w-3.5" />
+            Listen to All
+          </button>
+          <button 
             onClick={() => setShowFullView(true)}
-            className="w-full h-10 rounded-xl bg-primary text-white font-black text-[9px] uppercase tracking-[0.2em] shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
+            className="w-full h-10 rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 font-black text-[8px] uppercase tracking-[0.2em] shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all"
           >
             View All Readings
           </button>

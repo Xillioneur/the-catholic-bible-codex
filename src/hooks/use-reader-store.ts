@@ -75,6 +75,8 @@ interface ReaderState {
   setVoiceoverCurrentVerse: (verse: any | null) => void;
   isVoiceoverFollowEnabled: boolean;
   setIsVoiceoverFollowEnabled: (enabled: boolean) => void;
+  voiceoverPlaylist: number[] | null;
+  setVoiceoverPlaylist: (playlist: number[] | null) => void;
 }
 
 export const useReaderStore = create<ReaderState>((set) => ({
@@ -132,4 +134,6 @@ export const useReaderStore = create<ReaderState>((set) => ({
   setVoiceoverCurrentVerse: (verse) => set({ voiceoverCurrentVerse: verse }),
   isVoiceoverFollowEnabled: true,
   setIsVoiceoverFollowEnabled: (enabled) => set({ isVoiceoverFollowEnabled: enabled }),
+  voiceoverPlaylist: null,
+  setVoiceoverPlaylist: (playlist) => set({ voiceoverPlaylist: playlist }),
 }));

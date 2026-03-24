@@ -19,6 +19,8 @@ export function useVoiceover() {
   const setScrollToOrder = useReaderStore((state) => state.setScrollToOrder);
   const translationSlug = useReaderStore((state) => state.translationSlug);
   const globalCurrentOrder = useReaderStore((state) => state.currentOrder);
+  const playlist = useReaderStore((state) => state.voiceoverPlaylist);
+  const setPlaylist = useReaderStore((state) => state.setVoiceoverPlaylist);
 
   const synthRef = useRef<typeof window.speechSynthesis | null>(null);
   const isAutoAdvancing = useRef(false);
@@ -74,19 +76,18 @@ export function useVoiceover() {
     setIsMinimized(false);
     setVerse(null);
     setCurrentOrder(null);
+    setPlaylist(null);
     setVerseProgress(0);
     lastSpokenRef.current = null;
     if (synthRef.current) {
       synthRef.current.cancel();
     }
-  }, [setIsPlaying, setIsActive, setIsMinimized, setVerse, setCurrentOrder]);
+  }, [setIsPlaying, setIsActive, setIsMinimized, setVerse, setCurrentOrder, setPlaylist]);
 
-  const speak = useCallback(async (order: number, isAutoTransition = false) => {
+  const speak = useCallback(async (order: number) => {
     if (!synthRef.current || !isAutoAdvancing.current) return;
 
-    if (!isAutoTransition) {
-      sessionRef.current++;
-    }
+    sessionRef.current++;
     const currentSession = sessionRef.current;
     lastSpokenRef.current = { order, speed };
 
@@ -100,32 +101,42 @@ export function useVoiceover() {
       return;
     }
 
-    if (!isAutoTransition) {
-      synthRef.current.cancel();
-      const silence = new SpeechSynthesisUtterance(" ");
-      silence.volume = 0;
-      synthRef.current.speak(silence);
-      synthRef.current.cancel();
-      await new Promise(resolve => setTimeout(resolve, 80));
-    }
-
     if (!isAutoAdvancing.current || currentSession !== sessionRef.current) return;
 
+    // Clear any previous state
+    synthRef.current.cancel();
     setVerse(verse);
     setVerseProgress(0);
+
     const utterance = new SpeechSynthesisUtterance(verse.text);
     const voice = getBestVoice();
     if (voice) utterance.voice = voice;
     utterance.rate = speed;
     
+    const getNextOrder = (current: number) => {
+      if (playlist && playlist.length > 0) {
+        const idx = playlist.indexOf(current);
+        if (idx !== -1 && idx < playlist.length - 1) {
+          return playlist[idx + 1];
+        }
+        return null;
+      }
+      return current + 1;
+    };
+
     if (advanceTimeoutRef.current) clearTimeout(advanceTimeoutRef.current);
-    const estimatedMs = (verse.text.length * 120) / speed + 4000;
+    
+    // Watchdog: If onend doesn't fire, advance after estimated time
+    const estimatedMs = (verse.text.length * 100) / speed + 5000;
     advanceTimeoutRef.current = setTimeout(() => {
       if (isAutoAdvancing.current && currentSession === sessionRef.current && synthRef.current && !synthRef.current.speaking) {
-        const next = order + 1;
-        setCurrentOrder(next);
-        if (isFollowEnabled) setScrollToOrder(next);
-        speak(next, true);
+        const next = getNextOrder(order);
+        if (next !== null) {
+          setCurrentOrder(next);
+          if (isFollowEnabled) setScrollToOrder(next);
+        } else {
+          stop();
+        }
       }
     }, estimatedMs);
 
@@ -137,13 +148,18 @@ export function useVoiceover() {
     };
 
     utterance.onend = () => {
-      setVerseProgress(100);
-      if (advanceTimeoutRef.current) clearTimeout(advanceTimeoutRef.current);
-      if (isAutoAdvancing.current && currentSession === sessionRef.current) {
-        const next = order + 1;
-        speak(next, true);
-        setCurrentOrder(next);
-        if (isFollowEnabled) setScrollToOrder(next);
+      if (currentSession === sessionRef.current) {
+        setVerseProgress(100);
+        if (advanceTimeoutRef.current) clearTimeout(advanceTimeoutRef.current);
+        if (isAutoAdvancing.current) {
+          const next = getNextOrder(order);
+          if (next !== null) {
+            setCurrentOrder(next);
+            if (isFollowEnabled) setScrollToOrder(next);
+          } else {
+            stop();
+          }
+        }
       }
     };
 
@@ -151,12 +167,17 @@ export function useVoiceover() {
       if (advanceTimeoutRef.current) clearTimeout(advanceTimeoutRef.current);
       if (event.error !== "interrupted" && isAutoAdvancing.current && currentSession === sessionRef.current) {
         console.error("SpeechSynthesis error:", event);
-        setTimeout(() => speak(order, true), 500);
+        // Retry current verse once after short delay
+        setTimeout(() => {
+          if (isAutoAdvancing.current && currentSession === sessionRef.current) {
+            speak(order);
+          }
+        }, 500);
       }
     };
 
     synthRef.current.speak(utterance);
-  }, [translationSlug, speed, getBestVoice, isFollowEnabled, setCurrentOrder, setScrollToOrder, setVerse, stop]);
+  }, [translationSlug, speed, getBestVoice, isFollowEnabled, setCurrentOrder, setScrollToOrder, setVerse, stop, playlist]);
 
   useEffect(() => {
     if (isPlaying) {
@@ -173,7 +194,7 @@ export function useVoiceover() {
         return;
       }
 
-      speak(orderToSpeak);
+      void speak(orderToSpeak);
     } else {
       isAutoAdvancing.current = false;
       lastSpokenRef.current = null;
@@ -182,8 +203,11 @@ export function useVoiceover() {
     }
   }, [isPlaying, currentOrder, speed, voicesLoaded, speak, setIsActive, isActive, setCurrentOrder, globalCurrentOrder]);
 
-  const jumpToOrder = (order: number) => {
+  const jumpToOrder = (order: number, newPlaylist?: number[]) => {
     isAutoAdvancing.current = true;
+    if (newPlaylist) setPlaylist(newPlaylist);
+    if (isFollowEnabled) setScrollToOrder(order);
+    
     if (!isPlaying) {
       setIsActive(true);
       setIsMinimized(false);
@@ -208,12 +232,28 @@ export function useVoiceover() {
     togglePlay,
     stop,
     skipForward: () => {
-      const next = (currentOrder ?? globalCurrentOrder) + 1;
-      jumpToOrder(next);
+      if (playlist) {
+        const current = currentOrder ?? globalCurrentOrder;
+        const idx = playlist.indexOf(current);
+        if (idx !== -1 && idx < playlist.length - 1) {
+          jumpToOrder(playlist[idx + 1]);
+        }
+      } else {
+        const next = (currentOrder ?? globalCurrentOrder) + 1;
+        jumpToOrder(next);
+      }
     },
     skipBackward: () => {
-      const prev = Math.max(1, (currentOrder ?? globalCurrentOrder) - 1);
-      jumpToOrder(prev);
+      if (playlist) {
+        const current = currentOrder ?? globalCurrentOrder;
+        const idx = playlist.indexOf(current);
+        if (idx > 0) {
+          jumpToOrder(playlist[idx - 1]);
+        }
+      } else {
+        const prev = Math.max(1, (currentOrder ?? globalCurrentOrder) - 1);
+        jumpToOrder(prev);
+      }
     },
     jumpToOrder,
     isPlaying,
@@ -221,5 +261,6 @@ export function useVoiceover() {
     currentOrder,
     speed,
     verseProgress,
+    playlist,
   };
 }

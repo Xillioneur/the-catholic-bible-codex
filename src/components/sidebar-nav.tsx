@@ -31,11 +31,13 @@ import { useLiturgical } from "./liturgical-provider";
 import { DailyAllView } from "./liturgical-full-view";
 import { LibraryFullView } from "./library-full-view";
 import { toast } from "sonner";
+import { useVoiceover } from "~/hooks/use-voiceover";
 
 export function SidebarNav() {
   const { data: books = [] } = api.bible.getBooks.useQuery();
   const { data: translations = [] } = api.bible.getTranslations.useQuery();
   const { info } = useLiturgical();
+  const { jumpToOrder } = useVoiceover();
   
   const [activeTab, setActiveTab] = useState<"library" | "bookmarks" | "settings" | "daily" | null>(null);
   const [showFullLiturgical, setShowFullLiturgical] = useState(false);
@@ -84,6 +86,17 @@ export function SidebarNav() {
       toast.error("Reading not found");
     }
   };
+
+  const handleListenAll = useCallback(() => {
+    const allOrders = liturgicalReadings.flatMap(r => r.orders).sort((a, b) => a - b);
+    if (allOrders.length > 0) {
+      jumpToOrder(allOrders[0], allOrders);
+      toast.success("Daily Bread: Voiceover Started");
+      setActiveTab(null);
+    } else {
+      toast.error("Readings not yet loaded");
+    }
+  }, [liturgicalReadings, jumpToOrder]);
 
   const unlockAudio = useCallback(() => {
     if (typeof window !== "undefined" && window.speechSynthesis) {
@@ -172,12 +185,21 @@ export function SidebarNav() {
           <div className="flex-1 overflow-y-auto px-3 pb-6 scrollbar-elegant">
             {activeTab === "daily" && info && (
               <div className="space-y-6 mt-4">
-                <div className="px-3 py-2 bg-primary/5 rounded-2xl border border-primary/10">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Calendar className="h-3 w-3 text-primary" />
-                    <span className="text-[8px] font-black uppercase tracking-widest text-primary">Liturgical Day</span>
+                <div className="px-3 py-2 bg-primary/5 rounded-2xl border border-primary/10 flex items-center justify-between">
+                  <div className="flex flex-col">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Calendar className="h-3 w-3 text-primary" />
+                      <span className="text-[8px] font-black uppercase tracking-widest text-primary">Liturgical Day</span>
+                    </div>
+                    <p className="text-xs font-serif font-bold italic text-zinc-900 dark:text-zinc-100 leading-tight">{info.day}</p>
                   </div>
-                  <p className="text-xs font-serif font-bold italic text-zinc-900 dark:text-zinc-100 leading-tight">{info.day}</p>
+                  
+                  <button 
+                    onClick={handleListenAll}
+                    className="h-8 w-8 rounded-full bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/20 active:scale-90 transition-all"
+                  >
+                    <Volume2 className="h-3.5 w-3.5" />
+                  </button>
                 </div>
 
                 <div className="grid gap-1">
@@ -187,12 +209,21 @@ export function SidebarNav() {
                   {info.readings.gospel && <ReadingRow label="Gospel" citation={info.readings.gospel ?? ""} icon={Church} onSelect={() => handleSelectReading("The Holy Gospel")} />}
                 </div>
 
-                <button 
-                  onClick={() => setShowFullLiturgical(true)}
-                  className="w-full py-3 rounded-xl bg-primary text-white font-black text-[8px] uppercase tracking-[0.2em] shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all"
-                >
-                  View All Readings
-                </button>
+                <div className="flex flex-col gap-2">
+                  <button 
+                    onClick={handleListenAll}
+                    className="w-full py-3 rounded-xl bg-primary/10 text-primary border border-primary/20 font-black text-[8px] uppercase tracking-[0.2em] hover:bg-primary hover:text-white transition-all flex items-center justify-center gap-2"
+                  >
+                    <Volume2 className="h-3.5 w-3.5" />
+                    Listen to All
+                  </button>
+                  <button 
+                    onClick={() => setShowFullLiturgical(true)}
+                    className="w-full py-3 rounded-xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 font-black text-[8px] uppercase tracking-[0.2em] shadow-lg hover:scale-[1.02] active:scale-95 transition-all"
+                  >
+                    View All Readings
+                  </button>
+                </div>
               </div>
             )}
 

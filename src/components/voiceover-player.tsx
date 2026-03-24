@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { useVoiceover } from "~/hooks/use-voiceover";
 import { useReaderStore } from "~/hooks/use-reader-store";
 import { 
@@ -12,7 +13,8 @@ import {
   X,
   Volume2,
   Target,
-  Minimize2
+  Minimize2,
+  Church
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { 
@@ -36,7 +38,7 @@ import { toast } from "sonner";
 import { api } from "~/trpc/react";
 
 export function VoiceoverPlayer() {
-  const { togglePlay, skipForward, skipBackward, jumpToOrder, stop, isPlaying, isActive, speed, verseProgress } = useVoiceover();
+  const { togglePlay, skipForward, skipBackward, jumpToOrder, stop, isPlaying, isActive, speed, verseProgress, playlist } = useVoiceover();
   const currentVerse = useReaderStore((state) => state.voiceoverCurrentVerse);
   const currentReaderOrder = useReaderStore((state) => state.currentOrder);
   const isFollowEnabled = useReaderStore((state) => state.isVoiceoverFollowEnabled);
@@ -46,8 +48,15 @@ export function VoiceoverPlayer() {
   const isNavigatorVisible = useReaderStore((state) => state.isNavigatorVisible);
   const translationSlug = useReaderStore((state) => state.translationSlug);
   const setScrollToOrder = useReaderStore((state) => state.setScrollToOrder);
+  const liturgicalReadings = useReaderStore((state) => state.liturgicalReadings);
 
   const utils = api.useUtils();
+
+  const isLiturgical = useMemo(() => {
+    if (!playlist || !liturgicalReadings.length) return false;
+    const allLiturgicalOrders = liturgicalReadings.flatMap(r => r.orders);
+    return playlist.every(o => allLiturgicalOrders.includes(o));
+  }, [playlist, liturgicalReadings]);
 
   const handleJumpToChapter = async () => {
     if (!currentVerse) return;
@@ -101,12 +110,18 @@ export function VoiceoverPlayer() {
                       onClick={handleJumpToChapter}
                       className="hidden sm:flex flex-col items-center justify-center h-12 w-12 rounded-[1.5rem] bg-zinc-50 dark:bg-zinc-800 border border-zinc-100 dark:border-zinc-700/50 shrink-0 hover:bg-primary/5 hover:border-primary/20 transition-all active:scale-90 group/ch"
                     >
-                      <span className="text-[8px] font-black leading-none text-zinc-400 mb-0.5 group-hover/ch:text-primary transition-colors">CH</span>
-                      <span className="text-sm font-black text-zinc-900 dark:text-zinc-100 group-hover/ch:text-primary transition-colors">{currentVerse.chapter}</span>
+                      {isLiturgical ? (
+                        <Church className="h-5 w-5 text-primary" />
+                      ) : (
+                        <>
+                          <span className="text-[8px] font-black leading-none text-zinc-400 mb-0.5 group-hover/ch:text-primary transition-colors">CH</span>
+                          <span className="text-sm font-black text-zinc-900 dark:text-zinc-100 group-hover/ch:text-primary transition-colors">{currentVerse.chapter}</span>
+                        </>
+                      )}
                     </button>
                   </TooltipTrigger>
                   <TooltipContent side="top" sideOffset={10} className="text-[10px] font-black uppercase tracking-widest bg-zinc-900 text-white border-none py-2 px-3 rounded-full">
-                    Restart Chapter
+                    {isLiturgical ? "Daily Readings Mode" : "Restart Chapter"}
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -115,11 +130,11 @@ export function VoiceoverPlayer() {
               <div className="flex-1 min-w-0 px-2 flex flex-col justify-center">
                 <div className="flex items-center gap-2">
                   <h3 className="text-xs font-black uppercase tracking-[0.2em] text-primary truncate">
-                    {currentVerse.book.name}
+                    {isLiturgical ? "Liturgical Reading" : currentVerse.book.name}
                   </h3>
                   <div className="h-1 w-1 rounded-full bg-zinc-300 dark:bg-zinc-700 shrink-0" />
                   <span className="text-xs font-bold text-zinc-400 tabular-nums shrink-0">
-                    {currentVerse.chapter}:{currentVerse.verse}
+                    {currentVerse.book.name} {currentVerse.chapter}:{currentVerse.verse}
                   </span>
                 </div>
                 <div className="mt-1 relative h-4 overflow-hidden">

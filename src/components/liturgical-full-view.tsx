@@ -2,9 +2,10 @@
 
 import { useEffect, useState, useMemo } from "react";
 import { createPortal } from "react-dom";
-import { X, Scroll, Music, Church } from "lucide-react";
+import { X, Scroll, Music, Church, Volume2, Play, Pause } from "lucide-react";
 import { cn } from "~/lib/utils";
 import { useReaderStore } from "~/hooks/use-reader-store";
+import { useVoiceover } from "~/hooks/use-voiceover";
 
 interface DailyAllViewProps {
   info: any;
@@ -15,6 +16,9 @@ interface DailyAllViewProps {
 export function DailyAllView({ info, onClose, onSelectReading }: DailyAllViewProps) {
   const [mounted, setMounted] = useState(false);
   const liturgicalReadings = useReaderStore((state) => state.liturgicalReadings);
+  const { jumpToOrder, togglePlay, isPlaying, playlist } = useVoiceover();
+  const currentOrder = useReaderStore((state) => state.voiceoverCurrentOrder);
+  const isFollowEnabled = useReaderStore((state) => state.isVoiceoverFollowEnabled);
 
   useEffect(() => {
     setMounted(true);
@@ -23,6 +27,32 @@ export function DailyAllView({ info, onClose, onSelectReading }: DailyAllViewPro
       document.body.style.overflow = "unset";
     };
   }, []);
+
+  // AUTO-SCROLL within the DailyAllView
+  useEffect(() => {
+    if (isPlaying && isFollowEnabled && currentOrder) {
+      const activeEl = document.querySelector(`[data-liturgical-order="${currentOrder}"]`);
+      if (activeEl) {
+        activeEl.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }
+  }, [currentOrder, isPlaying, isFollowEnabled]);
+
+  const allOrders = useMemo(() => {
+    return liturgicalReadings.flatMap(r => r.orders).sort((a, b) => a - b);
+  }, [liturgicalReadings]);
+
+  const isReadingAll = isPlaying && playlist?.length === allOrders.length && playlist[0] === allOrders[0];
+
+  const handleReadAll = () => {
+    if (isReadingAll) {
+      togglePlay();
+    } else {
+      if (allOrders.length > 0) {
+        jumpToOrder(allOrders[0], allOrders);
+      }
+    }
+  };
 
   const content = (
     <div className="fixed inset-0 z-[999] flex flex-col bg-white dark:bg-zinc-950 animate-in fade-in duration-300 pointer-events-auto overflow-hidden">
@@ -40,12 +70,30 @@ export function DailyAllView({ info, onClose, onSelectReading }: DailyAllViewPro
               {info.day}
             </h1>
           </div>
-          <button 
-            onClick={onClose}
-            className="h-8 w-8 md:h-10 md:w-10 rounded-full flex items-center justify-center bg-zinc-50 dark:bg-zinc-900 text-zinc-400 hover:text-primary transition-all border border-zinc-100 dark:border-zinc-800"
-          >
-            <X className="h-4 w-4" />
-          </button>
+          
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={handleReadAll}
+              className={cn(
+                "flex items-center gap-2 px-4 py-2 rounded-full border transition-all active:scale-95",
+                isReadingAll 
+                  ? "bg-primary border-primary text-white shadow-lg shadow-primary/20" 
+                  : "bg-zinc-50 dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 text-zinc-600 dark:text-zinc-400 hover:text-primary hover:border-primary/20"
+              )}
+            >
+              {isReadingAll ? <Pause className="h-3.5 w-3.5 fill-current" /> : <Volume2 className="h-3.5 w-3.5" />}
+              <span className="text-[10px] font-black uppercase tracking-widest">
+                {isReadingAll ? "Playing" : "Read All"}
+              </span>
+            </button>
+
+            <button 
+              onClick={onClose}
+              className="h-8 w-8 md:h-10 md:w-10 rounded-full flex items-center justify-center bg-zinc-50 dark:bg-zinc-900 text-zinc-400 hover:text-primary transition-all border border-zinc-100 dark:border-zinc-800"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
         </header>
       </div>
 
@@ -57,6 +105,7 @@ export function DailyAllView({ info, onClose, onSelectReading }: DailyAllViewPro
             title="First Reading" 
             citation={info.readings.firstReading} 
             icon={Scroll}
+            orders={liturgicalReadings.find(r => r.type === "First Reading")?.orders ?? []}
             verses={liturgicalReadings.find(r => r.type === "First Reading")?.verses ?? []}
             onSelect={() => { onSelectReading("First Reading"); onClose(); }} 
           />
@@ -67,6 +116,7 @@ export function DailyAllView({ info, onClose, onSelectReading }: DailyAllViewPro
               citation={info.readings.psalm} 
               icon={Music}
               isPsalm
+              orders={liturgicalReadings.find(r => r.type === "Responsorial Psalm")?.orders ?? []}
               verses={liturgicalReadings.find(r => r.type === "Responsorial Psalm")?.verses ?? []}
               onSelect={() => { onSelectReading("Responsorial Psalm"); onClose(); }} 
             />
@@ -77,6 +127,7 @@ export function DailyAllView({ info, onClose, onSelectReading }: DailyAllViewPro
               title="Second Reading" 
               citation={info.readings.secondReading} 
               icon={Scroll}
+              orders={liturgicalReadings.find(r => r.type === "Second Reading")?.orders ?? []}
               verses={liturgicalReadings.find(r => r.type === "Second Reading")?.verses ?? []}
               onSelect={() => { onSelectReading("Second Reading"); onClose(); }} 
             />
@@ -88,6 +139,7 @@ export function DailyAllView({ info, onClose, onSelectReading }: DailyAllViewPro
               citation={info.readings.gospel} 
               icon={Church} 
               highlight
+              orders={liturgicalReadings.find(r => r.type === "The Holy Gospel")?.orders ?? []}
               verses={liturgicalReadings.find(r => r.type === "The Holy Gospel")?.verses ?? []}
               onSelect={() => { onSelectReading("The Holy Gospel"); onClose(); }} 
             />
@@ -113,16 +165,33 @@ export function DailyAllView({ info, onClose, onSelectReading }: DailyAllViewPro
   return createPortal(content, document.body);
 }
 
-function ReadingSection({ title, citation, icon: Icon, highlight, isPsalm, verses, onSelect }: { 
+function ReadingSection({ title, citation, icon: Icon, highlight, isPsalm, verses, orders, onSelect }: { 
   title: string, 
   citation: string, 
   icon: any, 
   highlight?: boolean, 
   isPsalm?: boolean,
   verses: any[],
+  orders: number[],
   onSelect: () => void 
 }) {
   if (!citation) return null;
+
+  const { jumpToOrder, togglePlay, isPlaying, playlist } = useVoiceover();
+  const currentOrder = useReaderStore((state) => state.voiceoverCurrentOrder);
+
+  const isPlayingThisSection = isPlaying && playlist?.some(o => orders.includes(o));
+  const isCurrentlyInThisSection = orders.includes(currentOrder ?? -1);
+
+  const handleToggleSection = () => {
+    if (isPlayingThisSection) {
+      togglePlay();
+    } else {
+      if (orders.length > 0) {
+        jumpToOrder(orders[0], orders);
+      }
+    }
+  };
 
   const verseSegments = useMemo(() => {
     if (verses.length === 0) return [];
@@ -159,9 +228,26 @@ function ReadingSection({ title, citation, icon: Icon, highlight, isPsalm, verse
             <span className="text-[11px] font-serif font-black italic text-zinc-900 dark:text-zinc-100 tracking-tight">{citation}</span>
           </div>
         </div>
-        <button onClick={onSelect} className="text-[8px] font-black text-primary hover:underline uppercase tracking-widest transition-all">
-          Reader
-        </button>
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={handleToggleSection}
+            className={cn(
+              "flex items-center gap-1.5 px-3 py-1 rounded-full transition-all active:scale-95 border",
+              isPlayingThisSection 
+                ? "bg-primary/10 border-primary text-primary" 
+                : "bg-zinc-50 dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 text-zinc-400 hover:text-primary hover:border-primary/20"
+            )}
+          >
+            {isPlayingThisSection ? <Pause className="h-2.5 w-2.5 fill-current" /> : <Play className="h-2.5 w-2.5 fill-current" />}
+            <span className="text-[8px] font-black uppercase tracking-widest">
+              {isPlayingThisSection ? "Pause" : "Listen"}
+            </span>
+          </button>
+          <div className="w-px h-3 bg-zinc-100 dark:bg-zinc-800" />
+          <button onClick={onSelect} className="text-[8px] font-black text-zinc-400 hover:text-primary uppercase tracking-widest transition-all">
+            Reader
+          </button>
+        </div>
       </div>
       
       <div className="space-y-6">
@@ -178,8 +264,19 @@ function ReadingSection({ title, citation, icon: Icon, highlight, isPsalm, verse
                   </div>
                 )}
                 {segment.map((v) => (
-                  <span key={v.id} className={cn("inline mr-1.5", isPsalm && "block mb-1.5 last:mb-0")}>
-                    <sup className="text-[0.6em] text-zinc-400 mr-1 tabular-nums font-sans">{v.verse}</sup>
+                  <span 
+                    key={v.id} 
+                    data-liturgical-order={v.globalOrder}
+                    className={cn(
+                      "inline mr-1.5 transition-all duration-500 rounded px-0.5", 
+                      isPsalm && "block mb-1.5 last:mb-0",
+                      currentOrder === v.globalOrder && "bg-primary/10 ring-1 ring-primary/20 text-primary"
+                    )}
+                  >
+                    <sup className={cn(
+                      "text-[0.6em] mr-1 tabular-nums font-sans",
+                      currentOrder === v.globalOrder ? "text-primary" : "text-zinc-400"
+                    )}>{v.verse}</sup>
                     {v.text}
                   </span>
                 ))}
