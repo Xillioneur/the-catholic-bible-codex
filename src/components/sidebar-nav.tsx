@@ -202,7 +202,10 @@ export function SidebarNav() {
                   </div>
                   
                   <button 
-                    onClick={handleListenAll}
+                    onClick={() => {
+                      setShowFullLiturgical(true);
+                      handleListenAll();
+                    }}
                     className="h-8 w-8 rounded-full bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/20 active:scale-90 transition-all"
                   >
                     <Volume2 className="h-3.5 w-3.5" />
