@@ -169,11 +169,16 @@ export function VoiceoverPlayer() {
                       <Settings2 className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56 p-2 rounded-2xl shadow-2xl border-zinc-100 dark:border-zinc-800">
+                  <DropdownMenuContent 
+                    side="top" 
+                    align="end" 
+                    sideOffset={12}
+                    className="w-64 p-3 rounded-2xl shadow-2xl border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950"
+                  >
                     <DropdownMenuLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 px-2 py-3">
                       Playback Settings
                     </DropdownMenuLabel>
-                    <DropdownMenuSeparator className="bg-zinc-100 dark:bg-zinc-800" />
+                    <DropdownMenuSeparator className="bg-zinc-100 dark:bg-zinc-800 mb-2" />
                     
                     <div className="py-2">
                       <p className="text-[9px] font-black uppercase tracking-widest text-zinc-400 px-2 mb-2">Speed</p>

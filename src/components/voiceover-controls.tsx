@@ -80,29 +80,32 @@ export function VoiceoverControls() {
             <Settings2 className="h-3 w-3" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-48">
-          <DropdownMenuLabel className="text-[10px] font-black uppercase tracking-widest text-zinc-400">
+        <DropdownMenuContent align="end" sideOffset={10} className="w-56 p-2 rounded-2xl shadow-xl border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-950">
+          <DropdownMenuLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 px-2 py-3">
             Playback Speed
           </DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          {speeds.map((s) => (
-            <DropdownMenuItem
-              key={s}
-              onClick={() => useReaderStore.setState({ voiceoverSpeed: s })}
-              className={cn(
-                "flex items-center justify-between text-xs font-bold",
-                speed === s && "text-primary"
-              )}
-            >
-              {s === 1.0 ? "Normal (1x)" : `${s}x`}
-              {speed === s && <div className="h-1.5 w-1.5 rounded-full bg-primary" />}
-            </DropdownMenuItem>
-          ))}
-          <DropdownMenuSeparator />
+          <DropdownMenuSeparator className="bg-zinc-100 dark:bg-zinc-800 mb-1" />
+          <div className="grid grid-cols-3 gap-1 p-1">
+            {speeds.map((s) => (
+              <button
+                key={s}
+                onClick={() => useReaderStore.setState({ voiceoverSpeed: s })}
+                className={cn(
+                  "h-8 rounded-lg text-[10px] font-bold transition-all",
+                  speed === s 
+                    ? "bg-primary text-white" 
+                    : "bg-zinc-50 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-700"
+                )}
+              >
+                {s}x
+              </button>
+            ))}
+          </div>
+          <DropdownMenuSeparator className="bg-zinc-100 dark:bg-zinc-800 my-1" />
           <DropdownMenuCheckboxItem
             checked={isFollowEnabled}
             onCheckedChange={setIsFollowEnabled}
-            className="text-xs font-bold"
+            className="text-xs font-bold rounded-xl focus:bg-primary/10 focus:text-primary py-2.5"
           >
             <div className="flex items-center gap-2">
               <MousePointer2 className="h-3 w-3" />
