@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useReaderStore } from "./use-reader-store";
 import { db } from "~/lib/db";
 
@@ -21,81 +21,68 @@ export function useVoiceover() {
   const globalCurrentOrder = useReaderStore((state) => state.currentOrder);
 
   const synthRef = useRef<typeof window.speechSynthesis | null>(null);
-  const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
   const isAutoAdvancing = useRef(false);
   const watchdogRef = useRef<NodeJS.Timeout | null>(null);
+  const advanceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [voicesLoaded, setVoicesLoaded] = useState(false);
+  const lastSpokenRef = useRef<{ order: number; speed: number } | null>(null);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
       synthRef.current = window.speechSynthesis;
-      
-      const handleVoicesChanged = () => {};
+      const handleVoicesChanged = () => setVoicesLoaded(true);
       if (synthRef.current) {
+        if (synthRef.current.getVoices().length > 0) setVoicesLoaded(true);
         synthRef.current.onvoiceschanged = handleVoicesChanged;
       }
     }
     return () => {
       if (watchdogRef.current) clearInterval(watchdogRef.current);
+      if (advanceTimeoutRef.current) clearTimeout(advanceTimeoutRef.current);
     };
   }, []);
 
   const getBestVoice = useCallback(() => {
     if (!synthRef.current) return null;
     const voices = synthRef.current.getVoices();
+    if (voices.length === 0) return null;
+
+    const premiumVoices = voices.filter(v => 
+      v.lang.startsWith("en") && 
+      (v.name.includes("Enhanced") || v.name.includes("Premium") || v.name.includes("High Quality"))
+    );
+
     return (
+      premiumVoices.find(v => v.name.includes("Alex")) ||
+      premiumVoices.find(v => v.name.includes("Samantha")) ||
+      premiumVoices.find(v => v.name.includes("Daniel")) ||
       voices.find((v) => v.name.includes("Google") && v.lang.startsWith("en")) ||
-      voices.find((v) => v.name.includes("Premium") && v.lang.startsWith("en")) ||
-      voices.find((v) => v.name.includes("Samantha")) || // iOS High Quality
-      voices.find((v) => v.name.includes("Daniel")) || // iOS High Quality
       voices.find((v) => v.lang.startsWith("en-US")) ||
       voices[0] ||
       null
     );
-  }, []);
+  }, [voicesLoaded]);
 
-  // iOS Safari requires a direct user interaction to "unlock" the audio context.
-  // We call this immediately on button click.
-  const unlockAudio = useCallback(() => {
-    if (synthRef.current && !isPlaying) {
-      const utterance = new SpeechSynthesisUtterance(" ");
-      utterance.volume = 0;
-      utterance.rate = 1; // Normal rate for unlock
-      synthRef.current.speak(utterance);
-    }
-  }, [isPlaying]);
-
-  const startWatchdog = useCallback(() => {
+  const stop = useCallback(() => {
+    isAutoAdvancing.current = false;
     if (watchdogRef.current) clearInterval(watchdogRef.current);
-    watchdogRef.current = setInterval(() => {
-      if (synthRef.current && isPlaying) {
-        if (!synthRef.current.speaking) {
-          // If we think we're playing but not speaking, verify/resume
-          return; 
-        }
-        if (synthRef.current.paused) {
-          synthRef.current.resume();
-        } else {
-          // iOS Keep-Alive: Gentle nudge only
-          synthRef.current.resume();
-        }
-      }
-    }, 5000);
-  }, [isPlaying]);
-
-  const stopWatchdog = useCallback(() => {
-    if (watchdogRef.current) clearInterval(watchdogRef.current);
-  }, []);
-
-  const speak = useCallback(async (order: number) => {
-    if (!synthRef.current) return;
-
-    startWatchdog();
-    isAutoAdvancing.current = true;
-    
-    // Only cancel if actually speaking to avoid destabilizing iOS queue
-    if (synthRef.current.speaking) {
+    if (advanceTimeoutRef.current) clearTimeout(advanceTimeoutRef.current);
+    setIsPlaying(false);
+    setIsActive(false);
+    setIsMinimized(false);
+    setVerse(null);
+    setCurrentOrder(null);
+    lastSpokenRef.current = null;
+    if (synthRef.current) {
       synthRef.current.cancel();
     }
+  }, [setIsPlaying, setIsActive, setIsMinimized, setVerse, setCurrentOrder]);
+
+  const speak = useCallback(async (order: number, isAutoTransition = false) => {
+    if (!synthRef.current || !isAutoAdvancing.current) return;
+
+    // Update ref immediately to "lock" this order and prevent effect double-triggers
+    lastSpokenRef.current = { order, speed };
 
     const verse = await db.verses
       .where("[translationId+globalOrder]")
@@ -107,115 +94,118 @@ export function useVoiceover() {
       return;
     }
 
+    // If something is already speaking and this is NOT an auto-transition,
+    // we must cancel the current speech to start the new one (e.g. user jumped).
+    if (!isAutoTransition && synthRef.current.speaking) {
+      synthRef.current.cancel();
+      // Required delay for most speech engines to clear
+      await new Promise(resolve => setTimeout(resolve, 60));
+    }
+
+    // Safety: check if we're still supposed to be playing after the async fetch/delay
+    if (!isAutoAdvancing.current) return;
+
     setVerse(verse);
     const utterance = new SpeechSynthesisUtterance(verse.text);
-    utterance.voice = getBestVoice();
+    const voice = getBestVoice();
+    if (voice) utterance.voice = voice;
     utterance.rate = speed;
+    
+    // Fallback Advance Timer
+    if (advanceTimeoutRef.current) clearTimeout(advanceTimeoutRef.current);
+    const estimatedMs = (verse.text.length * 120) / speed + 3000;
+    advanceTimeoutRef.current = setTimeout(() => {
+      if (isAutoAdvancing.current && synthRef.current && !synthRef.current.speaking) {
+        const next = order + 1;
+        setCurrentOrder(next);
+        if (isFollowEnabled) setScrollToOrder(next);
+        speak(next, true);
+      }
+    }, estimatedMs);
 
     utterance.onend = () => {
+      if (advanceTimeoutRef.current) clearTimeout(advanceTimeoutRef.current);
       if (isAutoAdvancing.current) {
-        setCurrentOrder(order + 1);
-        if (isFollowEnabled) {
-          setScrollToOrder(order + 1);
-        }
+        const next = order + 1;
+        // CHAIN: Call the next speak directly from the event handler
+        // to maintain the user-gesture authorized audio chain.
+        speak(next, true);
+        // Sync store so UI updates
+        setCurrentOrder(next);
+        if (isFollowEnabled) setScrollToOrder(next);
       }
     };
 
     utterance.onerror = (event) => {
-      if (event.error !== "interrupted") {
-        console.error("SpeechSynthesisUtterance error", event);
-        stop();
+      if (advanceTimeoutRef.current) clearTimeout(advanceTimeoutRef.current);
+      if (event.error !== "interrupted" && isAutoAdvancing.current) {
+        console.error("SpeechSynthesis error:", event);
+        setTimeout(() => speak(order, true), 500);
       }
     };
 
-    utteranceRef.current = utterance;
     synthRef.current.speak(utterance);
-  }, [translationSlug, speed, getBestVoice, setVerse, setCurrentOrder, isFollowEnabled, setScrollToOrder]);
+  }, [translationSlug, speed, getBestVoice, isFollowEnabled, setCurrentOrder, setScrollToOrder, setVerse, stop]);
 
-  const stop = useCallback(() => {
-    stopWatchdog();
-    setIsPlaying(false);
-    setIsActive(false);
-    setIsMinimized(false);
-    setVerse(null);
-    setCurrentOrder(null);
-    if (synthRef.current) {
+  // Main Effect: Handles starting, stopping, and manual jumps (Sync to View)
+  useEffect(() => {
+    if (isPlaying) {
+      isAutoAdvancing.current = true;
+      if (!isActive) setIsActive(true);
+      
+      const orderToSpeak = currentOrder ?? globalCurrentOrder;
+      if (currentOrder === null) {
+        setCurrentOrder(globalCurrentOrder);
+        return;
+      }
+
+      // Check if we already have this order handled (either speaking or about to)
+      if (lastSpokenRef.current?.order === orderToSpeak && lastSpokenRef.current?.speed === speed) {
+        return;
+      }
+
+      speak(orderToSpeak);
+    } else {
       isAutoAdvancing.current = false;
-      synthRef.current.cancel();
+      lastSpokenRef.current = null;
+      if (synthRef.current) synthRef.current.cancel();
+      if (advanceTimeoutRef.current) clearTimeout(advanceTimeoutRef.current);
     }
-  }, [setIsPlaying, setIsActive, setIsMinimized, setVerse, setCurrentOrder]);
+  }, [isPlaying, currentOrder, speed, voicesLoaded, speak, setIsActive, isActive, setCurrentOrder, globalCurrentOrder]);
+
+  const jumpToOrder = (order: number) => {
+    isAutoAdvancing.current = true;
+    if (!isPlaying) {
+      setIsActive(true);
+      setIsMinimized(false);
+      setCurrentOrder(order);
+      setIsPlaying(true);
+    } else {
+      setCurrentOrder(order);
+    }
+  };
 
   const togglePlay = useCallback(() => {
     if (isPlaying) {
-      stopWatchdog();
-      setIsPlaying(false);
-      if (synthRef.current) {
-        isAutoAdvancing.current = false;
-        synthRef.current.cancel();
-      }
+      stop();
     } else {
-      unlockAudio();
       setIsActive(true);
       setIsMinimized(false);
       setIsPlaying(true);
+      isAutoAdvancing.current = true;
     }
-  }, [isPlaying, setIsPlaying, setIsActive, setIsMinimized, unlockAudio, stopWatchdog]);
-
-  useEffect(() => {
-    if (isPlaying) {
-      startWatchdog();
-      if (!isActive) setIsActive(true);
-      if (currentOrder === null) {
-        setCurrentOrder(globalCurrentOrder);
-      } else {
-        speak(currentOrder);
-      }
-    } else {
-      stopWatchdog();
-      if (synthRef.current) {
-        isAutoAdvancing.current = false;
-        synthRef.current.cancel();
-      }
-    }
-  }, [isPlaying]);
-
-
-  useEffect(() => {
-    if (isPlaying && currentOrder !== null) {
-      speak(currentOrder);
-    }
-  }, [currentOrder, isPlaying]);
-
-  useEffect(() => {
-    if (isPlaying && currentOrder !== null) {
-      speak(currentOrder);
-    }
-  }, [speed]);
-
-  const jumpToOrder = (order: number) => {
-    unlockAudio();
-    setIsActive(true);
-    setIsMinimized(false);
-    isAutoAdvancing.current = false;
-    setCurrentOrder(order);
-    if (!isPlaying) {
-      setIsPlaying(true);
-    } else {
-      // Force restart if already playing
-      speak(order);
-    }
-  };
+  }, [isPlaying, setIsActive, setIsMinimized, setIsPlaying, stop]);
 
   return {
     togglePlay,
     stop,
     skipForward: () => {
-      unlockAudio();
-      setCurrentOrder((currentOrder ?? globalCurrentOrder) + 1);
+      const next = (currentOrder ?? globalCurrentOrder) + 1;
+      jumpToOrder(next);
     },
     skipBackward: () => {
-      unlockAudio();
-      setCurrentOrder(Math.max(1, (currentOrder ?? globalCurrentOrder) - 1));
+      const prev = Math.max(1, (currentOrder ?? globalCurrentOrder) - 1);
+      jumpToOrder(prev);
     },
     jumpToOrder,
     isPlaying,

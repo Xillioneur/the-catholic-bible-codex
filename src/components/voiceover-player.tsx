@@ -39,7 +39,7 @@ export function VoiceoverPlayer() {
   const currentVerse = useReaderStore((state) => state.voiceoverCurrentVerse);
   const currentReaderOrder = useReaderStore((state) => state.currentOrder);
   const isFollowEnabled = useReaderStore((state) => state.isVoiceoverFollowEnabled);
-  const setIsFollowEnabled = useReaderStore((state) => state.setIsFollowEnabled);
+  const setIsFollowEnabled = useReaderStore((state) => state.setIsVoiceoverFollowEnabled);
   const isMinimized = useReaderStore((state) => state.isVoiceoverMinimized);
   const setIsMinimized = useReaderStore((state) => state.setIsVoiceoverMinimized);
 
