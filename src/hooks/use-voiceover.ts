@@ -26,6 +26,7 @@ export function useVoiceover() {
   const advanceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [voicesLoaded, setVoicesLoaded] = useState(false);
   const lastSpokenRef = useRef<{ order: number; speed: number } | null>(null);
+  const sessionRef = useRef<number>(0);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -81,6 +82,13 @@ export function useVoiceover() {
   const speak = useCallback(async (order: number, isAutoTransition = false) => {
     if (!synthRef.current || !isAutoAdvancing.current) return;
 
+    // If this is a manual start (not auto-advancing from the previous verse),
+    // we increment the session ID to invalidate any previous "ghost" chains.
+    if (!isAutoTransition) {
+      sessionRef.current++;
+    }
+    const currentSession = sessionRef.current;
+
     // Update ref immediately to "lock" this order and prevent effect double-triggers
     lastSpokenRef.current = { order, speed };
 
@@ -94,16 +102,22 @@ export function useVoiceover() {
       return;
     }
 
-    // If something is already speaking and this is NOT an auto-transition,
-    // we must cancel the current speech to start the new one (e.g. user jumped).
-    if (!isAutoTransition && synthRef.current.speaking) {
+    // On iOS, speechSynthesis.cancel() can be unreliable. 
+    // If we're starting a new manual sequence, we aggressively clear the queue.
+    if (!isAutoTransition) {
       synthRef.current.cancel();
-      // Required delay for most speech engines to clear
-      await new Promise(resolve => setTimeout(resolve, 60));
+      // Workaround: speaking a tiny silent utterance helps "flush" the iOS queue
+      const silence = new SpeechSynthesisUtterance(" ");
+      silence.volume = 0;
+      synthRef.current.speak(silence);
+      synthRef.current.cancel();
+      
+      // Required delay for most speech engines to fully reset state
+      await new Promise(resolve => setTimeout(resolve, 80));
     }
 
-    // Safety: check if we're still supposed to be playing after the async fetch/delay
-    if (!isAutoAdvancing.current) return;
+    // Safety: check if we're still in the same session and still supposed to be playing
+    if (!isAutoAdvancing.current || currentSession !== sessionRef.current) return;
 
     setVerse(verse);
     const utterance = new SpeechSynthesisUtterance(verse.text);
@@ -113,9 +127,9 @@ export function useVoiceover() {
     
     // Fallback Advance Timer
     if (advanceTimeoutRef.current) clearTimeout(advanceTimeoutRef.current);
-    const estimatedMs = (verse.text.length * 120) / speed + 3000;
+    const estimatedMs = (verse.text.length * 120) / speed + 4000;
     advanceTimeoutRef.current = setTimeout(() => {
-      if (isAutoAdvancing.current && synthRef.current && !synthRef.current.speaking) {
+      if (isAutoAdvancing.current && currentSession === sessionRef.current && synthRef.current && !synthRef.current.speaking) {
         const next = order + 1;
         setCurrentOrder(next);
         if (isFollowEnabled) setScrollToOrder(next);
@@ -125,10 +139,12 @@ export function useVoiceover() {
 
     utterance.onend = () => {
       if (advanceTimeoutRef.current) clearTimeout(advanceTimeoutRef.current);
-      if (isAutoAdvancing.current) {
+      
+      // SESSION LOCK: Only advance if this utterance belongs to the current active session.
+      // This prevents "ghost" chains (e.g. from speed changes) from causing double-reading.
+      if (isAutoAdvancing.current && currentSession === sessionRef.current) {
         const next = order + 1;
         // CHAIN: Call the next speak directly from the event handler
-        // to maintain the user-gesture authorized audio chain.
         speak(next, true);
         // Sync store so UI updates
         setCurrentOrder(next);
@@ -138,7 +154,7 @@ export function useVoiceover() {
 
     utterance.onerror = (event) => {
       if (advanceTimeoutRef.current) clearTimeout(advanceTimeoutRef.current);
-      if (event.error !== "interrupted" && isAutoAdvancing.current) {
+      if (event.error !== "interrupted" && isAutoAdvancing.current && currentSession === sessionRef.current) {
         console.error("SpeechSynthesis error:", event);
         setTimeout(() => speak(order, true), 500);
       }
