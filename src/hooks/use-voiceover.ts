@@ -25,6 +25,7 @@ export function useVoiceover() {
   const watchdogRef = useRef<NodeJS.Timeout | null>(null);
   const advanceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [voicesLoaded, setVoicesLoaded] = useState(false);
+  const [verseProgress, setVerseProgress] = useState(0);
   const lastSpokenRef = useRef<{ order: number; speed: number } | null>(null);
   const sessionRef = useRef<number>(0);
 
@@ -73,6 +74,7 @@ export function useVoiceover() {
     setIsMinimized(false);
     setVerse(null);
     setCurrentOrder(null);
+    setVerseProgress(0);
     lastSpokenRef.current = null;
     if (synthRef.current) {
       synthRef.current.cancel();
@@ -82,14 +84,10 @@ export function useVoiceover() {
   const speak = useCallback(async (order: number, isAutoTransition = false) => {
     if (!synthRef.current || !isAutoAdvancing.current) return;
 
-    // If this is a manual start (not auto-advancing from the previous verse),
-    // we increment the session ID to invalidate any previous "ghost" chains.
     if (!isAutoTransition) {
       sessionRef.current++;
     }
     const currentSession = sessionRef.current;
-
-    // Update ref immediately to "lock" this order and prevent effect double-triggers
     lastSpokenRef.current = { order, speed };
 
     const verse = await db.verses
@@ -102,30 +100,24 @@ export function useVoiceover() {
       return;
     }
 
-    // On iOS, speechSynthesis.cancel() can be unreliable. 
-    // If we're starting a new manual sequence, we aggressively clear the queue.
     if (!isAutoTransition) {
       synthRef.current.cancel();
-      // Workaround: speaking a tiny silent utterance helps "flush" the iOS queue
       const silence = new SpeechSynthesisUtterance(" ");
       silence.volume = 0;
       synthRef.current.speak(silence);
       synthRef.current.cancel();
-      
-      // Required delay for most speech engines to fully reset state
       await new Promise(resolve => setTimeout(resolve, 80));
     }
 
-    // Safety: check if we're still in the same session and still supposed to be playing
     if (!isAutoAdvancing.current || currentSession !== sessionRef.current) return;
 
     setVerse(verse);
+    setVerseProgress(0);
     const utterance = new SpeechSynthesisUtterance(verse.text);
     const voice = getBestVoice();
     if (voice) utterance.voice = voice;
     utterance.rate = speed;
     
-    // Fallback Advance Timer
     if (advanceTimeoutRef.current) clearTimeout(advanceTimeoutRef.current);
     const estimatedMs = (verse.text.length * 120) / speed + 4000;
     advanceTimeoutRef.current = setTimeout(() => {
@@ -137,16 +129,19 @@ export function useVoiceover() {
       }
     }, estimatedMs);
 
+    utterance.onboundary = (event) => {
+      if (currentSession === sessionRef.current) {
+        const progress = (event.charIndex / verse.text.length) * 100;
+        setVerseProgress(progress);
+      }
+    };
+
     utterance.onend = () => {
+      setVerseProgress(100);
       if (advanceTimeoutRef.current) clearTimeout(advanceTimeoutRef.current);
-      
-      // SESSION LOCK: Only advance if this utterance belongs to the current active session.
-      // This prevents "ghost" chains (e.g. from speed changes) from causing double-reading.
       if (isAutoAdvancing.current && currentSession === sessionRef.current) {
         const next = order + 1;
-        // CHAIN: Call the next speak directly from the event handler
         speak(next, true);
-        // Sync store so UI updates
         setCurrentOrder(next);
         if (isFollowEnabled) setScrollToOrder(next);
       }
@@ -163,7 +158,6 @@ export function useVoiceover() {
     synthRef.current.speak(utterance);
   }, [translationSlug, speed, getBestVoice, isFollowEnabled, setCurrentOrder, setScrollToOrder, setVerse, stop]);
 
-  // Main Effect: Handles starting, stopping, and manual jumps (Sync to View)
   useEffect(() => {
     if (isPlaying) {
       isAutoAdvancing.current = true;
@@ -175,7 +169,6 @@ export function useVoiceover() {
         return;
       }
 
-      // Check if we already have this order handled (either speaking or about to)
       if (lastSpokenRef.current?.order === orderToSpeak && lastSpokenRef.current?.speed === speed) {
         return;
       }
@@ -227,5 +220,6 @@ export function useVoiceover() {
     isActive,
     currentOrder,
     speed,
+    verseProgress,
   };
 }
