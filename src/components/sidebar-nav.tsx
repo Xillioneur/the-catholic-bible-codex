@@ -57,6 +57,7 @@ export function SidebarNav() {
   const isVoiceoverPlaying = useReaderStore((state) => state.isVoiceoverPlaying);
   const setIsVoiceoverPlaying = useReaderStore((state) => state.setIsVoiceoverPlaying);
   const isVoiceoverActive = useReaderStore((state) => state.isVoiceoverActive);
+  const setIsActive = useReaderStore((state) => state.setIsVoiceoverActive);
   const isVoiceoverMinimized = useReaderStore((state) => state.isVoiceoverMinimized);
   const setIsVoiceoverMinimized = useReaderStore((state) => state.setIsVoiceoverMinimized);
   

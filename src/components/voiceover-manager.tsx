@@ -153,7 +153,7 @@ export function VoiceoverManager() {
       };
 
       utterance.onerror = (event) => {
-        if (currentSession === sessionRef.current && event.error && event.error !== "interrupted") {
+        if (currentSession === sessionRef.current && event.error && event.error !== "interrupted" && event.error !== "canceled") {
           console.error("Voiceover error:", event.error);
           setTimeout(() => {
             const currentIsPlaying = useReaderStore.getState().isVoiceoverPlaying;
