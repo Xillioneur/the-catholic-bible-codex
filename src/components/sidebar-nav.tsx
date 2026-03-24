@@ -149,8 +149,14 @@ export function SidebarNav() {
             icon={<Volume2 className={cn("h-4 w-4 transition-all", isVoiceoverPlaying && "animate-pulse text-primary")} />} 
             active={isVoiceoverPlaying} 
             onClick={() => {
-              if (!isVoiceoverPlaying) unlockAudio();
-              setIsVoiceoverPlaying(!isVoiceoverPlaying);
+              if (!isVoiceoverPlaying) {
+                unlockAudio();
+                setIsVoiceoverPlaying(true);
+                setIsActive(true);
+                setIsVoiceoverMinimized(false);
+              } else {
+                setIsVoiceoverPlaying(false);
+              }
             }} 
             label="Listen" 
           />

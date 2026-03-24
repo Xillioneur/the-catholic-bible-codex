@@ -73,10 +73,13 @@ interface ReaderState {
   setVoiceoverCurrentOrder: (order: number | null) => void;
   voiceoverCurrentVerse: any | null;
   setVoiceoverCurrentVerse: (verse: any | null) => void;
+  voiceoverProgress: number;
+  setVoiceoverProgress: (progress: number) => void;
   isVoiceoverFollowEnabled: boolean;
   setIsVoiceoverFollowEnabled: (enabled: boolean) => void;
   voiceoverPlaylist: number[] | null;
   setVoiceoverPlaylist: (playlist: number[] | null) => void;
+  resetVoiceover: () => void;
 }
 
 export const useReaderStore = create<ReaderState>((set) => ({
@@ -132,8 +135,19 @@ export const useReaderStore = create<ReaderState>((set) => ({
   setVoiceoverCurrentOrder: (order) => set({ voiceoverCurrentOrder: order }),
   voiceoverCurrentVerse: null,
   setVoiceoverCurrentVerse: (verse) => set({ voiceoverCurrentVerse: verse }),
+  voiceoverProgress: 0,
+  setVoiceoverProgress: (progress) => set({ voiceoverProgress: progress }),
   isVoiceoverFollowEnabled: true,
   setIsVoiceoverFollowEnabled: (enabled) => set({ isVoiceoverFollowEnabled: enabled }),
   voiceoverPlaylist: null,
   setVoiceoverPlaylist: (playlist) => set({ voiceoverPlaylist: playlist }),
+  resetVoiceover: () => set({
+    isVoiceoverPlaying: false,
+    isVoiceoverActive: false,
+    isVoiceoverMinimized: false,
+    voiceoverCurrentVerse: null,
+    voiceoverCurrentOrder: null,
+    voiceoverPlaylist: null,
+    voiceoverProgress: 0,
+  }),
 }));
