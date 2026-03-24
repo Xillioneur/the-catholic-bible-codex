@@ -203,14 +203,13 @@ export function useVoiceover() {
 
   const togglePlay = useCallback(() => {
     if (isPlaying) {
-      stop();
+      setIsPlaying(false);
     } else {
       setIsActive(true);
       setIsMinimized(false);
       setIsPlaying(true);
-      isAutoAdvancing.current = true;
     }
-  }, [isPlaying, setIsActive, setIsMinimized, setIsPlaying, stop]);
+  }, [isPlaying, setIsActive, setIsMinimized, setIsPlaying]);
 
   return {
     togglePlay,
