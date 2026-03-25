@@ -15,7 +15,6 @@ export function VoiceoverManager() {
   const currentOrder = useReaderStore((state) => state.voiceoverCurrentOrder);
   const setCurrentOrder = useReaderStore((state) => state.setVoiceoverCurrentOrder);
   const setVerse = useReaderStore((state) => state.setVoiceoverCurrentVerse);
-  const isFollowEnabled = useReaderStore((state) => state.isVoiceoverFollowEnabled);
   const setScrollToOrder = useReaderStore((state) => state.setScrollToOrder);
   const translationSlug = useReaderStore((state) => state.translationSlug);
   const globalCurrentOrder = useReaderStore((state) => state.currentOrder);
@@ -23,6 +22,9 @@ export function VoiceoverManager() {
   const setPlaylist = useReaderStore((state) => state.setVoiceoverPlaylist);
   
   const setVerseProgress = useReaderStore((state) => state.setVoiceoverProgress);
+  const isReadTitlesEnabled = useReaderStore((state) => state.isVoiceoverReadTitlesEnabled);
+  const liturgicalReadings = useReaderStore((state) => state.liturgicalReadings);
+  const selectedVoiceURI = useReaderStore((state) => state.voiceoverVoiceURI);
 
   const synthRef = useRef<typeof window.speechSynthesis | null>(null);
   const [voicesLoaded, setVoicesLoaded] = useState(false);
@@ -30,11 +32,17 @@ export function VoiceoverManager() {
   const sessionRef = useRef<number>(0);
   const speakingOrderRef = useRef<number | null>(null);
   const isInternalCancelRef = useRef<boolean>(false);
+  const isSpeakingTitleRef = useRef<boolean>(false);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
       synthRef.current = window.speechSynthesis;
-      const handleVoicesChanged = () => setVoicesLoaded(true);
+      const handleVoicesChanged = () => {
+        setVoicesLoaded(true);
+        if (synthRef.current?.getVoices().length === 0) {
+          setTimeout(() => setVoicesLoaded(true), 100);
+        }
+      };
       if (synthRef.current) {
         if (synthRef.current.getVoices().length > 0) setVoicesLoaded(true);
         synthRef.current.onvoiceschanged = handleVoicesChanged;
@@ -46,6 +54,11 @@ export function VoiceoverManager() {
     if (!synthRef.current) return null;
     const voices = synthRef.current.getVoices();
     if (voices.length === 0) return null;
+
+    if (selectedVoiceURI) {
+      const selected = voices.find(v => v.voiceURI === selectedVoiceURI);
+      if (selected) return selected;
+    }
 
     const premiumVoices = voices.filter(v => 
       v.lang.startsWith("en") && 
@@ -61,7 +74,7 @@ export function VoiceoverManager() {
       voices[0] ||
       null
     );
-  }, [voicesLoaded]);
+  }, [voicesLoaded, selectedVoiceURI]);
 
   const stop = useCallback(() => {
     isInternalCancelRef.current = true;
@@ -79,27 +92,57 @@ export function VoiceoverManager() {
     setCurrentOrder(null);
     setPlaylist(null);
     setVerseProgress(0);
+
+    if ("mediaSession" in navigator) {
+      navigator.mediaSession.playbackState = "none";
+    }
   }, [setIsPlaying, setIsActive, setIsMinimized, setVerse, setCurrentOrder, setPlaylist, setVerseProgress]);
 
   const getNextOrder = useCallback((current: number) => {
     if (playlist && playlist.length > 0) {
       const idx = playlist.indexOf(current);
       if (idx !== -1 && idx < playlist.length - 1) {
-        return playlist[idx + 1];
+        return playlist[idx + 1] ?? null;
       }
       return null;
     }
     return current + 1;
   }, [playlist]);
 
-  const speak = useCallback(async (order: number) => {
+  const skipForward = useCallback(() => {
+    const current = currentOrder ?? globalCurrentOrder;
+    const next = getNextOrder(current);
+    if (next !== null) setCurrentOrder(next);
+  }, [currentOrder, globalCurrentOrder, getNextOrder, setCurrentOrder]);
+
+  const skipBackward = useCallback(() => {
+    const current = currentOrder ?? globalCurrentOrder;
+    if (playlist) {
+      const idx = playlist.indexOf(current);
+      if (idx > 0) {
+        const prev = playlist[idx - 1];
+        if (prev !== undefined) setCurrentOrder(prev);
+      }
+    } else {
+      setCurrentOrder(Math.max(1, current - 1));
+    }
+  }, [currentOrder, globalCurrentOrder, playlist, setCurrentOrder]);
+
+  useEffect(() => {
+    if ("mediaSession" in navigator) {
+      navigator.mediaSession.setActionHandler("play", () => setIsPlaying(true));
+      navigator.mediaSession.setActionHandler("pause", () => setIsPlaying(false));
+      navigator.mediaSession.setActionHandler("stop", stop);
+      navigator.mediaSession.setActionHandler("previoustrack", skipBackward);
+      navigator.mediaSession.setActionHandler("nexttrack", skipForward);
+    }
+  }, [setIsPlaying, stop, skipBackward, skipForward]);
+
+  const speak = useCallback(async (order: number, forceTitle = false) => {
     if (!synthRef.current || !isPlaying) return;
 
-    // CRITICAL FIX: Ensure we unpause before cancelling/speaking, otherwise the engine might hang
     if (synthRef.current.paused) synthRef.current.resume();
     
-    // Set internal cancel to true so that the 'onend' from the previous 
-    // utterance (triggered by cancel()) doesn't advance the verse.
     isInternalCancelRef.current = true;
     synthRef.current.cancel();
 
@@ -108,6 +151,7 @@ export function VoiceoverManager() {
     setIsActive(true);
 
     try {
+      // 1. Fetch verse first to know what we are speaking
       const verse = await db.verses
         .where("[translationId+globalOrder]")
         .equals([translationSlug, order])
@@ -118,19 +162,62 @@ export function VoiceoverManager() {
         return;
       }
 
-      setVerse(verse);
-      setVerseProgress(0);
+      let textToSpeak = "";
+      let isTitle = false;
 
-      const utterance = new SpeechSynthesisUtterance(verse.text);
+      // 2. Title Logic
+      if (isReadTitlesEnabled && !forceTitle && !isSpeakingTitleRef.current) {
+        // A. Check Liturgical First
+        const reading = liturgicalReadings.find(r => r.orders[0] === order);
+        if (reading) {
+          textToSpeak = `${reading.type}. ${reading.citation}.`;
+          isTitle = true;
+        } 
+        // B. Check Chapter Start if no liturgical title or always? 
+        // User wants "Books and Chapter numbers".
+        else if (verse.verse === 1) {
+          textToSpeak = `${verse.book.name}. Chapter ${verse.chapter}.`;
+          isTitle = true;
+        }
+      }
+
+      if (isTitle) {
+        isSpeakingTitleRef.current = true;
+      } else {
+        isSpeakingTitleRef.current = false;
+        textToSpeak = verse.text;
+        setVerse(verse);
+        setVerseProgress(0);
+      }
+
+      if ("mediaSession" in navigator) {
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title: isTitle ? `Title: ${textToSpeak}` : `${verse.book.name} ${verse.chapter}:${verse.verse}`,
+          artist: "Catholic Bible Codex",
+          album: "Verbum Domini",
+          artwork: [
+            { src: "/favicon.svg", sizes: "512x512", type: "image/svg+xml" }
+          ]
+        });
+        navigator.mediaSession.playbackState = "playing";
+      }
+
+      const utterance = new SpeechSynthesisUtterance(textToSpeak);
       const voice = getBestVoice();
       if (voice) utterance.voice = voice;
       utterance.rate = speed;
       utterance.volume = 1;
 
+      // PERFORMANCE: Throttle progress updates to avoid excessive re-renders
+      let lastProgressUpdate = 0;
       utterance.onboundary = (event) => {
-        if (currentSession === sessionRef.current) {
-          const progress = (event.charIndex / verse.text.length) * 100;
-          setVerseProgress(progress);
+        if (currentSession === sessionRef.current && !isTitle) {
+          const now = Date.now();
+          if (now - lastProgressUpdate > 100) { // Every 100ms max
+            const progress = (event.charIndex / textToSpeak.length) * 100;
+            setVerseProgress(progress);
+            lastProgressUpdate = now;
+          }
         }
       };
 
@@ -142,14 +229,18 @@ export function VoiceoverManager() {
 
         const currentIsPlaying = useReaderStore.getState().isVoiceoverPlaying;
         if (currentSession === sessionRef.current && currentIsPlaying) {
-          setVerseProgress(100);
-          const next = getNextOrder(order);
-          if (next !== null) {
-            setCurrentOrder(next);
-            const currentIsFollowEnabled = useReaderStore.getState().isVoiceoverFollowEnabled;
-            if (currentIsFollowEnabled) setScrollToOrder(next);
+          if (isTitle) {
+            void speak(order, true); 
           } else {
-            stop();
+            setVerseProgress(100);
+            const next = getNextOrder(order);
+            if (next !== null) {
+              setCurrentOrder(next);
+              const currentIsFollowEnabled = useReaderStore.getState().isVoiceoverFollowEnabled;
+              if (currentIsFollowEnabled) setScrollToOrder(next);
+            } else {
+              stop();
+            }
           }
         }
       };
@@ -161,7 +252,7 @@ export function VoiceoverManager() {
             const currentIsPlaying = useReaderStore.getState().isVoiceoverPlaying;
             if (currentSession === sessionRef.current && currentIsPlaying) {
               speakingOrderRef.current = null;
-              void speak(order);
+              void speak(order, isTitle);
             }
           }, 500);
         }
@@ -173,22 +264,18 @@ export function VoiceoverManager() {
     } catch (err) {
       console.error("Voiceover engine error:", err);
     }
-  }, [translationSlug, isPlaying, speed, getBestVoice, isFollowEnabled, setCurrentOrder, setScrollToOrder, setVerse, stop, getNextOrder, setIsActive, setVerseProgress]);
+  }, [translationSlug, isPlaying, speed, getBestVoice, isReadTitlesEnabled, liturgicalReadings, setCurrentOrder, setScrollToOrder, setVerse, stop, getNextOrder, setIsActive, setVerseProgress]);
 
-  // THE MAIN LOOP
   useEffect(() => {
     if (isPlaying) {
       const orderToSpeak = currentOrder ?? globalCurrentOrder;
       
-      // 1. Handle Resume if paused
-      // We check for paused state to resume playback without restarting the verse
       if (synthRef.current?.paused) {
         synthRef.current.resume();
-        // If resuming the same order, we rely on the engine to continue.
+        if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "playing";
         if (speakingOrderRef.current === orderToSpeak) return;
       }
 
-      // 2. Recovery: If we think we are speaking but engine is idle (and not paused), force restart
       const isEngineIdle = synthRef.current && !synthRef.current.speaking && !synthRef.current.pending && !synthRef.current.paused;
       
       if (speakingOrderRef.current === orderToSpeak && !isEngineIdle) return;
@@ -200,23 +287,19 @@ export function VoiceoverManager() {
 
       void speak(orderToSpeak);
     } else {
-      // NOT PLAYING (Pause or Stop)
-      
       if (isActive) {
-        // PAUSE: Keep state, just pause audio
-        // We only pause if actually speaking to avoid "pausing" an empty queue
         if (synthRef.current?.speaking && !synthRef.current.paused) {
           synthRef.current.pause();
+          if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "paused";
         }
       } else {
-        // STOP: Reset everything
         speakingOrderRef.current = null;
         if (synthRef.current) {
           isInternalCancelRef.current = true;
-          // IMPORTANT: Resume before cancel to clear any paused state
           if (synthRef.current.paused) synthRef.current.resume();
           synthRef.current.cancel();
         }
+        if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "none";
       }
     }
   }, [isPlaying, isActive, currentOrder, globalCurrentOrder, speed, speak, setCurrentOrder]);

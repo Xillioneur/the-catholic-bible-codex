@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useEffect, useState } from "react";
 import { useVoiceover } from "~/hooks/use-voiceover";
 import { useReaderStore } from "~/hooks/use-reader-store";
 import { 
@@ -11,20 +11,21 @@ import {
   Settings2,
   MousePointer2,
   X,
-  Volume2,
   Target,
   Minimize2,
-  Church
+  Church,
+  Type,
+  User,
+  ChevronLeft
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
-  DropdownMenuItem, 
   DropdownMenuLabel, 
   DropdownMenuSeparator, 
   DropdownMenuTrigger,
-  DropdownMenuCheckboxItem
+  DropdownMenuCheckboxItem,
 } from "./ui/dropdown-menu";
 import {
   Tooltip,
@@ -42,13 +43,39 @@ export function VoiceoverPlayer() {
   const currentVerse = useReaderStore((state) => state.voiceoverCurrentVerse);
   const currentReaderOrder = useReaderStore((state) => state.currentOrder);
   const isFollowEnabled = useReaderStore((state) => state.isVoiceoverFollowEnabled);
-  const setIsFollowEnabled = useReaderStore((state) => state.setIsVoiceoverFollowEnabled);
+  const setIsFollowEnabled = useReaderStore((state) => state.setIsFollowEnabled);
+  const isReadTitlesEnabled = useReaderStore((state) => state.isVoiceoverReadTitlesEnabled);
+  const setIsReadTitlesEnabled = useReaderStore((state) => state.setIsReadTitlesEnabled);
+  const voiceURI = useReaderStore((state) => state.voiceoverVoiceURI);
+  const setVoiceURI = useReaderStore((state) => state.setVoiceoverVoiceURI);
+  
   const isMinimized = useReaderStore((state) => state.isVoiceoverMinimized);
   const setIsMinimized = useReaderStore((state) => state.setIsVoiceoverMinimized);
   const isNavigatorVisible = useReaderStore((state) => state.isNavigatorVisible);
   const translationSlug = useReaderStore((state) => state.translationSlug);
   const setScrollToOrder = useReaderStore((state) => state.setScrollToOrder);
   const liturgicalReadings = useReaderStore((state) => state.liturgicalReadings);
+
+  const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const [menuView, setMenuView] = useState<"main" | "voices">("main");
+
+  useEffect(() => {
+    const loadVoices = () => {
+      let v = window.speechSynthesis.getVoices();
+      if (v.length === 0) {
+        setTimeout(() => {
+          v = window.speechSynthesis.getVoices();
+          setVoices(v.filter(voice => voice.lang.startsWith("en")));
+        }, 100);
+      } else {
+        setVoices(v.filter(voice => voice.lang.startsWith("en")));
+      }
+    };
+    loadVoices();
+    if (window.speechSynthesis.onvoiceschanged !== undefined) {
+      window.speechSynthesis.onvoiceschanged = loadVoices;
+    }
+  }, []);
 
   const utils = api.useUtils();
 
@@ -74,6 +101,7 @@ export function VoiceoverPlayer() {
   };
 
   const speeds = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
+  const currentVoice = voices.find(v => v.voiceURI === voiceURI);
 
   return (
     <AnimatePresence>
@@ -213,7 +241,7 @@ export function VoiceoverPlayer() {
 
                 <div className="w-px h-6 bg-zinc-200 dark:bg-zinc-800 mx-1" />
 
-                <DropdownMenu>
+                <DropdownMenu onOpenChange={(open) => { if (!open) setMenuView("main"); }}>
                   <DropdownMenuTrigger asChild>
                     <Button
                       variant="ghost"
@@ -227,45 +255,112 @@ export function VoiceoverPlayer() {
                     side="top" 
                     align="end" 
                     sideOffset={12}
-                    className="w-64 p-3 rounded-[2rem] shadow-2xl border-zinc-200 dark:border-zinc-800 bg-white/90 dark:bg-zinc-950/90 backdrop-blur-xl"
+                    className="w-64 p-3 rounded-[2rem] shadow-2xl border-zinc-200 dark:border-zinc-800 bg-white/90 dark:bg-zinc-950/90 backdrop-blur-xl overflow-hidden"
                   >
-                    <DropdownMenuLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 px-3 py-3">
-                      Playback Settings
-                    </DropdownMenuLabel>
-                    <DropdownMenuSeparator className="bg-zinc-100 dark:bg-zinc-800 mb-3" />
-                    
-                    <div className="px-2 pb-4">
-                      <p className="text-[9px] font-black uppercase tracking-widest text-zinc-400 mb-3 ml-1">Playback Speed</p>
-                      <div className="grid grid-cols-3 gap-2">
-                        {speeds.map((s) => (
-                          <button
-                            key={s}
-                            onClick={() => useReaderStore.setState({ voiceoverSpeed: s })}
-                            className={cn(
-                              "h-9 rounded-xl text-[10px] font-black transition-all border",
-                              speed === s 
-                                ? "bg-primary border-primary text-white shadow-lg shadow-primary/20" 
-                                : "bg-white dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 text-zinc-500 hover:border-zinc-300 dark:hover:border-zinc-600"
-                            )}
-                          >
-                            {s}x
-                          </button>
-                        ))}
-                      </div>
-                    </div>
+                    {menuView === "main" ? (
+                      <div className="animate-in fade-in slide-in-from-right-2 duration-200">
+                        <DropdownMenuLabel className="text-[10px] font-black uppercase tracking-[0.2em] text-zinc-400 px-3 py-3">
+                          Settings
+                        </DropdownMenuLabel>
+                        <DropdownMenuSeparator className="bg-zinc-100 dark:bg-zinc-800 mb-3" />
+                        
+                        <button
+                          onClick={(e) => { e.preventDefault(); setMenuView("voices"); }}
+                          className="w-full flex items-center justify-between px-3 py-3 rounded-xl text-xs font-bold hover:bg-primary/5 text-zinc-600 dark:text-zinc-300 group"
+                        >
+                          <div className="flex items-center gap-3">
+                            <User className="h-4 w-4 text-zinc-400 group-hover:text-primary" />
+                            <span>Voice</span>
+                          </div>
+                          <span className="text-[9px] font-medium text-zinc-400 group-hover:text-primary max-w-[80px] truncate">
+                            {currentVoice?.name ?? "Default"}
+                          </span>
+                        </button>
 
-                    <DropdownMenuSeparator className="bg-zinc-100 dark:bg-zinc-800" />
-                    
-                    <DropdownMenuCheckboxItem
-                      checked={isFollowEnabled}
-                      onCheckedChange={setIsFollowEnabled}
-                      className="rounded-xl mt-1 py-3 text-[11px] font-black uppercase tracking-widest focus:bg-primary/10 focus:text-primary"
-                    >
-                      <div className="flex items-center gap-3">
-                        <MousePointer2 className="h-3.5 w-3.5" />
-                        Follow Reading
+                        <DropdownMenuCheckboxItem
+                          checked={isReadTitlesEnabled}
+                          onCheckedChange={setIsReadTitlesEnabled}
+                          className="rounded-xl py-3 text-[11px] font-black uppercase tracking-widest focus:bg-primary/10 focus:text-primary mt-1"
+                        >
+                          <div className="flex items-center gap-3">
+                            <Type className="h-4 w-4" />
+                            Read Titles
+                          </div>
+                        </DropdownMenuCheckboxItem>
+
+                        <DropdownMenuCheckboxItem
+                          checked={isFollowEnabled}
+                          onCheckedChange={setIsFollowEnabled}
+                          className="rounded-xl py-3 text-[11px] font-black uppercase tracking-widest focus:bg-primary/10 focus:text-primary"
+                        >
+                          <div className="flex items-center gap-3">
+                            <MousePointer2 className="h-4 w-4" />
+                            Follow Reading
+                          </div>
+                        </DropdownMenuCheckboxItem>
+
+                        <DropdownMenuSeparator className="bg-zinc-100 dark:bg-zinc-800" />
+
+                        <div className="px-2 py-4">
+                          <p className="text-[9px] font-black uppercase tracking-widest text-zinc-400 mb-3 ml-1">Speed</p>
+                          <div className="grid grid-cols-3 gap-2">
+                            {speeds.map((s) => (
+                              <button
+                                key={s}
+                                onClick={() => useReaderStore.setState({ voiceoverSpeed: s })}
+                                className={cn(
+                                  "h-8 rounded-xl text-[10px] font-black transition-all border",
+                                  speed === s 
+                                    ? "bg-primary border-primary text-white shadow-lg shadow-primary/20" 
+                                    : "bg-white dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 text-zinc-500 hover:border-zinc-300 dark:hover:border-zinc-600"
+                                )}
+                              >
+                                {s}x
+                              </button>
+                            ))}
+                          </div>
+                        </div>
                       </div>
-                    </DropdownMenuCheckboxItem>
+                    ) : (
+                      <div className="animate-in fade-in slide-in-from-left-2 duration-200">
+                        <button
+                          onClick={(e) => { e.preventDefault(); setMenuView("main"); }}
+                          className="w-full flex items-center gap-2 px-3 py-3 text-[10px] font-black uppercase tracking-[0.2em] text-primary hover:bg-primary/5 rounded-xl transition-colors mb-2"
+                        >
+                          <ChevronLeft className="h-3 w-3" />
+                          Back
+                        </button>
+                        <DropdownMenuSeparator className="bg-zinc-100 dark:bg-zinc-800 mb-1" />
+                        <div className="max-h-[300px] overflow-y-auto pr-1 scrollbar-elegant">
+                          {voices.length === 0 ? (
+                            <div className="px-3 py-4 text-center text-[10px] font-bold text-zinc-400 uppercase tracking-widest">
+                              Loading...
+                            </div>
+                          ) : (
+                            <div className="grid gap-0.5">
+                              {voices.map((voice) => (
+                                <button
+                                  key={voice.voiceURI}
+                                  onClick={() => setVoiceURI(voice.voiceURI)}
+                                  className={cn(
+                                    "w-full text-left px-3 py-2.5 rounded-xl text-xs transition-all flex items-center justify-between group",
+                                    voiceURI === voice.voiceURI 
+                                      ? "bg-primary/10 text-primary font-bold" 
+                                      : "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-900"
+                                  )}
+                                >
+                                  <div className="flex flex-col gap-0.5 min-w-0 pr-2">
+                                    <span className="truncate font-medium text-[11px] leading-tight">{voice.name}</span>
+                                    <span className="text-[8px] opacity-50 uppercase tracking-tighter font-black">{voice.lang}</span>
+                                  </div>
+                                  {voiceURI === voice.voiceURI && <div className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </DropdownMenuContent>
                 </DropdownMenu>
 
