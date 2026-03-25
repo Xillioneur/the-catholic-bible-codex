@@ -2,10 +2,11 @@
 
 import { useEffect, useState, useMemo } from "react";
 import { createPortal } from "react-dom";
-import { X, Scroll, Music, Church, Volume2, Play, Pause } from "lucide-react";
+import { X, Scroll, Music, Church, Volume2, Play, Pause, Target } from "lucide-react";
 import { cn } from "~/lib/utils";
 import { useReaderStore } from "~/hooks/use-reader-store";
 import { useVoiceover } from "~/hooks/use-voiceover";
+import { VoiceoverControls } from "./voiceover-controls";
 
 interface DailyAllViewProps {
   info: any;
@@ -150,7 +151,24 @@ export function DailyAllView({ info, onClose, onSelectReading }: DailyAllViewPro
       </div>
 
       {/* ULTRA-LEAN FLOATING FOOTER */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-40 pointer-events-none">
+      <div className="absolute bottom-6 left-0 right-0 z-40 px-6 flex items-center justify-between pointer-events-none">
+        <div className="flex items-center gap-2 pointer-events-auto">
+          <VoiceoverControls />
+          <button 
+            onClick={() => {
+              if (currentOrder) {
+                const activeEl = document.querySelector(`[data-liturgical-order="${currentOrder}"]`);
+                if (activeEl) {
+                  activeEl.scrollIntoView({ behavior: "smooth", block: "center" });
+                }
+              }
+            }}
+            className="h-10 w-10 flex items-center justify-center rounded-full bg-white/90 dark:bg-zinc-900/90 backdrop-blur-xl border border-zinc-200 dark:border-zinc-800 text-zinc-400 hover:text-primary shadow-xl transition-all active:scale-95"
+          >
+            <Target className="h-4 w-4" />
+          </button>
+        </div>
+
         <button 
           onClick={onClose}
           className="px-8 py-2.5 rounded-full bg-primary text-white font-black text-[9px] uppercase tracking-[0.3em] shadow-2xl shadow-primary/40 active:scale-95 transition-all hover:scale-[1.02] pointer-events-auto border border-white/20"
