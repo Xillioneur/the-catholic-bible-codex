@@ -98,7 +98,9 @@ export function VoiceoverManager() {
     // CRITICAL FIX: Ensure we unpause before cancelling/speaking, otherwise the engine might hang
     if (synthRef.current.paused) synthRef.current.resume();
     
-    // Ensure we interrupt any previous speech immediately
+    // Set internal cancel to true so that the 'onend' from the previous 
+    // utterance (triggered by cancel()) doesn't advance the verse.
+    isInternalCancelRef.current = true;
     synthRef.current.cancel();
 
     const currentSession = ++sessionRef.current;

@@ -17,7 +17,7 @@ interface DailyAllViewProps {
 export function DailyAllView({ info, onClose, onSelectReading }: DailyAllViewProps) {
   const [mounted, setMounted] = useState(false);
   const liturgicalReadings = useReaderStore((state) => state.liturgicalReadings);
-  const { jumpToOrder, togglePlay, isPlaying, playlist } = useVoiceover();
+  const { jumpToOrder, togglePlay, isPlaying, playlist, unlockAudio } = useVoiceover();
   const currentOrder = useReaderStore((state) => state.voiceoverCurrentOrder);
   const isFollowEnabled = useReaderStore((state) => state.isVoiceoverFollowEnabled);
 
@@ -40,7 +40,7 @@ export function DailyAllView({ info, onClose, onSelectReading }: DailyAllViewPro
   }, [currentOrder, isPlaying, isFollowEnabled]);
 
   const allOrders = useMemo(() => {
-    return liturgicalReadings.flatMap(r => r.orders).sort((a, b) => a - b);
+    return liturgicalReadings.flatMap(r => r.orders);
   }, [liturgicalReadings]);
 
   const isReadingAll = isPlaying && playlist?.length === allOrders.length && playlist[0] === allOrders[0];
@@ -50,6 +50,7 @@ export function DailyAllView({ info, onClose, onSelectReading }: DailyAllViewPro
       togglePlay();
     } else {
       if (allOrders.length > 0) {
+        unlockAudio();
         jumpToOrder(allOrders[0], allOrders);
       }
     }
@@ -195,7 +196,7 @@ function ReadingSection({ title, citation, icon: Icon, highlight, isPsalm, verse
 }) {
   if (!citation) return null;
 
-  const { jumpToOrder, togglePlay, isPlaying, playlist } = useVoiceover();
+  const { jumpToOrder, togglePlay, isPlaying, playlist, unlockAudio } = useVoiceover();
   const currentOrder = useReaderStore((state) => state.voiceoverCurrentOrder);
 
   const isPlayingThisSection = isPlaying && playlist?.some(o => orders.includes(o));
@@ -206,6 +207,7 @@ function ReadingSection({ title, citation, icon: Icon, highlight, isPsalm, verse
       togglePlay();
     } else {
       if (orders.length > 0) {
+        unlockAudio();
         jumpToOrder(orders[0], orders);
       }
     }

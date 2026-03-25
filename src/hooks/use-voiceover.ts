@@ -24,6 +24,15 @@ export function useVoiceover() {
   const setVerseProgress = useReaderStore((state) => state.setVoiceoverProgress);
   const resetVoiceover = useReaderStore((state) => state.resetVoiceover);
 
+  const unlockAudio = useCallback(() => {
+    if (typeof window !== "undefined" && window.speechSynthesis) {
+      const utterance = new SpeechSynthesisUtterance(" ");
+      utterance.volume = 0;
+      utterance.rate = 1;
+      window.speechSynthesis.speak(utterance);
+    }
+  }, []);
+
   const stop = useCallback(() => {
     // Atomic reset to prevent intermediate "paused" state
     resetVoiceover();
@@ -87,6 +96,7 @@ export function useVoiceover() {
     skipForward,
     skipBackward,
     jumpToOrder,
+    unlockAudio,
     isPlaying,
     isActive,
     currentOrder,

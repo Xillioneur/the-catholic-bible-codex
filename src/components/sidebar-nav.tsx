@@ -37,7 +37,7 @@ export function SidebarNav() {
   const { data: books = [] } = api.bible.getBooks.useQuery();
   const { data: translations = [] } = api.bible.getTranslations.useQuery();
   const { info } = useLiturgical();
-  const { jumpToOrder } = useVoiceover();
+  const { jumpToOrder, unlockAudio } = useVoiceover();
   
   const [activeTab, setActiveTab] = useState<"library" | "bookmarks" | "settings" | "daily" | null>(null);
   const [showFullLiturgical, setShowFullLiturgical] = useState(false);
@@ -89,25 +89,16 @@ export function SidebarNav() {
   };
 
   const handleListenAll = useCallback(() => {
-    const allOrders = liturgicalReadings.flatMap(r => r.orders).sort((a, b) => a - b);
+    const allOrders = liturgicalReadings.flatMap(r => r.orders);
     if (allOrders.length > 0) {
+      unlockAudio();
       jumpToOrder(allOrders[0], allOrders);
       toast.success("Daily Bread: Voiceover Started");
       setActiveTab(null);
     } else {
       toast.error("Readings not yet loaded");
     }
-  }, [liturgicalReadings, jumpToOrder]);
-
-  const unlockAudio = useCallback(() => {
-    if (typeof window !== "undefined" && window.speechSynthesis) {
-      // iOS Safari Unlock: Must be called directly in the click handler
-      const utterance = new SpeechSynthesisUtterance(" ");
-      utterance.volume = 0;
-      utterance.rate = 1;
-      window.speechSynthesis.speak(utterance);
-    }
-  }, []);
+  }, [liturgicalReadings, jumpToOrder, unlockAudio]);
 
   const currentBook = useMemo(() => books?.find(b => b.id === currentBookId), [books, currentBookId]);
 

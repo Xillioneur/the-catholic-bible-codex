@@ -57,17 +57,20 @@ export function LiturgicalProvider({ children }: { children: ReactNode }) {
           .and(v => allOrders.includes(v.globalOrder))
           .toArray();
 
-        // 3. MAP BACK TO READINGS
-        const finalReadings = resolvedOrders.map(ro => {
+        // 3. MAP BACK TO READINGS (and maintain original liturgical order)
+        const finalReadings = readingPairs.map(p => {
+          const resolved = resolvedOrders.find(ro => ro.type === p.type);
+          if (!resolved) return null;
+
           const readingVerses = allVerses
-            .filter(v => ro.orders.includes(v.globalOrder))
+            .filter(v => resolved.orders.includes(v.globalOrder))
             .sort((a, b) => a.globalOrder - b.globalOrder);
             
           return {
-            ...ro,
+            ...resolved,
             verses: readingVerses
           };
-        });
+        }).filter(Boolean);
 
         setLiturgicalReadings(finalReadings as any);
       } catch (e) {
