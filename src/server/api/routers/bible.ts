@@ -282,6 +282,28 @@ export const bibleRouter = createTRPCRouter({
     return ctx.db.book.findMany({ orderBy: { order: "asc" } });
   }),
 
+  getChapters: publicProcedure
+    .input(z.object({ 
+      bookSlug: z.string(),
+      translationSlug: z.string()
+    }))
+    .query(async ({ ctx, input }) => {
+      const translation = await ctx.db.translation.findUnique({ where: { slug: input.translationSlug } });
+      const book = await ctx.db.book.findFirst({ 
+        where: { slug: { equals: input.bookSlug, mode: 'insensitive' } } 
+      });
+      if (!translation || !book) return [];
+
+      let chapters = await ctx.db.verse.findMany({
+        where: { translationId: translation.id, bookId: book.id },
+        select: { chapter: true },
+        distinct: ['chapter'],
+        orderBy: { chapter: 'asc' }
+      });
+
+      return chapters.map(c => c.chapter);
+    }),
+
   getTranslations: publicProcedure.query(async ({ ctx }) => {
     return ctx.db.translation.findMany({ orderBy: { slug: "asc" } });
   }),

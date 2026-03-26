@@ -9,7 +9,6 @@ import {
   Sun,
   Settings2,
   Library as LibraryIcon,
-  History,
   X,
   Plus,
   Minus,
@@ -21,7 +20,8 @@ import {
   Calendar,
   Trash2,
   Volume2,
-  Headphones
+  Headphones,
+  Loader2
 } from "lucide-react";
 import { useReaderStore } from "~/hooks/use-reader-store";
 import { cn } from "~/lib/utils";
@@ -29,7 +29,6 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "~/lib/db";
 import { useLiturgical } from "./liturgical-provider";
 import { DailyAllView } from "./liturgical-full-view";
-import { LibraryFullView } from "./library-full-view";
 import { toast } from "sonner";
 import { useVoiceover } from "~/hooks/use-voiceover";
 
@@ -41,7 +40,8 @@ export function SidebarNav() {
   
   const [activeTab, setActiveTab] = useState<"library" | "bookmarks" | "settings" | "daily" | null>(null);
   const [showFullLiturgical, setShowFullLiturgical] = useState(false);
-  const [showFullLibrary, setShowFullLibrary] = useState(false);
+  const [librarySelectedBook, setLibrarySelectedBook] = useState<any | null>(null);
+  const [librarySearch, setLibrarySearch] = useState("");
 
   const isCollapsed = useReaderStore((state) => state.isSidebarCollapsed);
   const toggleSidebar = useReaderStore((state) => state.toggleSidebar);
@@ -67,11 +67,30 @@ export function SidebarNav() {
   const bookmarks = useLiveQuery(() => db.bookmarks.reverse().limit(10).toArray()) ?? [];
   const utils = api.useUtils();
 
-  const handleBookSelect = useCallback(async (bookSlug: string) => {
+  const handleBookSelect = useCallback(async (bookSlug: string, chapter: number = 1) => {
     setActiveTab(null);
-    const order = await utils.bible.getVerseOrder.fetch({ translationSlug, bookSlug });
+    setLibrarySelectedBook(null);
+    setLibrarySearch("");
+    const order = await utils.bible.getVerseOrder.fetch({ translationSlug, bookSlug, chapter });
     if (order !== null) setScrollToOrder(order);
   }, [translationSlug, utils, setScrollToOrder]);
+
+  const { data: libraryChapters = [], isLoading: isLoadingLibraryChapters } = api.bible.getChapters.useQuery(
+    { bookSlug: librarySelectedBook?.slug ?? "", translationSlug },
+    { enabled: !!librarySelectedBook }
+  );
+
+  const categories = useMemo(() => {
+    const cats = ["Pentateuch", "History", "Wisdom", "Prophets", "Gospels", "Acts", "Epistles", "Revelation"];
+    const filtered = books.filter(b => 
+      b.name.toLowerCase().includes(librarySearch.toLowerCase()) || 
+      b.abbreviation.toLowerCase().includes(librarySearch.toLowerCase())
+    );
+    return cats.map(c => ({
+      name: c,
+      books: filtered.filter(b => b.category === c).sort((a, b) => a.order - b.order)
+    })).filter(c => c.books.length > 0);
+  }, [books, librarySearch]);
 
   const handleSelectReading = (type: string) => {
     const reading = liturgicalReadings.find(r => r.type === type);
@@ -164,23 +183,26 @@ export function SidebarNav() {
         </div>
       </nav>
 
-      {/* 3. THE UNIFIED FLYOUT PANEL (Moved outside for viewport stability) */}
+      {/* 3. THE UNIFIED FLYOUT PANEL */}
       {activeTab && (
         <div className={cn(
           "fixed glass shadow-2xl border border-white/40 dark:border-zinc-800/40 flex flex-col animate-in duration-500 pointer-events-auto z-[101]",
           // Desktop Position
-          "md:left-16 md:top-0 md:bottom-0 md:w-64 md:slide-in-from-left-2 md:rounded-none",
-          // Mobile Position: Precision Full-Height
+          "md:left-16 md:top-0 md:bottom-0 md:w-80 md:slide-in-from-left-2 md:rounded-none",
+          // Mobile Position
           "left-4 right-4 top-[calc(env(safe-area-inset-top)+1rem)] bottom-[calc(env(safe-area-inset-bottom)+5.5rem)] rounded-[2.5rem] slide-in-from-bottom-4"
         )}>
-          <div className="p-5 flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800/50">
+          <div className="p-4 flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800/50">
             <h2 className="text-[8px] font-black uppercase tracking-[0.4em] text-zinc-400">{activeTab}</h2>
-            <button onClick={() => setActiveTab(null)} className="h-8 w-8 flex items-center justify-center text-zinc-400 hover:text-zinc-900 transition-colors">
+            <button onClick={() => {
+              setActiveTab(null);
+              setLibrarySelectedBook(null);
+            }} className="h-8 w-8 flex items-center justify-center text-zinc-400 hover:text-zinc-900 transition-colors">
               <X className="h-4 w-4" />
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto px-3 pb-6 scrollbar-elegant">
+          <div className="flex-1 overflow-y-auto px-4 pb-6 scrollbar-elegant">
             {activeTab === "daily" && info && (
               <div className="space-y-6 mt-4">
                 <div className="px-3 py-2 bg-primary/5 rounded-2xl border border-primary/10 flex items-center justify-between">
@@ -229,37 +251,108 @@ export function SidebarNav() {
             )}
 
             {activeTab === "library" && (
-              <div className="space-y-6 mt-4">
-                <div className="flex bg-zinc-100/50 dark:bg-zinc-800/50 p-0.5 rounded-full border border-zinc-200/20 dark:border-zinc-700/20">
-                  {translations?.map((t) => (
+              <div className="mt-4 animate-in fade-in duration-300">
+                {/* Header Area */}
+                <div className="flex flex-col gap-3 mb-5">
+                  <div className="flex bg-zinc-100/50 dark:bg-zinc-800/50 p-0.5 rounded-full border border-zinc-200/20">
+                    {translations?.map((t) => (
+                      <button 
+                        key={t.id} 
+                        onClick={() => setTranslationSlug(t.slug)} 
+                        className={cn(
+                          "flex-1 py-1 rounded-full text-[8px] font-black uppercase transition-all", 
+                          translationSlug === t.slug ? "bg-white dark:bg-zinc-700 text-primary shadow-sm" : "text-zinc-400 hover:text-zinc-600"
+                        )}
+                      >
+                        {t.abbreviation}
+                      </button>
+                    ))}
+                  </div>
+
+                  {!librarySelectedBook ? (
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3 w-3 text-zinc-400" />
+                      <input 
+                        value={librarySearch}
+                        onChange={(e) => setLibrarySearch(e.target.value)}
+                        placeholder="Filter 73 Books..."
+                        className="w-full h-8 pl-8 pr-3 rounded-lg bg-zinc-100/50 dark:bg-zinc-800/50 border border-zinc-200/20 focus:outline-none focus:ring-1 focus:ring-primary/20 text-[10px] font-serif italic"
+                      />
+                    </div>
+                  ) : (
                     <button 
-                      key={t.id} 
-                      onClick={() => setTranslationSlug(t.slug)} 
-                      className={cn(
-                        "flex-1 py-1.5 rounded-full text-[9px] font-black uppercase transition-all", 
-                        translationSlug === t.slug ? "bg-white dark:bg-zinc-700 text-primary shadow-sm" : "text-zinc-400 hover:text-zinc-600"
-                      )}
+                      onClick={() => setLibrarySelectedBook(null)}
+                      className="flex items-center gap-2 text-primary hover:opacity-70 transition-all group py-1"
                     >
-                      {t.abbreviation}
+                      <ChevronLeft className="h-3.5 w-3.5" />
+                      <span className="text-[10px] font-black uppercase tracking-widest">Back to Books</span>
                     </button>
-                  ))}
+                  )}
                 </div>
 
-                <div className="grid gap-0.5">
-                  {books?.map(book => (
-                    <button 
-                      key={book.id}
-                      onClick={() => handleBookSelect(book.slug)}
-                      className={cn(
-                        "w-full text-left px-3 py-3 rounded-xl transition-all group flex items-center justify-between",
-                        currentBookId === book.id ? "bg-primary/5 text-primary" : "hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-600 dark:text-zinc-400"
-                      )}
-                    >
-                      <span className="font-serif italic text-base tracking-tight">{book.name}</span>
-                      {currentBookId === book.id && <div className="h-1.5 w-1.5 rounded-full bg-primary" />}
-                    </button>
-                  ))}
-                </div>
+                {/* Content Area */}
+                {!librarySelectedBook ? (
+                  <div className="space-y-6">
+                    {categories.map((cat) => (
+                      <div key={cat.name} className="space-y-1">
+                        <div className="flex items-center gap-2 px-1 mb-2">
+                          <span className="text-[7px] font-black uppercase tracking-[0.3em] text-zinc-300">{cat.name}</span>
+                          <div className="h-[0.5px] flex-1 bg-zinc-100 dark:bg-zinc-800/50" />
+                        </div>
+                        <div className="grid gap-px">
+                          {cat.books.map(book => (
+                            <button
+                              key={book.id}
+                              onClick={() => setLibrarySelectedBook(book)}
+                              className={cn(
+                                "w-full text-left px-3 py-2 rounded-lg transition-all flex items-center justify-between group",
+                                currentBookId === book.id 
+                                  ? "bg-primary/5 text-primary" 
+                                  : "hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-500 dark:text-zinc-400"
+                                )}
+                            >
+                              <span className="font-serif italic text-sm tracking-tight">{book.name}</span>
+                              <ChevronRight className="h-3 w-3 opacity-0 group-hover:opacity-40 transition-all" />
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="animate-in fade-in slide-in-from-right-4 duration-300">
+                    <div className="px-1 mb-5">
+                      <h3 className="font-serif font-black italic text-xl text-zinc-900 dark:text-zinc-100 leading-tight">
+                        {librarySelectedBook.name}
+                      </h3>
+                    </div>
+                    
+                    {isLoadingLibraryChapters ? (
+                      <div className="grid grid-cols-6 gap-1.5">
+                        {Array.from({ length: 24 }).map((_, i) => (
+                          <div key={i} className="aspect-square rounded-lg bg-zinc-50 dark:bg-zinc-800/50 animate-pulse" />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-6 gap-1.5 pb-4">
+                        {libraryChapters.map((chapter) => (
+                          <button
+                            key={chapter}
+                            onClick={() => handleBookSelect(librarySelectedBook.slug, chapter)}
+                            className={cn(
+                              "aspect-square rounded-lg flex items-center justify-center text-[10px] font-black transition-all border shadow-sm",
+                              currentBookId === librarySelectedBook.id && currentChapter === chapter
+                                ? "bg-primary text-white border-primary shadow-primary/20"
+                                : "bg-white dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 text-zinc-400 hover:text-primary hover:border-primary/40 hover:scale-105 active:scale-95"
+                            )}
+                          >
+                            {chapter}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
 
@@ -317,7 +410,7 @@ export function SidebarNav() {
             )}
           </div>
 
-          <div className="p-5 bg-zinc-50/30 dark:bg-zinc-950/10 border-t border-zinc-100/50 dark:border-zinc-800/50 rounded-b-[2.5rem] md:rounded-none">
+          <div className="p-5 bg-zinc-50/30 dark:bg-zinc-950/10 border-t border-zinc-100/50 dark:border-zinc-800/50 rounded-b-[2.5rem] md:rounded-none flex-shrink-0">
             <div className="flex items-center gap-3">
               <div className="h-8 w-8 rounded-full bg-primary/5 flex items-center justify-center text-primary font-black text-[10px] border border-primary/10">
                 {currentChapter}
@@ -331,7 +424,7 @@ export function SidebarNav() {
         </div>
       )}
 
-      {/* 4. FLOATING LISTEN BUTTON (Restores Minimized Player) */}
+      {/* 4. FLOATING LISTEN BUTTON */}
       {isVoiceoverActive && isVoiceoverMinimized && (
         <button 
           onClick={() => setIsVoiceoverMinimized(false)}
