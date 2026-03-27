@@ -9,14 +9,18 @@ import { useBibleReader } from "~/hooks/use-bible-reader";
 import { BookHeader, ChapterHeader, LiturgicalReadingHeader } from "./bible/section-header";
 import { LoadingScreen } from "./bible/loading-screen";
 import { cn } from "~/lib/utils";
+import { useSession } from "next-auth/react";
 
 export function BibleReader() {
   const containerRef = useRef<HTMLDivElement>(null);
   const { rows, isLoading, rowVirtualizer } = useBibleReader(containerRef);
   const [activeVerse, setActiveVerse] = useState<any | null>(null);
 
-  const bookmarks = useLiveQuery(() => db.bookmarks.toArray()) ?? [];
-  const highlights = useLiveQuery(() => db.highlights.toArray()) ?? [];
+  const { data: session } = useSession();
+  const currentUserId = session?.user?.id ?? "guest";
+
+  const bookmarks = useLiveQuery(() => db.bookmarks.where("userId").equals(currentUserId).toArray(), [currentUserId]) ?? [];
+  const highlights = useLiveQuery(() => db.highlights.where("userId").equals(currentUserId).toArray(), [currentUserId]) ?? [];
   const liturgicalReadings = useReaderStore((state) => state.liturgicalReadings);
   const searchHighlight = useReaderStore((state) => state.searchHighlight);
   const voiceoverCurrentOrder = useReaderStore((state) => state.voiceoverCurrentOrder);
