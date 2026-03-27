@@ -84,38 +84,81 @@ export function SidebarNav() {
   const [editingNoteId, setEditingNoteId] = useState<string | number | null>(null);
   const [editingNoteContent, setEditingNoteContent] = useState("");
 
-  const handleUpdateNote = async (noteId: string | number, content: string) => {
+  const updateNoteCloud = api.user.updateNote.useMutation({
+    onSuccess: () => {
+      utils.user.getSyncData.invalidate();
+      utils.user.getJournal.invalidate();
+    }
+  });
+
+  const deleteNoteCloud = api.user.deleteNote.useMutation({
+    onSuccess: () => {
+      utils.user.getSyncData.invalidate();
+      utils.user.getJournal.invalidate();
+    }
+  });
+
+  const deleteHighlightCloud = api.user.deleteHighlight.useMutation({
+    onSuccess: () => {
+      utils.user.getSyncData.invalidate();
+      utils.user.getJournal.invalidate();
+    }
+  });
+
+  const deleteBookmarkCloud = api.user.deleteBookmark.useMutation({
+    onSuccess: () => {
+      utils.user.getSyncData.invalidate();
+    }
+  });
+
+  const handleUpdateNote = async (note: any, content: string) => {
     try {
+      await db.notes.update(note.id as number, { content, updatedAt: Date.now() });
       if (session) {
-        // We don't have a direct TRPC update yet, but we can update locally 
-        // and the syncer will eventually push it if implemented.
-        // Actually, we should probably add a TRPC mutation for single note update 
-        // but for now, updating Dexie is the source of truth for the UI.
-        await db.notes.update(noteId as number, { content, updatedAt: Date.now() });
-      } else {
-        await db.notes.update(noteId as number, { content, updatedAt: Date.now() });
+        updateNoteCloud.mutate({
+          globalOrder: note.globalOrder,
+          translationSlug: note.translationSlug,
+          content: content
+        });
       }
       setEditingNoteId(null);
       toast.success("Reflection updated");
     } catch (e) {
+      console.error("Update error:", e);
       toast.error("Failed to update reflection");
     }
   };
 
-  const handleDeleteNote = async (noteId: string | number) => {
+  const handleDeleteNote = async (note: any) => {
     try {
-      await db.notes.delete(noteId as number);
+      if (!note.id) return;
+      await db.notes.delete(note.id as number);
+      if (session) {
+        deleteNoteCloud.mutate({ 
+          globalOrder: note.globalOrder, 
+          translationSlug: note.translationSlug 
+        });
+      }
       toast.success("Reflection deleted");
     } catch (e) {
+      console.error("Delete error:", e);
       toast.error("Failed to delete reflection");
     }
   };
 
-  const handleDeleteHighlight = async (highlightId: string | number) => {
+  const handleDeleteHighlight = async (h: any) => {
     try {
-      await db.highlights.delete(highlightId as number);
+      if (!h.id) return;
+      await db.highlights.delete(h.id as number);
+      if (session) {
+        deleteHighlightCloud.mutate({ 
+          globalOrder: h.globalOrder, 
+          translationSlug: h.translationSlug 
+        });
+      }
       toast.success("Highlight removed");
     } catch (e) {
+      console.error("Highlight delete error:", e);
       toast.error("Failed to remove highlight");
     }
   };
@@ -141,7 +184,8 @@ export function SidebarNav() {
     return highlightsWithVerses.filter(h => !!h.verse);
   }, [localHighlightsRaw]) ?? [];
 
-  const { data: journal, isLoading: isLoadingJournal } = api.user.getJournal.useQuery(undefined, {
+  // Keep the query for cloud sync, but UI uses local data
+  const { isLoading: isLoadingJournal } = api.user.getJournal.useQuery(undefined, {
     enabled: activeTab === "journal" && !!session
   });
 
@@ -468,7 +512,14 @@ export function SidebarNav() {
                     <button 
                       onClick={(e) => {
                         e.stopPropagation();
+                        if (!b.id) return;
                         void db.bookmarks.delete(b.id!);
+                        if (session) {
+                          deleteBookmarkCloud.mutate({ 
+                            globalOrder: b.globalOrder, 
+                            translationSlug: b.translationSlug 
+                          });
+                        }
                         toast.success("Bookmark removed");
                       }}
                       className="absolute right-3 top-1/2 -translate-y-1/2 h-8 w-8 flex items-center justify-center rounded-full text-zinc-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all md:opacity-0 md:group-hover:opacity-100"
@@ -524,7 +575,7 @@ export function SidebarNav() {
                   <div className="space-y-3 animate-in fade-in duration-500">
                     {journalFilter === "notes" ? (
                       (() => {
-                        const notesToShow = session ? journal?.notes : localNotes;
+                        const notesToShow = localNotes;
                         if (!notesToShow || notesToShow.length === 0) {
                           return <div className="py-20 text-center text-[10px] font-black uppercase tracking-widest text-zinc-300">The page is blank</div>;
                         }
@@ -552,7 +603,7 @@ export function SidebarNav() {
                                   <Settings2 className="h-2.5 w-2.5" />
                                 </button>
                                 <button 
-                                  onClick={() => handleDeleteNote(note.id)}
+                                  onClick={() => handleDeleteNote(note)}
                                   className="p-1 rounded-full hover:bg-red-50 text-zinc-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
                                 >
                                   <Trash2 className="h-2.5 w-2.5" />
@@ -570,7 +621,7 @@ export function SidebarNav() {
                                 />
                                 <div className="flex gap-1.5">
                                   <button 
-                                    onClick={() => handleUpdateNote(note.id, editingNoteContent)}
+                                    onClick={() => handleUpdateNote(note, editingNoteContent)}
                                     className="flex-1 py-1.5 rounded-lg bg-primary text-white text-[8px] font-black uppercase tracking-widest"
                                   >
                                     Update
@@ -596,7 +647,7 @@ export function SidebarNav() {
                       })()
                     ) : (
                       (() => {
-                        const highlightsToShow = session ? journal?.highlights : localHighlights;
+                        const highlightsToShow = localHighlights;
                         if (!highlightsToShow || highlightsToShow.length === 0) {
                           return <div className="py-20 text-center text-[10px] font-black uppercase tracking-widest text-zinc-300">No illuminations</div>;
                         }
@@ -623,7 +674,7 @@ export function SidebarNav() {
                                 </button>
                                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
                                   <button 
-                                    onClick={() => handleDeleteHighlight(h.id)}
+                                    onClick={() => handleDeleteHighlight(h)}
                                     className="p-1.5 rounded-full hover:bg-red-50 text-zinc-300 hover:text-red-500 transition-colors"
                                   >
                                     <Trash2 className="h-3 w-3" />

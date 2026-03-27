@@ -46,6 +46,34 @@ export function VerseOverlay({ verseId, bookId, bookName, bookSlug, chapter, ver
   const [showCompare, setShowCompare] = useState(false);
 
   const currentUserId = session?.user?.id ?? "guest";
+  const utils = api.useUtils();
+
+  const deleteNoteCloud = api.user.deleteNote.useMutation({
+    onSuccess: () => {
+      utils.user.getSyncData.invalidate();
+      utils.user.getJournal.invalidate();
+    }
+  });
+
+  const updateNoteCloud = api.user.updateNote.useMutation({
+    onSuccess: () => {
+      utils.user.getSyncData.invalidate();
+      utils.user.getJournal.invalidate();
+    }
+  });
+
+  const deleteHighlightCloud = api.user.deleteHighlight.useMutation({
+    onSuccess: () => {
+      utils.user.getSyncData.invalidate();
+      utils.user.getJournal.invalidate();
+    }
+  });
+
+  const deleteBookmarkCloud = api.user.deleteBookmark.useMutation({
+    onSuccess: () => {
+      utils.user.getSyncData.invalidate();
+    }
+  });
 
   const bookmark = useLiveQuery(() => db.bookmarks.where("[userId+verseId]").equals([currentUserId, verseId]).first(), [currentUserId, verseId]);
   const highlight = useLiveQuery(() => db.highlights.where("[userId+verseId]").equals([currentUserId, verseId]).first(), [currentUserId, verseId]);
@@ -59,6 +87,9 @@ export function VerseOverlay({ verseId, bookId, bookName, bookSlug, chapter, ver
   const toggleBookmark = async () => {
     if (bookmark) {
       await db.bookmarks.delete(bookmark.id!);
+      if (session) {
+        deleteBookmarkCloud.mutate({ globalOrder, translationSlug });
+      }
       toast.success("Bookmark removed");
     } else {
       await db.bookmarks.add({ 
@@ -78,6 +109,9 @@ export function VerseOverlay({ verseId, bookId, bookName, bookSlug, chapter, ver
   const toggleHighlight = async (color: string = "yellow") => {
     if (highlight) {
       await db.highlights.delete(highlight.id!);
+      if (session) {
+        deleteHighlightCloud.mutate({ globalOrder, translationSlug });
+      }
     } else {
       await db.highlights.add({ 
         userId: currentUserId,
@@ -93,6 +127,9 @@ export function VerseOverlay({ verseId, bookId, bookName, bookSlug, chapter, ver
   const saveNote = async () => {
     if (note) {
       await db.notes.update(note.id!, { content: noteContent, updatedAt: Date.now() });
+      if (session) {
+        updateNoteCloud.mutate({ globalOrder, translationSlug, content: noteContent });
+      }
       toast.success("Reflection updated");
     } else {
       await db.notes.add({ 
@@ -104,6 +141,7 @@ export function VerseOverlay({ verseId, bookId, bookName, bookSlug, chapter, ver
         createdAt: Date.now(), 
         updatedAt: Date.now() 
       });
+      // The background syncer in ProgressSyncer will pick up new notes
       toast.success("Reflection saved");
     }
     setIsEditingNote(false);
@@ -144,6 +182,9 @@ export function VerseOverlay({ verseId, bookId, bookName, bookSlug, chapter, ver
               <button 
                 onClick={async () => {
                   await db.notes.delete(note.id!);
+                  if (session) {
+                    deleteNoteCloud.mutate({ globalOrder, translationSlug });
+                  }
                   toast.success("Reflection deleted");
                   setIsEditingNote(false);
                 }} 
