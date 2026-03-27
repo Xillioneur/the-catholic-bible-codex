@@ -383,7 +383,18 @@ export function SidebarNav() {
 
             {activeTab === "bookmarks" && (
               <div className="space-y-2 mt-4">
-                {bookmarks.length > 0 ? bookmarks.map(b => (
+                {!session ? (
+                  <div className="py-20 text-center flex flex-col items-center gap-3 px-6">
+                    <Bookmark className="h-6 w-6 text-zinc-200" />
+                    <p className="text-[10px] font-medium text-zinc-400">Sign in to save and sync your bookmarks globally.</p>
+                    <button 
+                      onClick={() => signIn("google")}
+                      className="mt-2 px-4 py-2 bg-primary/10 text-primary rounded-full text-[8px] font-black uppercase tracking-widest hover:bg-primary hover:text-white transition-all"
+                    >
+                      Sign In
+                    </button>
+                  </div>
+                ) : bookmarks.length > 0 ? bookmarks.map(b => (
                   <div key={b.id} className="relative group">
                     <button 
                       onClick={() => {
@@ -560,7 +571,15 @@ export function SidebarNav() {
                     </div>
 
                     <button 
-                      onClick={() => signOut()}
+                      onClick={() => {
+                        void signOut();
+                        // Clear local sanctuary on sign out (The Cleansing)
+                        void Promise.all([
+                          db.bookmarks.clear(),
+                          db.highlights.clear(),
+                          db.notes.clear()
+                        ]);
+                      }}
                       className="w-full py-4 rounded-3xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 font-black text-[9px] uppercase tracking-[0.2em] shadow-xl hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2"
                     >
                       <LogOut className="h-3.5 w-3.5" />
