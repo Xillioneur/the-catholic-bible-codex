@@ -224,7 +224,10 @@ exports.Prisma.UserScalarFieldEnum = {
   name: 'name',
   email: 'email',
   emailVerified: 'emailVerified',
-  image: 'image'
+  image: 'image',
+  lastReadOrder: 'lastReadOrder',
+  lastReadTranslation: 'lastReadTranslation',
+  lastReadAt: 'lastReadAt'
 };
 
 exports.Prisma.VerificationTokenScalarFieldEnum = {

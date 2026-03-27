@@ -31,6 +31,8 @@ export interface LocalBookmark {
 export interface LocalHighlight {
   id?: number;
   verseId: string;
+  globalOrder: number;
+  translationSlug: string;
   color: string;
   createdAt: number;
 }
@@ -38,6 +40,8 @@ export interface LocalHighlight {
 export interface LocalNote {
   id?: number;
   verseId: string;
+  globalOrder: number;
+  translationSlug: string;
   content: string;
   createdAt: number;
   updatedAt: number;
@@ -51,11 +55,11 @@ export class VerbumDominiDB extends Dexie {
 
   constructor() {
     super("VerbumDominiDB");
-    this.version(2).stores({
+    this.version(3).stores({
       verses: "id, globalOrder, translationId, [translationId+globalOrder]",
-      bookmarks: "++id, verseId, translationSlug",
-      highlights: "++id, verseId",
-      notes: "++id, verseId",
+      bookmarks: "++id, verseId, translationSlug, [translationSlug+globalOrder]",
+      highlights: "++id, verseId, [translationSlug+globalOrder]",
+      notes: "++id, verseId, [translationSlug+globalOrder]",
     });
   }
 }

@@ -69,7 +69,13 @@ export function VerseOverlay({ verseId, bookId, bookName, bookSlug, chapter, ver
     if (highlight) {
       await db.highlights.delete(highlight.id!);
     } else {
-      await db.highlights.add({ verseId, color, createdAt: Date.now() });
+      await db.highlights.add({ 
+        verseId, 
+        globalOrder, 
+        translationSlug, 
+        color, 
+        createdAt: Date.now() 
+      });
     }
   };
 
@@ -77,7 +83,14 @@ export function VerseOverlay({ verseId, bookId, bookName, bookSlug, chapter, ver
     if (note) {
       await db.notes.update(note.id!, { content: noteContent, updatedAt: Date.now() });
     } else {
-      await db.notes.add({ verseId, content: noteContent, createdAt: Date.now(), updatedAt: Date.now() });
+      await db.notes.add({ 
+        verseId, 
+        globalOrder, 
+        translationSlug, 
+        content: noteContent, 
+        createdAt: Date.now(), 
+        updatedAt: Date.now() 
+      });
     }
     setIsEditingNote(false);
   };

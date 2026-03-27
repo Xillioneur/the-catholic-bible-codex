@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
 
 interface Reading {
   type: string;
@@ -86,76 +87,91 @@ interface ReaderState {
   resetVoiceover: () => void;
 }
 
-export const useReaderStore = create<ReaderState>((set) => ({
-  translationSlug: "drb",
-  setTranslationSlug: (slug) => set({ translationSlug: slug }),
-  currentBookId: null,
-  setCurrentBookId: (id) => set({ currentBookId: id }),
-  currentChapter: null,
-  setCurrentChapter: (chapter) => set({ currentChapter: chapter }),
-  
-  currentOrder: 1,
-  setCurrentOrder: (order) => set({ currentOrder: order }),
-  progress: 0,
-  setProgress: (val) => set({ progress: val }),
-  totalVerseCount: 0,
-  setTotalVerseCount: (count) => set({ totalVerseCount: count }),
+export const useReaderStore = create<ReaderState>()(
+  persist(
+    (set) => ({
+      translationSlug: "drb",
+      setTranslationSlug: (slug) => set({ translationSlug: slug }),
+      currentBookId: null,
+      setCurrentBookId: (id) => set({ currentBookId: id }),
+      currentChapter: null,
+      setCurrentChapter: (chapter) => set({ currentChapter: chapter }),
+      
+      currentOrder: 1,
+      setCurrentOrder: (order) => set({ currentOrder: order }),
+      progress: 0,
+      setProgress: (val) => set({ progress: val }),
+      totalVerseCount: 0,
+      setTotalVerseCount: (count) => set({ totalVerseCount: count }),
 
-  scrollToOrder: null,
-  setScrollToOrder: (order) => set({ scrollToOrder: order }),
-  
-  liturgicalReadings: [],
-  setLiturgicalReadings: (readings) => set({ liturgicalReadings: readings }),
-  liturgicalGuide: null,
-  setLiturgicalGuide: (guide) => set({ liturgicalGuide: guide }),
-  isNavigatorVisible: false,
-  setIsNavigatorVisible: (visible) => set({ isNavigatorVisible: visible }),
-  activeReadingType: null,
-  setActiveReadingType: (type) => set({ activeReadingType: type }),
+      scrollToOrder: null,
+      setScrollToOrder: (order) => set({ scrollToOrder: order }),
+      
+      liturgicalReadings: [],
+      setLiturgicalReadings: (readings) => set({ liturgicalReadings: readings }),
+      liturgicalGuide: null,
+      setLiturgicalGuide: (guide) => set({ liturgicalGuide: guide }),
+      isNavigatorVisible: false,
+      setIsNavigatorVisible: (visible) => set({ isNavigatorVisible: visible }),
+      activeReadingType: null,
+      setActiveReadingType: (type) => set({ activeReadingType: type }),
 
-  isSearchOpen: false,
-  setIsSearchOpen: (open) => set({ isSearchOpen: open }),
-  searchHighlight: null,
-  setSearchHighlight: (highlight) => set({ searchHighlight: highlight }),
+      isSearchOpen: false,
+      setIsSearchOpen: (open) => set({ isSearchOpen: open }),
+      searchHighlight: null,
+      setSearchHighlight: (highlight) => set({ searchHighlight: highlight }),
 
-  isSidebarCollapsed: false,
-  toggleSidebar: () => set((state) => ({ isSidebarCollapsed: !state.isSidebarCollapsed })),
+      isSidebarCollapsed: false,
+      toggleSidebar: () => set((state) => ({ isSidebarCollapsed: !state.isSidebarCollapsed })),
 
-  fontSize: 18,
-  setFontSize: (size) => set({ fontSize: size }),
-  theme: "sanctuary",
-  setTheme: (theme) => set({ theme }),
+      fontSize: 18,
+      setFontSize: (size) => set({ fontSize: size }),
+      theme: "sanctuary",
+      setTheme: (theme) => set({ theme }),
 
-  // VOICEOVER
-  isVoiceoverPlaying: false,
-  setIsVoiceoverPlaying: (playing) => set({ isVoiceoverPlaying: playing }),
-  isVoiceoverActive: false,
-  setIsVoiceoverActive: (active) => set({ isVoiceoverActive: active }),
-  isVoiceoverMinimized: false,
-  setIsVoiceoverMinimized: (minimized) => set({ isVoiceoverMinimized: minimized }),
-  voiceoverSpeed: 1.0,
-  setVoiceoverSpeed: (speed) => set({ voiceoverSpeed: speed }),
-  voiceoverCurrentOrder: null,
-  setVoiceoverCurrentOrder: (order) => set({ voiceoverCurrentOrder: order }),
-  voiceoverCurrentVerse: null,
-  setVoiceoverCurrentVerse: (verse) => set({ voiceoverCurrentVerse: verse }),
-  voiceoverProgress: 0,
-  setVoiceoverProgress: (progress) => set({ voiceoverProgress: progress }),
-  isVoiceoverFollowEnabled: true,
-  setIsVoiceoverFollowEnabled: (enabled) => set({ isVoiceoverFollowEnabled: enabled }),
-  isVoiceoverReadTitlesEnabled: true,
-  setIsVoiceoverReadTitlesEnabled: (enabled) => set({ isVoiceoverReadTitlesEnabled: enabled }),
-  voiceoverVoiceURI: null,
-  setVoiceoverVoiceURI: (uri) => set({ voiceoverVoiceURI: uri }),
-  voiceoverPlaylist: null,
-  setVoiceoverPlaylist: (playlist) => set({ voiceoverPlaylist: playlist }),
-  resetVoiceover: () => set({
-    isVoiceoverPlaying: false,
-    isVoiceoverActive: false,
-    isVoiceoverMinimized: false,
-    voiceoverCurrentVerse: null,
-    voiceoverCurrentOrder: null,
-    voiceoverPlaylist: null,
-    voiceoverProgress: 0,
-  }),
-}));
+      // VOICEOVER
+      isVoiceoverPlaying: false,
+      setIsVoiceoverPlaying: (playing) => set({ isVoiceoverPlaying: playing }),
+      isVoiceoverActive: false,
+      setIsVoiceoverActive: (active) => set({ isVoiceoverActive: active }),
+      isVoiceoverMinimized: false,
+      setIsVoiceoverMinimized: (minimized) => set({ isVoiceoverMinimized: minimized }),
+      voiceoverSpeed: 1.0,
+      setVoiceoverSpeed: (speed) => set({ voiceoverSpeed: speed }),
+      voiceoverCurrentOrder: null,
+      setVoiceoverCurrentOrder: (order) => set({ voiceoverCurrentOrder: order }),
+      voiceoverCurrentVerse: null,
+      setVoiceoverCurrentVerse: (verse) => set({ voiceoverCurrentVerse: verse }),
+      voiceoverProgress: 0,
+      setVoiceoverProgress: (progress) => set({ voiceoverProgress: progress }),
+      isVoiceoverFollowEnabled: true,
+      setIsVoiceoverFollowEnabled: (enabled) => set({ isVoiceoverFollowEnabled: enabled }),
+      isVoiceoverReadTitlesEnabled: true,
+      setIsVoiceoverReadTitlesEnabled: (enabled) => set({ isVoiceoverReadTitlesEnabled: enabled }),
+      voiceoverVoiceURI: null,
+      setVoiceoverVoiceURI: (uri) => set({ voiceoverVoiceURI: uri }),
+      voiceoverPlaylist: null,
+      setVoiceoverPlaylist: (playlist) => set({ voiceoverPlaylist: playlist }),
+      resetVoiceover: () => set({
+        isVoiceoverPlaying: false,
+        isVoiceoverActive: false,
+        isVoiceoverMinimized: false,
+        voiceoverCurrentVerse: null,
+        voiceoverCurrentOrder: null,
+        voiceoverPlaylist: null,
+        voiceoverProgress: 0,
+      }),
+    }),
+    {
+      name: "bible-reader-storage",
+      storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({
+        translationSlug: state.translationSlug,
+        currentOrder: state.currentOrder,
+        fontSize: state.fontSize,
+        theme: state.theme,
+        isSidebarCollapsed: state.isSidebarCollapsed,
+      }),
+    }
+  )
+);

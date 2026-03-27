@@ -68,6 +68,7 @@ model Bookmark {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   verse     Verse    @relation(fields: [verseId], references: [id], onDelete: Cascade)
 
+  @@unique([userId, verseId])
   @@index([userId])
 }
 
@@ -80,6 +81,7 @@ model Highlight {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   verse     Verse    @relation(fields: [verseId], references: [id], onDelete: Cascade)
 
+  @@unique([userId, verseId])
   @@index([userId])
 }
 
@@ -93,6 +95,7 @@ model Note {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   verse     Verse    @relation(fields: [verseId], references: [id], onDelete: Cascade)
 
+  @@unique([userId, verseId])
   @@index([userId])
 }
 
@@ -136,17 +139,20 @@ model Session {
 }
 
 model User {
-  id            String      @id @default(cuid())
-  name          String?
-  email         String?     @unique
-  emailVerified DateTime?
-  image         String?
-  accounts      Account[]
-  bookmarks     Bookmark[]
-  highlights    Highlight[]
-  notes         Note[]
-  posts         Post[]
-  sessions      Session[]
+  id                  String      @id @default(cuid())
+  name                String?
+  email               String?     @unique
+  emailVerified       DateTime?
+  image               String?
+  lastReadOrder       Int         @default(1)
+  lastReadTranslation String      @default("drb")
+  lastReadAt          DateTime    @default(now())
+  accounts            Account[]
+  bookmarks           Bookmark[]
+  highlights          Highlight[]
+  notes               Note[]
+  posts               Post[]
+  sessions            Session[]
 }
 
 model VerificationToken {

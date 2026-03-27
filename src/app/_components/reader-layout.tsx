@@ -6,6 +6,7 @@ import { SearchDialog } from "~/components/search-dialog";
 import { LiturgicalNavigator } from "~/components/liturgical-navigator";
 import { VoiceoverPlayer } from "~/components/voiceover-player";
 import { VoiceoverManager } from "~/components/voiceover-manager";
+import { SyncStatus } from "./sync-status";
 
 export function ReaderLayout() {
   return (
@@ -24,6 +25,7 @@ export function ReaderLayout() {
       <LiturgicalNavigator />
       <VoiceoverPlayer />
       <VoiceoverManager />
+      <SyncStatus />
     </main>
   );
 }

@@ -21,7 +21,14 @@ import {
   Trash2,
   Volume2,
   Headphones,
-  Loader2
+  Loader2,
+  User as UserIcon,
+  LogOut,
+  LogIn,
+  History,
+  BookText,
+  Highlighter,
+  MessageSquare
 } from "lucide-react";
 import { useReaderStore } from "~/hooks/use-reader-store";
 import { cn } from "~/lib/utils";
@@ -31,14 +38,17 @@ import { useLiturgical } from "./liturgical-provider";
 import { DailyAllView } from "./liturgical-full-view";
 import { toast } from "sonner";
 import { useVoiceover } from "~/hooks/use-voiceover";
+import { useSession, signIn, signOut } from "next-auth/react";
 
 export function SidebarNav() {
+  const { data: session } = useSession();
   const { data: books = [] } = api.bible.getBooks.useQuery();
   const { data: translations = [] } = api.bible.getTranslations.useQuery();
   const { info } = useLiturgical();
   const { jumpToOrder, unlockAudio } = useVoiceover();
   
-  const [activeTab, setActiveTab] = useState<"library" | "bookmarks" | "settings" | "daily" | null>(null);
+  const [activeTab, setActiveTab] = useState<"library" | "bookmarks" | "settings" | "daily" | "account" | "journal" | null>(null);
+  const [journalFilter, setJournalFilter] = useState<"notes" | "highlights">("notes");
   const [showFullLiturgical, setShowFullLiturgical] = useState(false);
   const [librarySelectedBook, setLibrarySelectedBook] = useState<any | null>(null);
   const [librarySearch, setLibrarySearch] = useState("");
@@ -66,6 +76,10 @@ export function SidebarNav() {
 
   const bookmarks = useLiveQuery(() => db.bookmarks.reverse().limit(10).toArray()) ?? [];
   const utils = api.useUtils();
+
+  const { data: journal, isLoading: isLoadingJournal } = api.user.getJournal.useQuery(undefined, {
+    enabled: activeTab === "journal" && !!session
+  });
 
   const handleBookSelect = useCallback(async (bookSlug: string, chapter: number = 1) => {
     setActiveTab(null);
@@ -174,8 +188,19 @@ export function SidebarNav() {
 
           <div className="hidden md:block h-px w-6 bg-zinc-200/50 dark:bg-zinc-800/50 my-1 self-center" />
           <RailButton icon={<LibraryIcon className="h-4 w-4" />} active={activeTab === "library"} onClick={() => setActiveTab(activeTab === "library" ? null : "library")} label="Library" />
+          <RailButton icon={<BookText className="h-4 w-4" />} active={activeTab === "journal"} onClick={() => setActiveTab(activeTab === "journal" ? null : "journal")} label="Journal" />
           <RailButton icon={<Bookmark className="h-4 w-4" />} active={activeTab === "bookmarks"} onClick={() => setActiveTab(activeTab === "bookmarks" ? null : "bookmarks")} label="Saved" />
           <RailButton icon={<Settings2 className="h-4 w-4" />} active={activeTab === "settings"} onClick={() => setActiveTab(activeTab === "settings" ? null : "settings")} label="Style" />
+          <RailButton 
+            icon={session?.user?.image ? (
+              <img src={session.user.image} className="h-4 w-4 rounded-full" alt="Profile" />
+            ) : (
+              <UserIcon className="h-4 w-4" />
+            )} 
+            active={activeTab === "account"} 
+            onClick={() => setActiveTab(activeTab === "account" ? null : "account")} 
+            label="Account" 
+          />
 
           <button onClick={toggleSidebar} className="hidden md:flex mt-auto p-2.5 text-zinc-400 hover:text-primary transition-all active:scale-75">
             <ChevronLeft className="h-4 w-4 opacity-50" />
@@ -396,6 +421,93 @@ export function SidebarNav() {
               </div>
             )}
 
+            {activeTab === "journal" && (
+              <div className="mt-4 space-y-4">
+                <div className="flex bg-zinc-100/50 dark:bg-zinc-800/50 p-0.5 rounded-full border border-zinc-200/20">
+                  <button 
+                    onClick={() => setJournalFilter("notes")} 
+                    className={cn(
+                      "flex-1 py-1.5 rounded-full text-[8px] font-black uppercase transition-all flex items-center justify-center gap-2", 
+                      journalFilter === "notes" ? "bg-white dark:bg-zinc-700 text-primary shadow-sm" : "text-zinc-400"
+                    )}
+                  >
+                    <MessageSquare className="h-3 w-3" />
+                    Reflections
+                  </button>
+                  <button 
+                    onClick={() => setJournalFilter("highlights")} 
+                    className={cn(
+                      "flex-1 py-1.5 rounded-full text-[8px] font-black uppercase transition-all flex items-center justify-center gap-2", 
+                      journalFilter === "highlights" ? "bg-white dark:bg-zinc-700 text-primary shadow-sm" : "text-zinc-400"
+                    )}
+                  >
+                    <Highlighter className="h-3 w-3" />
+                    Highlights
+                  </button>
+                </div>
+
+                {!session ? (
+                  <div className="py-20 text-center flex flex-col items-center gap-3 px-6">
+                    <History className="h-6 w-6 text-zinc-200" />
+                    <p className="text-[10px] font-medium text-zinc-400">Sign in to view your global journal across all devices.</p>
+                  </div>
+                ) : isLoadingJournal ? (
+                  <div className="flex justify-center py-20"><Loader2 className="h-6 w-6 text-primary/20 animate-spin" /></div>
+                ) : (
+                  <div className="space-y-3 animate-in fade-in duration-500">
+                    {journalFilter === "notes" ? (
+                      journal?.notes.length === 0 ? (
+                        <div className="py-20 text-center text-[10px] font-black uppercase tracking-widest text-zinc-300">The page is blank</div>
+                      ) : journal?.notes.map(note => (
+                        <button 
+                          key={note.id}
+                          onClick={() => setScrollToOrder(note.verse.globalOrder)}
+                          className="w-full text-left p-4 rounded-[2rem] bg-zinc-50/50 dark:bg-zinc-800/20 border border-zinc-100 dark:border-zinc-800/50 hover:border-primary/20 transition-all"
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-[9px] font-black uppercase tracking-widest text-primary">
+                              {note.verse.book.abbreviation} {note.verse.chapter}:{note.verse.verse}
+                            </span>
+                            <span className="text-[7px] font-bold text-zinc-400">{new Date(note.updatedAt).toLocaleDateString()}</span>
+                          </div>
+                          <p className="text-xs font-serif italic text-zinc-600 dark:text-zinc-400 leading-relaxed line-clamp-3">
+                            {note.content}
+                          </p>
+                        </button>
+                      ))
+                    ) : (
+                      journal?.highlights.length === 0 ? (
+                        <div className="py-20 text-center text-[10px] font-black uppercase tracking-widest text-zinc-300">No illuminations</div>
+                      ) : (
+                        <div className="grid gap-2">
+                          {journal?.highlights.map(h => (
+                            <button 
+                              key={h.id}
+                              onClick={() => setScrollToOrder(h.verse.globalOrder)}
+                              className="w-full text-left p-3 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 flex items-center justify-between group"
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className={cn("h-3 w-3 rounded-full shadow-sm", {
+                                  "bg-yellow-300": h.color === "yellow",
+                                  "bg-blue-300": h.color === "blue",
+                                  "bg-green-300": h.color === "green",
+                                  "bg-red-300": h.color === "red",
+                                })} />
+                                <span className="text-[10px] font-bold text-zinc-900 dark:text-zinc-100">
+                                  {h.verse.book.name} {h.verse.chapter}:{h.verse.verse}
+                                </span>
+                              </div>
+                              <ChevronRight className="h-3 w-3 text-zinc-300 opacity-0 group-hover:opacity-100 transition-all" />
+                            </button>
+                          ))}
+                        </div>
+                      )
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
             {activeTab === "settings" && (
               <div className="space-y-8 mt-6">
                 <div className="space-y-3 px-1">
@@ -406,6 +518,75 @@ export function SidebarNav() {
                     <button onClick={() => setFontSize(fontSize + 1)} className="h-8 w-8 flex items-center justify-center rounded-xl bg-white dark:bg-zinc-700 shadow-sm text-zinc-600"><Plus className="h-3 w-3" /></button>
                   </div>
                 </div>
+              </div>
+            )}
+
+            {activeTab === "account" && (
+              <div className="space-y-6 mt-6">
+                {session ? (
+                  <div className="animate-in fade-in duration-500 space-y-6">
+                    <div className="p-6 rounded-[2.5rem] bg-zinc-50 dark:bg-zinc-800/30 border border-zinc-100/50 dark:border-zinc-800/50 flex flex-col items-center text-center gap-3">
+                      <div className="h-20 w-20 rounded-full border-4 border-white dark:border-zinc-900 shadow-xl overflow-hidden mb-2">
+                        {session.user.image ? (
+                          <img src={session.user.image} className="h-full w-full object-cover" alt={session.user.name ?? ""} />
+                        ) : (
+                          <div className="h-full w-full bg-primary/10 flex items-center justify-center text-primary">
+                            <UserIcon className="h-8 w-8" />
+                          </div>
+                        )}
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-serif font-bold italic text-zinc-900 dark:text-zinc-100 leading-tight">
+                          {session.user.name}
+                        </h3>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mt-1">
+                          {session.user.email}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <span className="text-[8px] font-black uppercase tracking-[0.3em] text-zinc-300 ml-2">Presence Sync</span>
+                      <div className="p-4 rounded-3xl bg-primary/5 border border-primary/10 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <History className="h-4 w-4 text-primary opacity-50" />
+                          <div className="flex flex-col">
+                            <span className="text-[10px] font-bold text-zinc-900 dark:text-zinc-100">Auto-Cloud Sync</span>
+                            <span className="text-[8px] font-medium text-zinc-500">Your progress is secured</span>
+                          </div>
+                        </div>
+                        <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                      </div>
+                    </div>
+
+                    <button 
+                      onClick={() => signOut()}
+                      className="w-full py-4 rounded-3xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 font-black text-[9px] uppercase tracking-[0.2em] shadow-xl hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2"
+                    >
+                      <LogOut className="h-3.5 w-3.5" />
+                      Sign Out
+                    </button>
+                  </div>
+                ) : (
+                  <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 py-10 flex flex-col items-center text-center gap-6">
+                    <div className="h-20 w-20 rounded-full bg-zinc-50 dark:bg-zinc-800/50 flex items-center justify-center border-2 border-zinc-100 dark:border-zinc-800 mb-2">
+                      <UserIcon className="h-8 w-8 text-zinc-300" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-serif font-bold italic text-zinc-900 dark:text-zinc-100 mb-2">Join the Sanctuary</h3>
+                      <p className="text-xs text-zinc-500 leading-relaxed px-6 font-medium">
+                        Sign in to sync your reading progress, bookmarks, and notes across all your devices.
+                      </p>
+                    </div>
+                    <button 
+                      onClick={() => signIn("google")}
+                      className="w-full py-4 rounded-3xl bg-primary text-white font-black text-[9px] uppercase tracking-[0.2em] shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2"
+                    >
+                      <LogIn className="h-3.5 w-3.5" />
+                      Sign In with Google
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>

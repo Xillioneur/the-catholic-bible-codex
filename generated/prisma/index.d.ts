@@ -13103,8 +13103,18 @@ export namespace Prisma {
 
   export type AggregateUser = {
     _count: UserCountAggregateOutputType | null
+    _avg: UserAvgAggregateOutputType | null
+    _sum: UserSumAggregateOutputType | null
     _min: UserMinAggregateOutputType | null
     _max: UserMaxAggregateOutputType | null
+  }
+
+  export type UserAvgAggregateOutputType = {
+    lastReadOrder: number | null
+  }
+
+  export type UserSumAggregateOutputType = {
+    lastReadOrder: number | null
   }
 
   export type UserMinAggregateOutputType = {
@@ -13113,6 +13123,9 @@ export namespace Prisma {
     email: string | null
     emailVerified: Date | null
     image: string | null
+    lastReadOrder: number | null
+    lastReadTranslation: string | null
+    lastReadAt: Date | null
   }
 
   export type UserMaxAggregateOutputType = {
@@ -13121,6 +13134,9 @@ export namespace Prisma {
     email: string | null
     emailVerified: Date | null
     image: string | null
+    lastReadOrder: number | null
+    lastReadTranslation: string | null
+    lastReadAt: Date | null
   }
 
   export type UserCountAggregateOutputType = {
@@ -13129,9 +13145,20 @@ export namespace Prisma {
     email: number
     emailVerified: number
     image: number
+    lastReadOrder: number
+    lastReadTranslation: number
+    lastReadAt: number
     _all: number
   }
 
+
+  export type UserAvgAggregateInputType = {
+    lastReadOrder?: true
+  }
+
+  export type UserSumAggregateInputType = {
+    lastReadOrder?: true
+  }
 
   export type UserMinAggregateInputType = {
     id?: true
@@ -13139,6 +13166,9 @@ export namespace Prisma {
     email?: true
     emailVerified?: true
     image?: true
+    lastReadOrder?: true
+    lastReadTranslation?: true
+    lastReadAt?: true
   }
 
   export type UserMaxAggregateInputType = {
@@ -13147,6 +13177,9 @@ export namespace Prisma {
     email?: true
     emailVerified?: true
     image?: true
+    lastReadOrder?: true
+    lastReadTranslation?: true
+    lastReadAt?: true
   }
 
   export type UserCountAggregateInputType = {
@@ -13155,6 +13188,9 @@ export namespace Prisma {
     email?: true
     emailVerified?: true
     image?: true
+    lastReadOrder?: true
+    lastReadTranslation?: true
+    lastReadAt?: true
     _all?: true
   }
 
@@ -13196,6 +13232,18 @@ export namespace Prisma {
     /**
      * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
      * 
+     * Select which fields to average
+    **/
+    _avg?: UserAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: UserSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
      * Select which fields to find the minimum value
     **/
     _min?: UserMinAggregateInputType
@@ -13226,6 +13274,8 @@ export namespace Prisma {
     take?: number
     skip?: number
     _count?: UserCountAggregateInputType | true
+    _avg?: UserAvgAggregateInputType
+    _sum?: UserSumAggregateInputType
     _min?: UserMinAggregateInputType
     _max?: UserMaxAggregateInputType
   }
@@ -13236,7 +13286,12 @@ export namespace Prisma {
     email: string | null
     emailVerified: Date | null
     image: string | null
+    lastReadOrder: number
+    lastReadTranslation: string
+    lastReadAt: Date
     _count: UserCountAggregateOutputType | null
+    _avg: UserAvgAggregateOutputType | null
+    _sum: UserSumAggregateOutputType | null
     _min: UserMinAggregateOutputType | null
     _max: UserMaxAggregateOutputType | null
   }
@@ -13261,6 +13316,9 @@ export namespace Prisma {
     email?: boolean
     emailVerified?: boolean
     image?: boolean
+    lastReadOrder?: boolean
+    lastReadTranslation?: boolean
+    lastReadAt?: boolean
     accounts?: boolean | User$accountsArgs<ExtArgs>
     bookmarks?: boolean | User$bookmarksArgs<ExtArgs>
     highlights?: boolean | User$highlightsArgs<ExtArgs>
@@ -13276,6 +13334,9 @@ export namespace Prisma {
     email?: boolean
     emailVerified?: boolean
     image?: boolean
+    lastReadOrder?: boolean
+    lastReadTranslation?: boolean
+    lastReadAt?: boolean
   }, ExtArgs["result"]["user"]>
 
   export type UserSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -13284,6 +13345,9 @@ export namespace Prisma {
     email?: boolean
     emailVerified?: boolean
     image?: boolean
+    lastReadOrder?: boolean
+    lastReadTranslation?: boolean
+    lastReadAt?: boolean
   }, ExtArgs["result"]["user"]>
 
   export type UserSelectScalar = {
@@ -13292,9 +13356,12 @@ export namespace Prisma {
     email?: boolean
     emailVerified?: boolean
     image?: boolean
+    lastReadOrder?: boolean
+    lastReadTranslation?: boolean
+    lastReadAt?: boolean
   }
 
-  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "email" | "emailVerified" | "image", ExtArgs["result"]["user"]>
+  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "email" | "emailVerified" | "image" | "lastReadOrder" | "lastReadTranslation" | "lastReadAt", ExtArgs["result"]["user"]>
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     accounts?: boolean | User$accountsArgs<ExtArgs>
     bookmarks?: boolean | User$bookmarksArgs<ExtArgs>
@@ -13323,6 +13390,9 @@ export namespace Prisma {
       email: string | null
       emailVerified: Date | null
       image: string | null
+      lastReadOrder: number
+      lastReadTranslation: string
+      lastReadAt: Date
     }, ExtArgs["result"]["user"]>
     composites: {}
   }
@@ -13757,6 +13827,9 @@ export namespace Prisma {
     readonly email: FieldRef<"User", 'String'>
     readonly emailVerified: FieldRef<"User", 'DateTime'>
     readonly image: FieldRef<"User", 'String'>
+    readonly lastReadOrder: FieldRef<"User", 'Int'>
+    readonly lastReadTranslation: FieldRef<"User", 'String'>
+    readonly lastReadAt: FieldRef<"User", 'DateTime'>
   }
     
 
@@ -15423,7 +15496,10 @@ export namespace Prisma {
     name: 'name',
     email: 'email',
     emailVerified: 'emailVerified',
-    image: 'image'
+    image: 'image',
+    lastReadOrder: 'lastReadOrder',
+    lastReadTranslation: 'lastReadTranslation',
+    lastReadAt: 'lastReadAt'
   };
 
   export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
@@ -15830,6 +15906,7 @@ export namespace Prisma {
 
   export type BookmarkWhereUniqueInput = Prisma.AtLeast<{
     id?: string
+    userId_verseId?: BookmarkUserIdVerseIdCompoundUniqueInput
     AND?: BookmarkWhereInput | BookmarkWhereInput[]
     OR?: BookmarkWhereInput[]
     NOT?: BookmarkWhereInput | BookmarkWhereInput[]
@@ -15838,7 +15915,7 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"Bookmark"> | Date | string
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
     verse?: XOR<VerseScalarRelationFilter, VerseWhereInput>
-  }, "id">
+  }, "id" | "userId_verseId">
 
   export type BookmarkOrderByWithAggregationInput = {
     id?: SortOrder
@@ -15885,6 +15962,7 @@ export namespace Prisma {
 
   export type HighlightWhereUniqueInput = Prisma.AtLeast<{
     id?: string
+    userId_verseId?: HighlightUserIdVerseIdCompoundUniqueInput
     AND?: HighlightWhereInput | HighlightWhereInput[]
     OR?: HighlightWhereInput[]
     NOT?: HighlightWhereInput | HighlightWhereInput[]
@@ -15894,7 +15972,7 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"Highlight"> | Date | string
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
     verse?: XOR<VerseScalarRelationFilter, VerseWhereInput>
-  }, "id">
+  }, "id" | "userId_verseId">
 
   export type HighlightOrderByWithAggregationInput = {
     id?: SortOrder
@@ -15945,6 +16023,7 @@ export namespace Prisma {
 
   export type NoteWhereUniqueInput = Prisma.AtLeast<{
     id?: string
+    userId_verseId?: NoteUserIdVerseIdCompoundUniqueInput
     AND?: NoteWhereInput | NoteWhereInput[]
     OR?: NoteWhereInput[]
     NOT?: NoteWhereInput | NoteWhereInput[]
@@ -15955,7 +16034,7 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"Note"> | Date | string
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
     verse?: XOR<VerseScalarRelationFilter, VerseWhereInput>
-  }, "id">
+  }, "id" | "userId_verseId">
 
   export type NoteOrderByWithAggregationInput = {
     id?: SortOrder
@@ -16210,6 +16289,9 @@ export namespace Prisma {
     email?: StringNullableFilter<"User"> | string | null
     emailVerified?: DateTimeNullableFilter<"User"> | Date | string | null
     image?: StringNullableFilter<"User"> | string | null
+    lastReadOrder?: IntFilter<"User"> | number
+    lastReadTranslation?: StringFilter<"User"> | string
+    lastReadAt?: DateTimeFilter<"User"> | Date | string
     accounts?: AccountListRelationFilter
     bookmarks?: BookmarkListRelationFilter
     highlights?: HighlightListRelationFilter
@@ -16224,6 +16306,9 @@ export namespace Prisma {
     email?: SortOrderInput | SortOrder
     emailVerified?: SortOrderInput | SortOrder
     image?: SortOrderInput | SortOrder
+    lastReadOrder?: SortOrder
+    lastReadTranslation?: SortOrder
+    lastReadAt?: SortOrder
     accounts?: AccountOrderByRelationAggregateInput
     bookmarks?: BookmarkOrderByRelationAggregateInput
     highlights?: HighlightOrderByRelationAggregateInput
@@ -16241,6 +16326,9 @@ export namespace Prisma {
     name?: StringNullableFilter<"User"> | string | null
     emailVerified?: DateTimeNullableFilter<"User"> | Date | string | null
     image?: StringNullableFilter<"User"> | string | null
+    lastReadOrder?: IntFilter<"User"> | number
+    lastReadTranslation?: StringFilter<"User"> | string
+    lastReadAt?: DateTimeFilter<"User"> | Date | string
     accounts?: AccountListRelationFilter
     bookmarks?: BookmarkListRelationFilter
     highlights?: HighlightListRelationFilter
@@ -16255,9 +16343,14 @@ export namespace Prisma {
     email?: SortOrderInput | SortOrder
     emailVerified?: SortOrderInput | SortOrder
     image?: SortOrderInput | SortOrder
+    lastReadOrder?: SortOrder
+    lastReadTranslation?: SortOrder
+    lastReadAt?: SortOrder
     _count?: UserCountOrderByAggregateInput
+    _avg?: UserAvgOrderByAggregateInput
     _max?: UserMaxOrderByAggregateInput
     _min?: UserMinOrderByAggregateInput
+    _sum?: UserSumOrderByAggregateInput
   }
 
   export type UserScalarWhereWithAggregatesInput = {
@@ -16269,6 +16362,9 @@ export namespace Prisma {
     email?: StringNullableWithAggregatesFilter<"User"> | string | null
     emailVerified?: DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
     image?: StringNullableWithAggregatesFilter<"User"> | string | null
+    lastReadOrder?: IntWithAggregatesFilter<"User"> | number
+    lastReadTranslation?: StringWithAggregatesFilter<"User"> | string
+    lastReadAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
   }
 
   export type VerificationTokenWhereInput = {
@@ -17012,6 +17108,9 @@ export namespace Prisma {
     email?: string | null
     emailVerified?: Date | string | null
     image?: string | null
+    lastReadOrder?: number
+    lastReadTranslation?: string
+    lastReadAt?: Date | string
     accounts?: AccountCreateNestedManyWithoutUserInput
     bookmarks?: BookmarkCreateNestedManyWithoutUserInput
     highlights?: HighlightCreateNestedManyWithoutUserInput
@@ -17026,6 +17125,9 @@ export namespace Prisma {
     email?: string | null
     emailVerified?: Date | string | null
     image?: string | null
+    lastReadOrder?: number
+    lastReadTranslation?: string
+    lastReadAt?: Date | string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
     bookmarks?: BookmarkUncheckedCreateNestedManyWithoutUserInput
     highlights?: HighlightUncheckedCreateNestedManyWithoutUserInput
@@ -17040,6 +17142,9 @@ export namespace Prisma {
     email?: NullableStringFieldUpdateOperationsInput | string | null
     emailVerified?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     image?: NullableStringFieldUpdateOperationsInput | string | null
+    lastReadOrder?: IntFieldUpdateOperationsInput | number
+    lastReadTranslation?: StringFieldUpdateOperationsInput | string
+    lastReadAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
     bookmarks?: BookmarkUpdateManyWithoutUserNestedInput
     highlights?: HighlightUpdateManyWithoutUserNestedInput
@@ -17054,6 +17159,9 @@ export namespace Prisma {
     email?: NullableStringFieldUpdateOperationsInput | string | null
     emailVerified?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     image?: NullableStringFieldUpdateOperationsInput | string | null
+    lastReadOrder?: IntFieldUpdateOperationsInput | number
+    lastReadTranslation?: StringFieldUpdateOperationsInput | string
+    lastReadAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
     bookmarks?: BookmarkUncheckedUpdateManyWithoutUserNestedInput
     highlights?: HighlightUncheckedUpdateManyWithoutUserNestedInput
@@ -17068,6 +17176,9 @@ export namespace Prisma {
     email?: string | null
     emailVerified?: Date | string | null
     image?: string | null
+    lastReadOrder?: number
+    lastReadTranslation?: string
+    lastReadAt?: Date | string
   }
 
   export type UserUpdateManyMutationInput = {
@@ -17076,6 +17187,9 @@ export namespace Prisma {
     email?: NullableStringFieldUpdateOperationsInput | string | null
     emailVerified?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     image?: NullableStringFieldUpdateOperationsInput | string | null
+    lastReadOrder?: IntFieldUpdateOperationsInput | number
+    lastReadTranslation?: StringFieldUpdateOperationsInput | string
+    lastReadAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type UserUncheckedUpdateManyInput = {
@@ -17084,6 +17198,9 @@ export namespace Prisma {
     email?: NullableStringFieldUpdateOperationsInput | string | null
     emailVerified?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     image?: NullableStringFieldUpdateOperationsInput | string | null
+    lastReadOrder?: IntFieldUpdateOperationsInput | number
+    lastReadTranslation?: StringFieldUpdateOperationsInput | string
+    lastReadAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type VerificationTokenCreateInput = {
@@ -17442,6 +17559,11 @@ export namespace Prisma {
     isNot?: VerseWhereInput
   }
 
+  export type BookmarkUserIdVerseIdCompoundUniqueInput = {
+    userId: string
+    verseId: string
+  }
+
   export type BookmarkCountOrderByAggregateInput = {
     id?: SortOrder
     userId?: SortOrder
@@ -17461,6 +17583,11 @@ export namespace Prisma {
     userId?: SortOrder
     verseId?: SortOrder
     createdAt?: SortOrder
+  }
+
+  export type HighlightUserIdVerseIdCompoundUniqueInput = {
+    userId: string
+    verseId: string
   }
 
   export type HighlightCountOrderByAggregateInput = {
@@ -17485,6 +17612,11 @@ export namespace Prisma {
     verseId?: SortOrder
     color?: SortOrder
     createdAt?: SortOrder
+  }
+
+  export type NoteUserIdVerseIdCompoundUniqueInput = {
+    userId: string
+    verseId: string
   }
 
   export type NoteCountOrderByAggregateInput = {
@@ -17746,6 +17878,13 @@ export namespace Prisma {
     email?: SortOrder
     emailVerified?: SortOrder
     image?: SortOrder
+    lastReadOrder?: SortOrder
+    lastReadTranslation?: SortOrder
+    lastReadAt?: SortOrder
+  }
+
+  export type UserAvgOrderByAggregateInput = {
+    lastReadOrder?: SortOrder
   }
 
   export type UserMaxOrderByAggregateInput = {
@@ -17754,6 +17893,9 @@ export namespace Prisma {
     email?: SortOrder
     emailVerified?: SortOrder
     image?: SortOrder
+    lastReadOrder?: SortOrder
+    lastReadTranslation?: SortOrder
+    lastReadAt?: SortOrder
   }
 
   export type UserMinOrderByAggregateInput = {
@@ -17762,6 +17904,13 @@ export namespace Prisma {
     email?: SortOrder
     emailVerified?: SortOrder
     image?: SortOrder
+    lastReadOrder?: SortOrder
+    lastReadTranslation?: SortOrder
+    lastReadAt?: SortOrder
+  }
+
+  export type UserSumOrderByAggregateInput = {
+    lastReadOrder?: SortOrder
   }
 
   export type DateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -18660,6 +18809,9 @@ export namespace Prisma {
     email?: string | null
     emailVerified?: Date | string | null
     image?: string | null
+    lastReadOrder?: number
+    lastReadTranslation?: string
+    lastReadAt?: Date | string
     accounts?: AccountCreateNestedManyWithoutUserInput
     bookmarks?: BookmarkCreateNestedManyWithoutUserInput
     highlights?: HighlightCreateNestedManyWithoutUserInput
@@ -18673,6 +18825,9 @@ export namespace Prisma {
     email?: string | null
     emailVerified?: Date | string | null
     image?: string | null
+    lastReadOrder?: number
+    lastReadTranslation?: string
+    lastReadAt?: Date | string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
     bookmarks?: BookmarkUncheckedCreateNestedManyWithoutUserInput
     highlights?: HighlightUncheckedCreateNestedManyWithoutUserInput
@@ -18702,6 +18857,9 @@ export namespace Prisma {
     email?: NullableStringFieldUpdateOperationsInput | string | null
     emailVerified?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     image?: NullableStringFieldUpdateOperationsInput | string | null
+    lastReadOrder?: IntFieldUpdateOperationsInput | number
+    lastReadTranslation?: StringFieldUpdateOperationsInput | string
+    lastReadAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
     bookmarks?: BookmarkUpdateManyWithoutUserNestedInput
     highlights?: HighlightUpdateManyWithoutUserNestedInput
@@ -18715,6 +18873,9 @@ export namespace Prisma {
     email?: NullableStringFieldUpdateOperationsInput | string | null
     emailVerified?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     image?: NullableStringFieldUpdateOperationsInput | string | null
+    lastReadOrder?: IntFieldUpdateOperationsInput | number
+    lastReadTranslation?: StringFieldUpdateOperationsInput | string
+    lastReadAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
     bookmarks?: BookmarkUncheckedUpdateManyWithoutUserNestedInput
     highlights?: HighlightUncheckedUpdateManyWithoutUserNestedInput
@@ -19110,6 +19271,9 @@ export namespace Prisma {
     email?: string | null
     emailVerified?: Date | string | null
     image?: string | null
+    lastReadOrder?: number
+    lastReadTranslation?: string
+    lastReadAt?: Date | string
     accounts?: AccountCreateNestedManyWithoutUserInput
     highlights?: HighlightCreateNestedManyWithoutUserInput
     notes?: NoteCreateNestedManyWithoutUserInput
@@ -19123,6 +19287,9 @@ export namespace Prisma {
     email?: string | null
     emailVerified?: Date | string | null
     image?: string | null
+    lastReadOrder?: number
+    lastReadTranslation?: string
+    lastReadAt?: Date | string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
     highlights?: HighlightUncheckedCreateNestedManyWithoutUserInput
     notes?: NoteUncheckedCreateNestedManyWithoutUserInput
@@ -19181,6 +19348,9 @@ export namespace Prisma {
     email?: NullableStringFieldUpdateOperationsInput | string | null
     emailVerified?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     image?: NullableStringFieldUpdateOperationsInput | string | null
+    lastReadOrder?: IntFieldUpdateOperationsInput | number
+    lastReadTranslation?: StringFieldUpdateOperationsInput | string
+    lastReadAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
     highlights?: HighlightUpdateManyWithoutUserNestedInput
     notes?: NoteUpdateManyWithoutUserNestedInput
@@ -19194,6 +19364,9 @@ export namespace Prisma {
     email?: NullableStringFieldUpdateOperationsInput | string | null
     emailVerified?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     image?: NullableStringFieldUpdateOperationsInput | string | null
+    lastReadOrder?: IntFieldUpdateOperationsInput | number
+    lastReadTranslation?: StringFieldUpdateOperationsInput | string
+    lastReadAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
     highlights?: HighlightUncheckedUpdateManyWithoutUserNestedInput
     notes?: NoteUncheckedUpdateManyWithoutUserNestedInput
@@ -19242,6 +19415,9 @@ export namespace Prisma {
     email?: string | null
     emailVerified?: Date | string | null
     image?: string | null
+    lastReadOrder?: number
+    lastReadTranslation?: string
+    lastReadAt?: Date | string
     accounts?: AccountCreateNestedManyWithoutUserInput
     bookmarks?: BookmarkCreateNestedManyWithoutUserInput
     notes?: NoteCreateNestedManyWithoutUserInput
@@ -19255,6 +19431,9 @@ export namespace Prisma {
     email?: string | null
     emailVerified?: Date | string | null
     image?: string | null
+    lastReadOrder?: number
+    lastReadTranslation?: string
+    lastReadAt?: Date | string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
     bookmarks?: BookmarkUncheckedCreateNestedManyWithoutUserInput
     notes?: NoteUncheckedCreateNestedManyWithoutUserInput
@@ -19313,6 +19492,9 @@ export namespace Prisma {
     email?: NullableStringFieldUpdateOperationsInput | string | null
     emailVerified?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     image?: NullableStringFieldUpdateOperationsInput | string | null
+    lastReadOrder?: IntFieldUpdateOperationsInput | number
+    lastReadTranslation?: StringFieldUpdateOperationsInput | string
+    lastReadAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
     bookmarks?: BookmarkUpdateManyWithoutUserNestedInput
     notes?: NoteUpdateManyWithoutUserNestedInput
@@ -19326,6 +19508,9 @@ export namespace Prisma {
     email?: NullableStringFieldUpdateOperationsInput | string | null
     emailVerified?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     image?: NullableStringFieldUpdateOperationsInput | string | null
+    lastReadOrder?: IntFieldUpdateOperationsInput | number
+    lastReadTranslation?: StringFieldUpdateOperationsInput | string
+    lastReadAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
     bookmarks?: BookmarkUncheckedUpdateManyWithoutUserNestedInput
     notes?: NoteUncheckedUpdateManyWithoutUserNestedInput
@@ -19374,6 +19559,9 @@ export namespace Prisma {
     email?: string | null
     emailVerified?: Date | string | null
     image?: string | null
+    lastReadOrder?: number
+    lastReadTranslation?: string
+    lastReadAt?: Date | string
     accounts?: AccountCreateNestedManyWithoutUserInput
     bookmarks?: BookmarkCreateNestedManyWithoutUserInput
     highlights?: HighlightCreateNestedManyWithoutUserInput
@@ -19387,6 +19575,9 @@ export namespace Prisma {
     email?: string | null
     emailVerified?: Date | string | null
     image?: string | null
+    lastReadOrder?: number
+    lastReadTranslation?: string
+    lastReadAt?: Date | string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
     bookmarks?: BookmarkUncheckedCreateNestedManyWithoutUserInput
     highlights?: HighlightUncheckedCreateNestedManyWithoutUserInput
@@ -19445,6 +19636,9 @@ export namespace Prisma {
     email?: NullableStringFieldUpdateOperationsInput | string | null
     emailVerified?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     image?: NullableStringFieldUpdateOperationsInput | string | null
+    lastReadOrder?: IntFieldUpdateOperationsInput | number
+    lastReadTranslation?: StringFieldUpdateOperationsInput | string
+    lastReadAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
     bookmarks?: BookmarkUpdateManyWithoutUserNestedInput
     highlights?: HighlightUpdateManyWithoutUserNestedInput
@@ -19458,6 +19652,9 @@ export namespace Prisma {
     email?: NullableStringFieldUpdateOperationsInput | string | null
     emailVerified?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     image?: NullableStringFieldUpdateOperationsInput | string | null
+    lastReadOrder?: IntFieldUpdateOperationsInput | number
+    lastReadTranslation?: StringFieldUpdateOperationsInput | string
+    lastReadAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
     bookmarks?: BookmarkUncheckedUpdateManyWithoutUserNestedInput
     highlights?: HighlightUncheckedUpdateManyWithoutUserNestedInput
@@ -19506,6 +19703,9 @@ export namespace Prisma {
     email?: string | null
     emailVerified?: Date | string | null
     image?: string | null
+    lastReadOrder?: number
+    lastReadTranslation?: string
+    lastReadAt?: Date | string
     bookmarks?: BookmarkCreateNestedManyWithoutUserInput
     highlights?: HighlightCreateNestedManyWithoutUserInput
     notes?: NoteCreateNestedManyWithoutUserInput
@@ -19519,6 +19719,9 @@ export namespace Prisma {
     email?: string | null
     emailVerified?: Date | string | null
     image?: string | null
+    lastReadOrder?: number
+    lastReadTranslation?: string
+    lastReadAt?: Date | string
     bookmarks?: BookmarkUncheckedCreateNestedManyWithoutUserInput
     highlights?: HighlightUncheckedCreateNestedManyWithoutUserInput
     notes?: NoteUncheckedCreateNestedManyWithoutUserInput
@@ -19548,6 +19751,9 @@ export namespace Prisma {
     email?: NullableStringFieldUpdateOperationsInput | string | null
     emailVerified?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     image?: NullableStringFieldUpdateOperationsInput | string | null
+    lastReadOrder?: IntFieldUpdateOperationsInput | number
+    lastReadTranslation?: StringFieldUpdateOperationsInput | string
+    lastReadAt?: DateTimeFieldUpdateOperationsInput | Date | string
     bookmarks?: BookmarkUpdateManyWithoutUserNestedInput
     highlights?: HighlightUpdateManyWithoutUserNestedInput
     notes?: NoteUpdateManyWithoutUserNestedInput
@@ -19561,6 +19767,9 @@ export namespace Prisma {
     email?: NullableStringFieldUpdateOperationsInput | string | null
     emailVerified?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     image?: NullableStringFieldUpdateOperationsInput | string | null
+    lastReadOrder?: IntFieldUpdateOperationsInput | number
+    lastReadTranslation?: StringFieldUpdateOperationsInput | string
+    lastReadAt?: DateTimeFieldUpdateOperationsInput | Date | string
     bookmarks?: BookmarkUncheckedUpdateManyWithoutUserNestedInput
     highlights?: HighlightUncheckedUpdateManyWithoutUserNestedInput
     notes?: NoteUncheckedUpdateManyWithoutUserNestedInput
@@ -19574,6 +19783,9 @@ export namespace Prisma {
     email?: string | null
     emailVerified?: Date | string | null
     image?: string | null
+    lastReadOrder?: number
+    lastReadTranslation?: string
+    lastReadAt?: Date | string
     accounts?: AccountCreateNestedManyWithoutUserInput
     bookmarks?: BookmarkCreateNestedManyWithoutUserInput
     highlights?: HighlightCreateNestedManyWithoutUserInput
@@ -19587,6 +19799,9 @@ export namespace Prisma {
     email?: string | null
     emailVerified?: Date | string | null
     image?: string | null
+    lastReadOrder?: number
+    lastReadTranslation?: string
+    lastReadAt?: Date | string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
     bookmarks?: BookmarkUncheckedCreateNestedManyWithoutUserInput
     highlights?: HighlightUncheckedCreateNestedManyWithoutUserInput
@@ -19616,6 +19831,9 @@ export namespace Prisma {
     email?: NullableStringFieldUpdateOperationsInput | string | null
     emailVerified?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     image?: NullableStringFieldUpdateOperationsInput | string | null
+    lastReadOrder?: IntFieldUpdateOperationsInput | number
+    lastReadTranslation?: StringFieldUpdateOperationsInput | string
+    lastReadAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
     bookmarks?: BookmarkUpdateManyWithoutUserNestedInput
     highlights?: HighlightUpdateManyWithoutUserNestedInput
@@ -19629,6 +19847,9 @@ export namespace Prisma {
     email?: NullableStringFieldUpdateOperationsInput | string | null
     emailVerified?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     image?: NullableStringFieldUpdateOperationsInput | string | null
+    lastReadOrder?: IntFieldUpdateOperationsInput | number
+    lastReadTranslation?: StringFieldUpdateOperationsInput | string
+    lastReadAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
     bookmarks?: BookmarkUncheckedUpdateManyWithoutUserNestedInput
     highlights?: HighlightUncheckedUpdateManyWithoutUserNestedInput

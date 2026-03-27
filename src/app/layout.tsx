@@ -2,11 +2,13 @@ import "~/styles/globals.css";
 
 import { type Metadata } from "next";
 import { Geist, Ibarra_Real_Nova } from "next/font/google";
+import { SessionProvider } from "next-auth/react";
 
 import { TRPCReactProvider } from "~/trpc/react";
 import { LiturgicalProvider } from "~/components/liturgical-provider";
 import { Toaster } from "~/components/ui/sonner";
 import { Analytics } from "@vercel/analytics/next";
+import { ProgressSyncer } from "./_components/progress-syncer";
 
 export const metadata: Metadata = {
   title: "The Catholic Bible Codex – Read, Study, and Pray with the Full Catholic Bible",
@@ -51,13 +53,16 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${geist.variable} ${ibarra.variable}`} suppressHydrationWarning>
       <body suppressHydrationWarning>
-        <TRPCReactProvider>
-          <LiturgicalProvider>
-            {children}
-            <Toaster position="top-center" richColors />
-            <Analytics />
-          </LiturgicalProvider>
-        </TRPCReactProvider>
+        <SessionProvider>
+          <TRPCReactProvider>
+            <LiturgicalProvider>
+              {children}
+              <ProgressSyncer />
+              <Toaster position="top-center" richColors />
+              <Analytics />
+            </LiturgicalProvider>
+          </TRPCReactProvider>
+        </SessionProvider>
       </body>
     </html>
   );
