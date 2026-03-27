@@ -64,12 +64,12 @@ export function SyncStatus() {
         {session ? (
           <div className="flex items-center gap-2">
             <Cloud className="h-3 w-3 text-primary opacity-60" />
-            <span className="text-[7px] font-black uppercase tracking-tighter text-zinc-500">Cloud Active</span>
+            <span className="text-[7px] font-black uppercase tracking-tighter text-zinc-500">Cloud Sanctuary</span>
           </div>
         ) : (
           <div className="flex items-center gap-2">
-            <CloudOff className="h-3 w-3 text-zinc-300" />
-            <span className="text-[7px] font-black uppercase tracking-tighter text-zinc-300">Guest Mode</span>
+            <div className="h-1.5 w-1.5 rounded-full bg-primary/40" />
+            <span className="text-[7px] font-black uppercase tracking-tighter text-zinc-500">Local Sanctuary</span>
           </div>
         )}
       </div>

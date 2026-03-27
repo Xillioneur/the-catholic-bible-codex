@@ -19,6 +19,7 @@ export interface LocalVerse {
 
 export interface LocalBookmark {
   id?: number;
+  userId: string; // "guest" or real userId
   verseId: string;
   bookId: number;
   chapter: number;
@@ -30,6 +31,7 @@ export interface LocalBookmark {
 
 export interface LocalHighlight {
   id?: number;
+  userId: string; // "guest" or real userId
   verseId: string;
   globalOrder: number;
   translationSlug: string;
@@ -39,6 +41,7 @@ export interface LocalHighlight {
 
 export interface LocalNote {
   id?: number;
+  userId: string; // "guest" or real userId
   verseId: string;
   globalOrder: number;
   translationSlug: string;
@@ -55,11 +58,12 @@ export class VerbumDominiDB extends Dexie {
 
   constructor() {
     super("VerbumDominiDB");
-    this.version(3).stores({
+    // Version 4: Data Separation by userId
+    this.version(4).stores({
       verses: "id, globalOrder, translationId, [translationId+globalOrder]",
-      bookmarks: "++id, verseId, translationSlug, [translationSlug+globalOrder]",
-      highlights: "++id, verseId, [translationSlug+globalOrder]",
-      notes: "++id, verseId, [translationSlug+globalOrder]",
+      bookmarks: "++id, userId, verseId, translationSlug, [userId+verseId], [userId+translationSlug+globalOrder]",
+      highlights: "++id, userId, verseId, [userId+verseId], [userId+translationSlug+globalOrder]",
+      notes: "++id, userId, verseId, [userId+verseId], [userId+translationSlug+globalOrder]",
     });
   }
 }

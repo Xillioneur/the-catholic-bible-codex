@@ -9,6 +9,8 @@ import { db } from "~/lib/db";
 
 export function ProgressSyncer() {
   const { data: session } = useSession();
+  const currentUserId = session?.user?.id ?? "guest";
+  
   const currentOrder = useReaderStore((state) => state.currentOrder);
   const translationSlug = useReaderStore((state) => state.translationSlug);
   const setScrollToOrder = useReaderStore((state) => state.setScrollToOrder);
@@ -43,12 +45,18 @@ export function ProgressSyncer() {
     enabled: !!session,
   });
 
-  const localHighlights = useLiveQuery(() => db.highlights.toArray());
-  const localNotes = useLiveQuery(() => db.notes.toArray());
-  const localBookmarks = useLiveQuery(() => db.bookmarks.toArray());
+  const localHighlights = useLiveQuery(() => db.highlights.where("userId").equals(currentUserId).toArray(), [currentUserId]);
+  const localNotes = useLiveQuery(() => db.notes.where("userId").equals(currentUserId).toArray(), [currentUserId]);
+  const localBookmarks = useLiveQuery(() => db.bookmarks.where("userId").equals(currentUserId).toArray(), [currentUserId]);
 
   const hasInitialSync = useRef(false);
   const hasPulledCloudData = useRef(false);
+
+  // Reset sync flags when user changes
+  useEffect(() => {
+    hasInitialSync.current = false;
+    hasPulledCloudData.current = false;
+  }, [currentUserId]);
 
   // Initial Sync from DB to LocalStore (Progress only)
   useEffect(() => {
@@ -67,13 +75,14 @@ export function ProgressSyncer() {
 
   // Initial Pull from Cloud to Dexie (The Great Restoration)
   useEffect(() => {
-    if (cloudData && !hasPulledCloudData.current) {
-      console.log("[SYNC] Cloud data loaded, starting restoration...", cloudData);
+    if (cloudData && session && !hasPulledCloudData.current) {
+      console.log("[SYNC] Cloud data loaded, starting restoration for user:", session.user.id);
       const restoreData = async () => {
         try {
+          const userId = session.user.id;
+
           // RESTORE NOTES
           for (const n of cloudData.notes) {
-            // Find local verse ID for this globalOrder/translation
             const localVerse = await db.verses
               .where("[translationId+globalOrder]")
               .equals([n.verse.translation.slug, n.verse.globalOrder])
@@ -81,12 +90,13 @@ export function ProgressSyncer() {
             
             if (!localVerse) continue;
 
-            const exists = await db.notes.where("[translationSlug+globalOrder]")
-              .equals([localVerse.translationId, localVerse.globalOrder])
+            const exists = await db.notes.where("[userId+verseId]")
+              .equals([userId, localVerse.id])
               .first();
             
             if (!exists) {
               await db.notes.add({
+                userId,
                 verseId: localVerse.id,
                 globalOrder: localVerse.globalOrder,
                 translationSlug: localVerse.translationId,
@@ -106,12 +116,13 @@ export function ProgressSyncer() {
             
             if (!localVerse) continue;
 
-            const exists = await db.highlights.where("[translationSlug+globalOrder]")
-              .equals([localVerse.translationId, localVerse.globalOrder])
+            const exists = await db.highlights.where("[userId+verseId]")
+              .equals([userId, localVerse.id])
               .first();
             
             if (!exists) {
               await db.highlights.add({
+                userId,
                 verseId: localVerse.id,
                 globalOrder: localVerse.globalOrder,
                 translationSlug: localVerse.translationId,
@@ -130,12 +141,13 @@ export function ProgressSyncer() {
             
             if (!localVerse) continue;
 
-            const exists = await db.bookmarks.where("[translationSlug+globalOrder]")
-              .equals([localVerse.translationId, localVerse.globalOrder])
+            const exists = await db.bookmarks.where("[userId+verseId]")
+              .equals([userId, localVerse.id])
               .first();
             
             if (!exists) {
               await db.bookmarks.add({
+                userId,
                 verseId: localVerse.id,
                 bookId: b.verse.bookId,
                 chapter: b.verse.chapter,
@@ -154,7 +166,7 @@ export function ProgressSyncer() {
       void restoreData();
       hasPulledCloudData.current = true;
     }
-  }, [cloudData]);
+  }, [cloudData, session]);
 
   // Periodic Progress Sync
   useEffect(() => {

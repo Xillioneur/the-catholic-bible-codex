@@ -74,8 +74,33 @@ export function SidebarNav() {
   const fontSize = useReaderStore((state) => state.fontSize);
   const setFontSize = useReaderStore((state) => state.setFontSize);
 
-  const bookmarks = useLiveQuery(() => db.bookmarks.reverse().limit(10).toArray()) ?? [];
+  const currentUserId = session?.user?.id ?? "guest";
+
+  const bookmarks = useLiveQuery(() => db.bookmarks.where("userId").equals(currentUserId).reverse().limit(10).toArray(), [currentUserId]) ?? [];
+  const localNotesRaw = useLiveQuery(() => db.notes.where("userId").equals(currentUserId).reverse().toArray(), [currentUserId]) ?? [];
+  const localHighlightsRaw = useLiveQuery(() => db.highlights.where("userId").equals(currentUserId).reverse().toArray(), [currentUserId]) ?? [];
   const utils = api.useUtils();
+
+  // For Guests and Users: Join local notes/highlights with verse info from Dexie
+  const localNotes = useLiveQuery(async () => {
+    const notesWithVerses = await Promise.all(
+      localNotesRaw.map(async (n) => {
+        const verse = await db.verses.get(n.verseId);
+        return { ...n, verse };
+      })
+    );
+    return notesWithVerses.filter(n => !!n.verse);
+  }, [localNotesRaw]) ?? [];
+
+  const localHighlights = useLiveQuery(async () => {
+    const highlightsWithVerses = await Promise.all(
+      localHighlightsRaw.map(async (h) => {
+        const verse = await db.verses.get(h.verseId);
+        return { ...h, verse };
+      })
+    );
+    return highlightsWithVerses.filter(h => !!h.verse);
+  }, [localHighlightsRaw]) ?? [];
 
   const { data: journal, isLoading: isLoadingJournal } = api.user.getJournal.useQuery(undefined, {
     enabled: activeTab === "journal" && !!session
@@ -383,18 +408,7 @@ export function SidebarNav() {
 
             {activeTab === "bookmarks" && (
               <div className="space-y-2 mt-4">
-                {!session ? (
-                  <div className="py-20 text-center flex flex-col items-center gap-3 px-6">
-                    <Bookmark className="h-6 w-6 text-zinc-200" />
-                    <p className="text-[10px] font-medium text-zinc-400">Sign in to save and sync your bookmarks globally.</p>
-                    <button 
-                      onClick={() => signIn("google")}
-                      className="mt-2 px-4 py-2 bg-primary/10 text-primary rounded-full text-[8px] font-black uppercase tracking-widest hover:bg-primary hover:text-white transition-all"
-                    >
-                      Sign In
-                    </button>
-                  </div>
-                ) : bookmarks.length > 0 ? bookmarks.map(b => (
+                {bookmarks.length > 0 ? bookmarks.map(b => (
                   <div key={b.id} className="relative group">
                     <button 
                       onClick={() => {
@@ -427,6 +441,14 @@ export function SidebarNav() {
                   <div className="py-20 text-center flex flex-col items-center gap-3 text-zinc-300">
                     <Bookmark className="h-6 w-6 opacity-20" />
                     <span className="text-[8px] font-black uppercase tracking-widest">Quiet Sanctuary</span>
+                    {!session && (
+                      <p className="text-[10px] font-medium text-zinc-400 mt-4 px-10">Sign in to sync your local bookmarks across all your devices.</p>
+                    )}
+                  </div>
+                )}
+                {!session && bookmarks.length > 0 && (
+                  <div className="px-6 py-4 mt-4 bg-zinc-50 dark:bg-zinc-800/20 rounded-3xl border border-zinc-100 dark:border-zinc-800">
+                    <p className="text-[9px] font-medium text-zinc-400 text-center">These bookmarks are stored locally. Sign in to sync them to the Sanctuary Cloud.</p>
                   </div>
                 )}
               </div>
@@ -457,62 +479,77 @@ export function SidebarNav() {
                   </button>
                 </div>
 
-                {!session ? (
-                  <div className="py-20 text-center flex flex-col items-center gap-3 px-6">
-                    <History className="h-6 w-6 text-zinc-200" />
-                    <p className="text-[10px] font-medium text-zinc-400">Sign in to view your global journal across all devices.</p>
-                  </div>
-                ) : isLoadingJournal ? (
+                {isLoadingJournal && session ? (
                   <div className="flex justify-center py-20"><Loader2 className="h-6 w-6 text-primary/20 animate-spin" /></div>
                 ) : (
                   <div className="space-y-3 animate-in fade-in duration-500">
                     {journalFilter === "notes" ? (
-                      journal?.notes.length === 0 ? (
-                        <div className="py-20 text-center text-[10px] font-black uppercase tracking-widest text-zinc-300">The page is blank</div>
-                      ) : journal?.notes.map(note => (
-                        <button 
-                          key={note.id}
-                          onClick={() => setScrollToOrder(note.verse.globalOrder)}
-                          className="w-full text-left p-4 rounded-[2rem] bg-zinc-50/50 dark:bg-zinc-800/20 border border-zinc-100 dark:border-zinc-800/50 hover:border-primary/20 transition-all"
-                        >
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-[9px] font-black uppercase tracking-widest text-primary">
-                              {note.verse.book.abbreviation} {note.verse.chapter}:{note.verse.verse}
-                            </span>
-                            <span className="text-[7px] font-bold text-zinc-400">{new Date(note.updatedAt).toLocaleDateString()}</span>
-                          </div>
-                          <p className="text-xs font-serif italic text-zinc-600 dark:text-zinc-400 leading-relaxed line-clamp-3">
-                            {note.content}
-                          </p>
-                        </button>
-                      ))
+                      (() => {
+                        const notesToShow = session ? journal?.notes : localNotes;
+                        if (!notesToShow || notesToShow.length === 0) {
+                          return <div className="py-20 text-center text-[10px] font-black uppercase tracking-widest text-zinc-300">The page is blank</div>;
+                        }
+                        return notesToShow.map((note: any) => (
+                          <button 
+                            key={note.id}
+                            onClick={() => setScrollToOrder(note.verse.globalOrder)}
+                            className="w-full text-left p-4 rounded-[2rem] bg-zinc-50/50 dark:bg-zinc-800/20 border border-zinc-100 dark:border-zinc-800/50 hover:border-primary/20 transition-all"
+                          >
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-[9px] font-black uppercase tracking-widest text-primary">
+                                {note.verse.book.abbreviation} {note.verse.chapter}:{note.verse.verse}
+                              </span>
+                              <span className="text-[7px] font-bold text-zinc-400">{new Date(note.updatedAt).toLocaleDateString()}</span>
+                            </div>
+                            <p className="text-xs font-serif italic text-zinc-600 dark:text-zinc-400 leading-relaxed line-clamp-3">
+                              {note.content}
+                            </p>
+                          </button>
+                        ));
+                      })()
                     ) : (
-                      journal?.highlights.length === 0 ? (
-                        <div className="py-20 text-center text-[10px] font-black uppercase tracking-widest text-zinc-300">No illuminations</div>
-                      ) : (
-                        <div className="grid gap-2">
-                          {journal?.highlights.map(h => (
-                            <button 
-                              key={h.id}
-                              onClick={() => setScrollToOrder(h.verse.globalOrder)}
-                              className="w-full text-left p-3 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 flex items-center justify-between group"
-                            >
-                              <div className="flex items-center gap-3">
-                                <div className={cn("h-3 w-3 rounded-full shadow-sm", {
-                                  "bg-yellow-300": h.color === "yellow",
-                                  "bg-blue-300": h.color === "blue",
-                                  "bg-green-300": h.color === "green",
-                                  "bg-red-300": h.color === "red",
-                                })} />
-                                <span className="text-[10px] font-bold text-zinc-900 dark:text-zinc-100">
-                                  {h.verse.book.name} {h.verse.chapter}:{h.verse.verse}
-                                </span>
-                              </div>
-                              <ChevronRight className="h-3 w-3 text-zinc-300 opacity-0 group-hover:opacity-100 transition-all" />
-                            </button>
-                          ))}
-                        </div>
-                      )
+                      (() => {
+                        const highlightsToShow = session ? journal?.highlights : localHighlights;
+                        if (!highlightsToShow || highlightsToShow.length === 0) {
+                          return <div className="py-20 text-center text-[10px] font-black uppercase tracking-widest text-zinc-300">No illuminations</div>;
+                        }
+                        return (
+                          <div className="grid gap-2">
+                            {highlightsToShow.map((h: any) => (
+                              <button 
+                                key={h.id}
+                                onClick={() => setScrollToOrder(h.verse.globalOrder)}
+                                className="w-full text-left p-3 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 flex items-center justify-between group"
+                              >
+                                <div className="flex items-center gap-3">
+                                  <div className={cn("h-3 w-3 rounded-full shadow-sm", {
+                                    "bg-yellow-300": h.color === "yellow",
+                                    "bg-blue-300": h.color === "blue",
+                                    "bg-green-300": h.color === "green",
+                                    "bg-red-300": h.color === "red",
+                                  })} />
+                                  <span className="text-[10px] font-bold text-zinc-900 dark:text-zinc-100">
+                                    {h.verse.book.name} {h.verse.chapter}:{h.verse.verse}
+                                  </span>
+                                </div>
+                                <ChevronRight className="h-3 w-3 text-zinc-300 opacity-0 group-hover:opacity-100 transition-all" />
+                              </button>
+                            ))}
+                          </div>
+                        );
+                      })()
+                    )}
+                    {!session && (
+                      <div className="px-6 py-8 mt-4 bg-primary/5 rounded-[2.5rem] border border-primary/10 text-center space-y-3">
+                        <History className="h-6 w-6 text-primary mx-auto opacity-40" />
+                        <p className="text-[10px] font-medium text-zinc-500 leading-relaxed">Your journal is currently saved to this device only. Join the Sanctuary to sync your study history across all your screens.</p>
+                        <button 
+                          onClick={() => signIn("google")}
+                          className="px-6 py-2 bg-primary text-white rounded-full text-[8px] font-black uppercase tracking-widest hover:scale-105 transition-all shadow-lg shadow-primary/20"
+                        >
+                          Join the Sanctuary
+                        </button>
+                      </div>
                     )}
                   </div>
                 )}
@@ -571,15 +608,7 @@ export function SidebarNav() {
                     </div>
 
                     <button 
-                      onClick={() => {
-                        void signOut();
-                        // Clear local sanctuary on sign out (The Cleansing)
-                        void Promise.all([
-                          db.bookmarks.clear(),
-                          db.highlights.clear(),
-                          db.notes.clear()
-                        ]);
-                      }}
+                      onClick={() => void signOut()}
                       className="w-full py-4 rounded-3xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 font-black text-[9px] uppercase tracking-[0.2em] shadow-xl hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2"
                     >
                       <LogOut className="h-3.5 w-3.5" />

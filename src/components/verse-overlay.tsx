@@ -44,35 +44,24 @@ export function VerseOverlay({ verseId, bookId, bookName, bookSlug, chapter, ver
   const [showExtras, setShowExtras] = useState(false);
   const [showCompare, setShowCompare] = useState(false);
 
-  const bookmark = useLiveQuery(() => db.bookmarks.where("verseId").equals(verseId).first(), [verseId]);
-  const highlight = useLiveQuery(() => db.highlights.where("verseId").equals(verseId).first(), [verseId]);
-  const note = useLiveQuery(() => db.notes.where("verseId").equals(verseId).first(), [verseId]);
+  const currentUserId = session?.user?.id ?? "guest";
+
+  const bookmark = useLiveQuery(() => db.bookmarks.where("[userId+verseId]").equals([currentUserId, verseId]).first(), [currentUserId, verseId]);
+  const highlight = useLiveQuery(() => db.highlights.where("[userId+verseId]").equals([currentUserId, verseId]).first(), [currentUserId, verseId]);
+  const note = useLiveQuery(() => db.notes.where("[userId+verseId]").equals([currentUserId, verseId]).first(), [currentUserId, verseId]);
 
   const { data: parallels, isLoading: isComparing } = api.bible.getVerseInAllTranslations.useQuery(
     { bookSlug, chapter, verse },
     { enabled: showCompare }
   );
 
-  const requireAuth = (action: string) => {
-    if (!session) {
-      toast.error(`Sign in to ${action}`, {
-        description: "Join the Sanctuary to sync your study across devices.",
-        action: {
-          label: "Sign In",
-          onClick: () => void signIn("google")
-        }
-      });
-      return false;
-    }
-    return true;
-  };
-
   const toggleBookmark = async () => {
-    if (!requireAuth("save bookmarks")) return;
     if (bookmark) {
       await db.bookmarks.delete(bookmark.id!);
+      toast.success("Bookmark removed");
     } else {
       await db.bookmarks.add({ 
+        userId: currentUserId,
         verseId, 
         bookId, 
         chapter, 
@@ -81,15 +70,16 @@ export function VerseOverlay({ verseId, bookId, bookName, bookSlug, chapter, ver
         translationSlug, 
         createdAt: Date.now() 
       });
+      toast.success("Verse bookmarked");
     }
   };
 
   const toggleHighlight = async (color: string = "yellow") => {
-    if (!requireAuth("highlight Scripture")) return;
     if (highlight) {
       await db.highlights.delete(highlight.id!);
     } else {
       await db.highlights.add({ 
+        userId: currentUserId,
         verseId, 
         globalOrder, 
         translationSlug, 
@@ -100,11 +90,12 @@ export function VerseOverlay({ verseId, bookId, bookName, bookSlug, chapter, ver
   };
 
   const saveNote = async () => {
-    if (!requireAuth("save reflections")) return;
     if (note) {
       await db.notes.update(note.id!, { content: noteContent, updatedAt: Date.now() });
+      toast.success("Reflection updated");
     } else {
       await db.notes.add({ 
+        userId: currentUserId,
         verseId, 
         globalOrder, 
         translationSlug, 
@@ -112,6 +103,7 @@ export function VerseOverlay({ verseId, bookId, bookName, bookSlug, chapter, ver
         createdAt: Date.now(), 
         updatedAt: Date.now() 
       });
+      toast.success("Reflection saved");
     }
     setIsEditingNote(false);
   };
@@ -226,17 +218,14 @@ export function VerseOverlay({ verseId, bookId, bookName, bookSlug, chapter, ver
           onClick={() => toggleHighlight()}
           className={cn(
             "p-2.5 rounded-full transition-all active:scale-90 relative", 
-            highlight ? "bg-yellow-400 text-white shadow-lg shadow-yellow-400/20" : "hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400",
-            !session && "opacity-50 grayscale-[0.5]"
+            highlight ? "bg-yellow-400 text-white shadow-lg shadow-yellow-400/20" : "hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400"
           )}
         >
           <Highlighter className="h-4 w-4" />
-          {!session && <Lock className="absolute -top-1 -right-1 h-2 w-2 text-zinc-400" />}
         </button>
 
         <button 
           onClick={() => { 
-            if (!requireAuth("write reflections")) return;
             setIsEditingNote(true); 
             setNoteContent(note?.content ?? ""); 
             setShowExtras(false); 
@@ -244,12 +233,10 @@ export function VerseOverlay({ verseId, bookId, bookName, bookSlug, chapter, ver
           }}
           className={cn(
             "p-2.5 rounded-full transition-all active:scale-90 relative", 
-            note ? "text-primary bg-primary/10" : "hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400",
-            !session && "opacity-50 grayscale-[0.5]"
+            note ? "text-primary bg-primary/10" : "hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400"
           )}
         >
           <MessageSquare className="h-4 w-4" />
-          {!session && <Lock className="absolute -top-1 -right-1 h-2 w-2 text-zinc-400" />}
         </button>
 
         <button 
@@ -263,12 +250,10 @@ export function VerseOverlay({ verseId, bookId, bookName, bookSlug, chapter, ver
           onClick={toggleBookmark}
           className={cn(
             "p-2.5 rounded-full transition-all active:scale-90 relative", 
-            bookmark ? "text-primary bg-primary/10" : "hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400",
-            !session && "opacity-50 grayscale-[0.5]"
+            bookmark ? "text-primary bg-primary/10" : "hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400"
           )}
         >
           <BookmarkIcon className={cn("h-4 w-4", bookmark && "fill-primary")} />
-          {!session && <Lock className="absolute -top-1 -right-1 h-2 w-2 text-zinc-400" />}
         </button>
 
         <button 
