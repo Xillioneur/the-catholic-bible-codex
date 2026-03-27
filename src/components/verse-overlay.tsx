@@ -13,7 +13,8 @@ import {
   BookOpen,
   MoreHorizontal,
   Volume2,
-  Lock
+  Lock,
+  Trash2
 } from "lucide-react";
 import { db } from "~/lib/db";
 import { useLiveQuery } from "dexie-react-hooks";
@@ -139,6 +140,18 @@ export function VerseOverlay({ verseId, bookId, bookName, bookSlug, chapter, ver
           />
           <div className="flex gap-2 mt-2">
             <button onClick={saveNote} className="flex-1 bg-primary text-white py-2 rounded-xl text-[9px] font-black uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all">Save Reflection</button>
+            {note && (
+              <button 
+                onClick={async () => {
+                  await db.notes.delete(note.id!);
+                  toast.success("Reflection deleted");
+                  setIsEditingNote(false);
+                }} 
+                className="px-4 py-2 bg-red-50 dark:bg-red-950/20 rounded-xl text-[9px] font-black uppercase tracking-widest text-red-500 hover:bg-red-100 transition-all"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            )}
             <button onClick={() => setIsEditingNote(false)} className="px-4 py-2 bg-zinc-100 dark:bg-zinc-800 rounded-xl text-[9px] font-black uppercase tracking-widest text-zinc-500">Cancel</button>
           </div>
         </div>

@@ -81,6 +81,45 @@ export function SidebarNav() {
   const localHighlightsRaw = useLiveQuery(() => db.highlights.where("userId").equals(currentUserId).reverse().toArray(), [currentUserId]) ?? [];
   const utils = api.useUtils();
 
+  const [editingNoteId, setEditingNoteId] = useState<string | number | null>(null);
+  const [editingNoteContent, setEditingNoteContent] = useState("");
+
+  const handleUpdateNote = async (noteId: string | number, content: string) => {
+    try {
+      if (session) {
+        // We don't have a direct TRPC update yet, but we can update locally 
+        // and the syncer will eventually push it if implemented.
+        // Actually, we should probably add a TRPC mutation for single note update 
+        // but for now, updating Dexie is the source of truth for the UI.
+        await db.notes.update(noteId as number, { content, updatedAt: Date.now() });
+      } else {
+        await db.notes.update(noteId as number, { content, updatedAt: Date.now() });
+      }
+      setEditingNoteId(null);
+      toast.success("Reflection updated");
+    } catch (e) {
+      toast.error("Failed to update reflection");
+    }
+  };
+
+  const handleDeleteNote = async (noteId: string | number) => {
+    try {
+      await db.notes.delete(noteId as number);
+      toast.success("Reflection deleted");
+    } catch (e) {
+      toast.error("Failed to delete reflection");
+    }
+  };
+
+  const handleDeleteHighlight = async (highlightId: string | number) => {
+    try {
+      await db.highlights.delete(highlightId as number);
+      toast.success("Highlight removed");
+    } catch (e) {
+      toast.error("Failed to remove highlight");
+    }
+  };
+
   // For Guests and Users: Join local notes/highlights with verse info from Dexie
   const localNotes = useLiveQuery(async () => {
     const notesWithVerses = await Promise.all(
@@ -490,21 +529,69 @@ export function SidebarNav() {
                           return <div className="py-20 text-center text-[10px] font-black uppercase tracking-widest text-zinc-300">The page is blank</div>;
                         }
                         return notesToShow.map((note: any) => (
-                          <button 
+                          <div 
                             key={note.id}
-                            onClick={() => setScrollToOrder(note.verse.globalOrder)}
-                            className="w-full text-left p-4 rounded-[2rem] bg-zinc-50/50 dark:bg-zinc-800/20 border border-zinc-100 dark:border-zinc-800/50 hover:border-primary/20 transition-all"
+                            className="group relative w-full text-left p-4 rounded-[2rem] bg-zinc-50/50 dark:bg-zinc-800/20 border border-zinc-100 dark:border-zinc-800/50 hover:border-primary/20 transition-all overflow-hidden"
                           >
                             <div className="flex items-center justify-between mb-2">
-                              <span className="text-[9px] font-black uppercase tracking-widest text-primary">
+                              <button 
+                                onClick={() => setScrollToOrder(note.verse.globalOrder)}
+                                className="text-[9px] font-black uppercase tracking-widest text-primary hover:underline"
+                              >
                                 {note.verse.book.abbreviation} {note.verse.chapter}:{note.verse.verse}
-                              </span>
-                              <span className="text-[7px] font-bold text-zinc-400">{new Date(note.updatedAt).toLocaleDateString()}</span>
+                              </button>
+                              <div className="flex items-center gap-1">
+                                <span className="text-[7px] font-bold text-zinc-400 mr-1">{new Date(note.updatedAt).toLocaleDateString()}</span>
+                                <button 
+                                  onClick={() => {
+                                    setEditingNoteId(note.id);
+                                    setEditingNoteContent(note.content);
+                                  }}
+                                  className="p-1 rounded-full hover:bg-primary/10 text-zinc-400 hover:text-primary transition-colors opacity-0 group-hover:opacity-100"
+                                >
+                                  <Settings2 className="h-2.5 w-2.5" />
+                                </button>
+                                <button 
+                                  onClick={() => handleDeleteNote(note.id)}
+                                  className="p-1 rounded-full hover:bg-red-50 text-zinc-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
+                                >
+                                  <Trash2 className="h-2.5 w-2.5" />
+                                </button>
+                              </div>
                             </div>
-                            <p className="text-xs font-serif italic text-zinc-600 dark:text-zinc-400 leading-relaxed line-clamp-3">
-                              {note.content}
-                            </p>
-                          </button>
+
+                            {editingNoteId === note.id ? (
+                              <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                                <textarea
+                                  value={editingNoteContent}
+                                  onChange={(e) => setEditingNoteContent(e.target.value)}
+                                  autoFocus
+                                  className="w-full min-h-[80px] bg-white dark:bg-zinc-900 rounded-xl p-3 text-[11px] font-serif italic text-zinc-700 dark:text-zinc-300 border border-primary/20 focus:outline-none focus:ring-1 focus:ring-primary/20 resize-none"
+                                />
+                                <div className="flex gap-1.5">
+                                  <button 
+                                    onClick={() => handleUpdateNote(note.id, editingNoteContent)}
+                                    className="flex-1 py-1.5 rounded-lg bg-primary text-white text-[8px] font-black uppercase tracking-widest"
+                                  >
+                                    Update
+                                  </button>
+                                  <button 
+                                    onClick={() => setEditingNoteId(null)}
+                                    className="px-3 py-1.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-500 text-[8px] font-black uppercase tracking-widest"
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              <p 
+                                onClick={() => setScrollToOrder(note.verse.globalOrder)}
+                                className="text-xs font-serif italic text-zinc-600 dark:text-zinc-400 leading-relaxed line-clamp-3 cursor-pointer"
+                              >
+                                {note.content}
+                              </p>
+                            )}
+                          </div>
                         ));
                       })()
                     ) : (
@@ -516,12 +603,14 @@ export function SidebarNav() {
                         return (
                           <div className="grid gap-2">
                             {highlightsToShow.map((h: any) => (
-                              <button 
+                              <div 
                                 key={h.id}
-                                onClick={() => setScrollToOrder(h.verse.globalOrder)}
-                                className="w-full text-left p-3 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 flex items-center justify-between group"
+                                className="group w-full text-left p-3 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 flex items-center justify-between transition-all hover:border-primary/20"
                               >
-                                <div className="flex items-center gap-3">
+                                <button 
+                                  onClick={() => setScrollToOrder(h.verse.globalOrder)}
+                                  className="flex items-center gap-3 flex-1"
+                                >
                                   <div className={cn("h-3 w-3 rounded-full shadow-sm", {
                                     "bg-yellow-300": h.color === "yellow",
                                     "bg-blue-300": h.color === "blue",
@@ -531,9 +620,17 @@ export function SidebarNav() {
                                   <span className="text-[10px] font-bold text-zinc-900 dark:text-zinc-100">
                                     {h.verse.book.name} {h.verse.chapter}:{h.verse.verse}
                                   </span>
+                                </button>
+                                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                                  <button 
+                                    onClick={() => handleDeleteHighlight(h.id)}
+                                    className="p-1.5 rounded-full hover:bg-red-50 text-zinc-300 hover:text-red-500 transition-colors"
+                                  >
+                                    <Trash2 className="h-3 w-3" />
+                                  </button>
+                                  <ChevronRight className="h-3 w-3 text-zinc-300" />
                                 </div>
-                                <ChevronRight className="h-3 w-3 text-zinc-300 opacity-0 group-hover:opacity-100 transition-all" />
-                              </button>
+                              </div>
                             ))}
                           </div>
                         );
