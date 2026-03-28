@@ -47,8 +47,8 @@ export function SidebarNav() {
   const { info } = useLiturgical();
   const { jumpToOrder, unlockAudio } = useVoiceover();
   
-  const [activeTab, setActiveTab] = useState<"library" | "bookmarks" | "settings" | "daily" | "account" | "journal" | null>(null);
-  const [journalFilter, setJournalFilter] = useState<"notes" | "highlights">("notes");
+  const [activeTab, setActiveTab] = useState<"library" | "daily" | "study" | "sanctuary" | null>(null);
+  const [studyFilter, setStudyFilter] = useState<"notes" | "highlights" | "bookmarks">("notes");
   const [showFullLiturgical, setShowFullLiturgical] = useState(false);
   const [librarySelectedBook, setLibrarySelectedBook] = useState<any | null>(null);
   const [librarySearch, setLibrarySearch] = useState("");
@@ -186,7 +186,7 @@ export function SidebarNav() {
 
   // Keep the query for cloud sync, but UI uses local data
   const { isLoading: isLoadingJournal } = api.user.getJournal.useQuery(undefined, {
-    enabled: activeTab === "journal" && !!session
+    enabled: activeTab === "study" && !!session
   });
 
   const handleBookSelect = useCallback(async (bookSlug: string, chapter: number = 1) => {
@@ -264,19 +264,21 @@ export function SidebarNav() {
       )}>
         <div className={cn(
           "bg-white/90 dark:bg-zinc-950/90 backdrop-blur-2xl border-zinc-200/30 dark:border-zinc-800/30 flex pointer-events-auto shadow-2xl transition-all duration-700",
-          "md:w-14 md:h-full md:flex-col md:items-center md:py-6 md:gap-6 md:border-r md:rounded-none",
+          "md:w-14 md:h-full md:flex-col md:items-center md:py-8 md:gap-7 md:border-r md:rounded-none",
           "w-full h-14 items-center justify-around px-2 rounded-full border"
         )}>
-          <div className="hidden md:flex w-8 h-8 rounded-lg bg-primary items-center justify-center shadow-md shadow-primary/10 mb-2 overflow-hidden">
-            <svg viewBox="0 0 512 512" fill="none" className="w-5 h-5">
-              <circle cx="256" cy="256" r="240" fill="transparent" stroke="white" strokeWidth="16"/>
-              <path d="M256 120V392" stroke="white" strokeWidth="32" strokeLinecap="round"/>
-              <path d="M160 210H352" stroke="white" strokeWidth="32" strokeLinecap="round"/>
+          {/* LOGO AREA */}
+          <div className="hidden md:flex w-9 h-9 rounded-xl bg-primary items-center justify-center shadow-lg shadow-primary/20 mb-4 overflow-hidden flex-shrink-0">
+            <svg viewBox="0 0 512 512" fill="none" className="w-6 h-6">
+              <circle cx="256" cy="256" r="240" fill="transparent" stroke="white" strokeWidth="20"/>
+              <path d="M256 120V392" stroke="white" strokeWidth="36" strokeLinecap="round"/>
+              <path d="M160 210H352" stroke="white" strokeWidth="36" strokeLinecap="round"/>
             </svg>
           </div>
 
-          <RailButton icon={<Search className="h-4 w-4" />} onClick={() => { setIsSearchOpen(true); setActiveTab(null); }} label="Search" />
+          <RailButton icon={<LibraryIcon className="h-4 w-4" />} active={activeTab === "library"} onClick={() => setActiveTab(activeTab === "library" ? null : "library")} label="Library" />
           <RailButton icon={<Sun className="h-4 w-4" />} active={activeTab === "daily"} onClick={() => setActiveTab(activeTab === "daily" ? null : "daily")} label="Daily" />
+          <RailButton icon={<BookText className="h-4 w-4" />} active={activeTab === "study"} onClick={() => setActiveTab(activeTab === "study" ? null : "study")} label="Study" />
           
           <RailButton 
             icon={<Volume2 className={cn("h-4 w-4 transition-all", isVoiceoverPlaying && "animate-pulse text-primary")} />} 
@@ -295,22 +297,19 @@ export function SidebarNav() {
           />
 
           <div className="hidden md:block h-px w-6 bg-zinc-200/50 dark:bg-zinc-800/50 my-1 self-center" />
-          <RailButton icon={<LibraryIcon className="h-4 w-4" />} active={activeTab === "library"} onClick={() => setActiveTab(activeTab === "library" ? null : "library")} label="Library" />
-          <RailButton icon={<BookText className="h-4 w-4" />} active={activeTab === "journal"} onClick={() => setActiveTab(activeTab === "journal" ? null : "journal")} label="Journal" />
-          <RailButton icon={<Bookmark className="h-4 w-4" />} active={activeTab === "bookmarks"} onClick={() => setActiveTab(activeTab === "bookmarks" ? null : "bookmarks")} label="Saved" />
-          <RailButton icon={<Settings2 className="h-4 w-4" />} active={activeTab === "settings"} onClick={() => setActiveTab(activeTab === "settings" ? null : "settings")} label="Style" />
+          
           <RailButton 
             icon={session?.user?.image ? (
-              <img src={session.user.image} className="h-4 w-4 rounded-full" alt="Profile" />
+              <img src={session.user.image} className="h-4 w-4 rounded-full border border-white/20" alt="Profile" />
             ) : (
               <UserIcon className="h-4 w-4" />
             )} 
-            active={activeTab === "account"} 
-            onClick={() => setActiveTab(activeTab === "account" ? null : "account")} 
-            label="Account" 
+            active={activeTab === "sanctuary"} 
+            onClick={() => setActiveTab(activeTab === "sanctuary" ? null : "sanctuary")} 
+            label="Sanctuary" 
           />
 
-          <button onClick={toggleSidebar} className="hidden md:flex mt-auto p-2.5 text-zinc-400 hover:text-primary transition-all active:scale-75">
+          <button onClick={toggleSidebar} className="hidden md:flex mt-auto mb-4 p-2.5 text-zinc-400 hover:text-primary transition-all active:scale-75">
             <ChevronLeft className="h-4 w-4 opacity-50" />
           </button>
         </div>
@@ -385,7 +384,18 @@ export function SidebarNav() {
 
             {activeTab === "library" && (
               <div className="mt-4 animate-in fade-in duration-300">
-                {/* Header Area */}
+                {/* 1. Global Search Trigger inside Library */}
+                <div className="mb-6">
+                  <button 
+                    onClick={() => { setIsSearchOpen(true); setActiveTab(null); }}
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-primary/5 border border-primary/10 hover:border-primary/30 transition-all group"
+                  >
+                    <Search className="h-4 w-4 text-primary opacity-60 group-hover:opacity-100" />
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/60 group-hover:text-primary">Search the Word...</span>
+                  </button>
+                </div>
+
+                {/* 2. Translation & Filter Area */}
                 <div className="flex flex-col gap-3 mb-5">
                   <div className="flex bg-zinc-100/50 dark:bg-zinc-800/50 p-0.5 rounded-full border border-zinc-200/20">
                     {translations?.map((t) => (
@@ -489,238 +499,223 @@ export function SidebarNav() {
               </div>
             )}
 
-            {activeTab === "bookmarks" && (
-              <div className="space-y-2 mt-4">
-                {bookmarks.length > 0 ? bookmarks.map(b => (
-                  <div key={b.id} className="relative group">
-                    <button 
-                      onClick={() => {
-                        if (b.globalOrder) {
-                          setScrollToOrder(b.globalOrder);
-                          setActiveTab(null);
-                        } else {
-                          toast.error("Older bookmark: please re-save.");
-                        }
-                      }}
-                      className="w-full text-left p-4 rounded-[1.5rem] border border-zinc-100 dark:border-zinc-800 hover:border-primary/20 hover:bg-primary/[0.01] transition-all"
-                    >
-                      <span className="text-[9px] font-black uppercase text-primary tracking-widest block mb-1">
-                        {books?.find(bk => bk.id === b.bookId)?.abbreviation} {b.chapter}:{b.verse}
-                      </span>
-                      <p className="text-[11px] font-serif italic text-zinc-500 truncate pr-8">Saved reflection</p>
-                    </button>
-                    <button 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (!b.id) return;
-                        void db.bookmarks.delete(b.id!);
-                        if (session) {
-                          deleteBookmarkCloud.mutate({ 
-                            globalOrder: b.globalOrder, 
-                            translationSlug: b.translationSlug 
-                          });
-                        }
-                        toast.success("Bookmark removed");
-                      }}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 h-8 w-8 flex items-center justify-center rounded-full text-zinc-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all md:opacity-0 md:group-hover:opacity-100"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                )) : (
-                  <div className="py-20 text-center flex flex-col items-center gap-3 text-zinc-300">
-                    <Bookmark className="h-6 w-6 opacity-20" />
-                    <span className="text-[8px] font-black uppercase tracking-widest">Quiet Sanctuary</span>
-                    {!session && (
-                      <p className="text-[10px] font-medium text-zinc-400 mt-4 px-10">Sign in to sync your local bookmarks across all your devices.</p>
-                    )}
-                  </div>
-                )}
-                {!session && bookmarks.length > 0 && (
-                  <div className="px-6 py-4 mt-4 bg-zinc-50 dark:bg-zinc-800/20 rounded-3xl border border-zinc-100 dark:border-zinc-800">
-                    <p className="text-[9px] font-medium text-zinc-400 text-center">These bookmarks are stored locally. Sign in to sync them to the Sanctuary Cloud.</p>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {activeTab === "journal" && (
-              <div className="mt-4 space-y-4">
+            {activeTab === "study" && (
+              <div className="mt-4 space-y-4 animate-in fade-in duration-300">
                 <div className="flex bg-zinc-100/50 dark:bg-zinc-800/50 p-0.5 rounded-full border border-zinc-200/20">
                   <button 
-                    onClick={() => setJournalFilter("notes")} 
+                    onClick={() => setStudyFilter("notes")} 
                     className={cn(
-                      "flex-1 py-1.5 rounded-full text-[8px] font-black uppercase transition-all flex items-center justify-center gap-2", 
-                      journalFilter === "notes" ? "bg-white dark:bg-zinc-700 text-primary shadow-sm" : "text-zinc-400"
+                      "flex-1 py-1.5 rounded-full text-[8px] font-black uppercase transition-all flex items-center justify-center gap-1.5", 
+                      studyFilter === "notes" ? "bg-white dark:bg-zinc-700 text-primary shadow-sm" : "text-zinc-400"
                     )}
                   >
                     <MessageSquare className="h-3 w-3" />
                     Reflections
                   </button>
                   <button 
-                    onClick={() => setJournalFilter("highlights")} 
+                    onClick={() => setStudyFilter("highlights")} 
                     className={cn(
-                      "flex-1 py-1.5 rounded-full text-[8px] font-black uppercase transition-all flex items-center justify-center gap-2", 
-                      journalFilter === "highlights" ? "bg-white dark:bg-zinc-700 text-primary shadow-sm" : "text-zinc-400"
+                      "flex-1 py-1.5 rounded-full text-[8px] font-black uppercase transition-all flex items-center justify-center gap-1.5", 
+                      studyFilter === "highlights" ? "bg-white dark:bg-zinc-700 text-primary shadow-sm" : "text-zinc-400"
                     )}
                   >
                     <Highlighter className="h-3 w-3" />
-                    Highlights
+                    Illuminations
+                  </button>
+                  <button 
+                    onClick={() => setStudyFilter("bookmarks")} 
+                    className={cn(
+                      "flex-1 py-1.5 rounded-full text-[8px] font-black uppercase transition-all flex items-center justify-center gap-1.5", 
+                      studyFilter === "bookmarks" ? "bg-white dark:bg-zinc-700 text-primary shadow-sm" : "text-zinc-400"
+                    )}
+                  >
+                    <Bookmark className="h-3 w-3" />
+                    Saved
                   </button>
                 </div>
 
-                {isLoadingJournal && session ? (
-                  <div className="flex justify-center py-20"><Loader2 className="h-6 w-6 text-primary/20 animate-spin" /></div>
-                ) : (
+                {studyFilter === "notes" && (
                   <div className="space-y-3 animate-in fade-in duration-500">
-                    {journalFilter === "notes" ? (
-                      (() => {
-                        const notesToShow = localNotes;
-                        if (!notesToShow || notesToShow.length === 0) {
-                          return <div className="py-20 text-center text-[10px] font-black uppercase tracking-widest text-zinc-300">The page is blank</div>;
-                        }
-                        return notesToShow.map((note: any) => (
-                          <div 
-                            key={note.id}
-                            className="group relative w-full text-left p-4 rounded-[2rem] bg-zinc-50/50 dark:bg-zinc-800/20 border border-zinc-100 dark:border-zinc-800/50 hover:border-primary/20 transition-all overflow-hidden"
-                          >
-                            <div className="flex items-center justify-between mb-2">
+                    {localNotes.length === 0 ? (
+                      <div className="py-20 text-center text-[10px] font-black uppercase tracking-widest text-zinc-300">The page is blank</div>
+                    ) : (
+                      localNotes.map((note: any) => (
+                        <div 
+                          key={note.id}
+                          className="group relative w-full text-left p-4 rounded-[2rem] bg-zinc-50/50 dark:bg-zinc-800/20 border border-zinc-100 dark:border-zinc-800/50 hover:border-primary/20 transition-all overflow-hidden"
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <button 
+                              onClick={() => setScrollToOrder(note.verse.globalOrder)}
+                              className="text-[9px] font-black uppercase tracking-widest text-primary hover:underline"
+                            >
+                              {note.verse.book.abbreviation} {note.verse.chapter}:{note.verse.verse}
+                            </button>
+                            <div className="flex items-center gap-1">
+                              <span className="text-[7px] font-bold text-zinc-400 mr-1">{new Date(note.updatedAt).toLocaleDateString()}</span>
                               <button 
-                                onClick={() => setScrollToOrder(note.verse.globalOrder)}
-                                className="text-[9px] font-black uppercase tracking-widest text-primary hover:underline"
+                                onClick={() => {
+                                  setEditingNoteId(note.id);
+                                  setEditingNoteContent(note.content);
+                                }}
+                                className="p-1 rounded-full hover:bg-primary/10 text-zinc-400 hover:text-primary transition-colors opacity-0 group-hover:opacity-100"
                               >
-                                {note.verse.book.abbreviation} {note.verse.chapter}:{note.verse.verse}
+                                <Settings2 className="h-2.5 w-2.5" />
                               </button>
-                              <div className="flex items-center gap-1">
-                                <span className="text-[7px] font-bold text-zinc-400 mr-1">{new Date(note.updatedAt).toLocaleDateString()}</span>
+                              <button 
+                                onClick={() => handleDeleteNote(note)}
+                                className="p-1 rounded-full hover:bg-red-50 text-zinc-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
+                              >
+                                <Trash2 className="h-2.5 w-2.5" />
+                              </button>
+                            </div>
+                          </div>
+
+                          {editingNoteId === note.id ? (
+                            <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
+                              <textarea
+                                value={editingNoteContent}
+                                onChange={(e) => setEditingNoteContent(e.target.value)}
+                                autoFocus
+                                className="w-full min-h-[80px] bg-white dark:bg-zinc-900 rounded-xl p-3 text-[11px] font-serif italic text-zinc-700 dark:text-zinc-300 border border-primary/20 focus:outline-none focus:ring-1 focus:ring-primary/20 resize-none"
+                              />
+                              <div className="flex gap-1.5">
                                 <button 
-                                  onClick={() => {
-                                    setEditingNoteId(note.id);
-                                    setEditingNoteContent(note.content);
-                                  }}
-                                  className="p-1 rounded-full hover:bg-primary/10 text-zinc-400 hover:text-primary transition-colors opacity-0 group-hover:opacity-100"
+                                  onClick={() => handleUpdateNote(note, editingNoteContent)}
+                                  className="flex-1 py-1.5 rounded-lg bg-primary text-white text-[8px] font-black uppercase tracking-widest"
                                 >
-                                  <Settings2 className="h-2.5 w-2.5" />
+                                  Update
                                 </button>
                                 <button 
-                                  onClick={() => handleDeleteNote(note)}
-                                  className="p-1 rounded-full hover:bg-red-50 text-zinc-400 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
+                                  onClick={() => setEditingNoteId(null)}
+                                  className="px-3 py-1.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-500 text-[8px] font-black uppercase tracking-widest"
                                 >
-                                  <Trash2 className="h-2.5 w-2.5" />
+                                  Cancel
                                 </button>
                               </div>
                             </div>
+                          ) : (
+                            <p 
+                              onClick={() => setScrollToOrder(note.verse.globalOrder)}
+                              className="text-xs font-serif italic text-zinc-600 dark:text-zinc-400 leading-relaxed line-clamp-3 cursor-pointer"
+                            >
+                              {note.content}
+                            </p>
+                          )}
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
 
-                            {editingNoteId === note.id ? (
-                              <div className="space-y-2 animate-in fade-in slide-in-from-top-2 duration-300">
-                                <textarea
-                                  value={editingNoteContent}
-                                  onChange={(e) => setEditingNoteContent(e.target.value)}
-                                  autoFocus
-                                  className="w-full min-h-[80px] bg-white dark:bg-zinc-900 rounded-xl p-3 text-[11px] font-serif italic text-zinc-700 dark:text-zinc-300 border border-primary/20 focus:outline-none focus:ring-1 focus:ring-primary/20 resize-none"
-                                />
-                                <div className="flex gap-1.5">
-                                  <button 
-                                    onClick={() => handleUpdateNote(note, editingNoteContent)}
-                                    className="flex-1 py-1.5 rounded-lg bg-primary text-white text-[8px] font-black uppercase tracking-widest"
-                                  >
-                                    Update
-                                  </button>
-                                  <button 
-                                    onClick={() => setEditingNoteId(null)}
-                                    className="px-3 py-1.5 rounded-lg bg-zinc-100 dark:bg-zinc-800 text-zinc-500 text-[8px] font-black uppercase tracking-widest"
-                                  >
-                                    Cancel
-                                  </button>
-                                </div>
-                              </div>
-                            ) : (
-                              <p 
-                                onClick={() => setScrollToOrder(note.verse.globalOrder)}
-                                className="text-xs font-serif italic text-zinc-600 dark:text-zinc-400 leading-relaxed line-clamp-3 cursor-pointer"
-                              >
-                                {note.content}
-                              </p>
-                            )}
-                          </div>
-                        ));
-                      })()
+                {studyFilter === "highlights" && (
+                  <div className="space-y-2 animate-in fade-in duration-500">
+                    {localHighlights.length === 0 ? (
+                      <div className="py-20 text-center text-[10px] font-black uppercase tracking-widest text-zinc-300">No illuminations</div>
                     ) : (
-                      (() => {
-                        const highlightsToShow = localHighlights;
-                        if (!highlightsToShow || highlightsToShow.length === 0) {
-                          return <div className="py-20 text-center text-[10px] font-black uppercase tracking-widest text-zinc-300">No illuminations</div>;
-                        }
-                        return (
-                          <div className="grid gap-2">
-                            {highlightsToShow.map((h: any) => (
-                              <div 
-                                key={h.id}
-                                className="group w-full text-left p-3 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 flex items-center justify-between transition-all hover:border-primary/20"
-                              >
-                                <button 
-                                  onClick={() => setScrollToOrder(h.verse.globalOrder)}
-                                  className="flex items-center gap-3 flex-1"
-                                >
-                                  <div className={cn("h-3 w-3 rounded-full shadow-sm", {
-                                    "bg-yellow-300": h.color === "yellow",
-                                    "bg-blue-300": h.color === "blue",
-                                    "bg-green-300": h.color === "green",
-                                    "bg-red-300": h.color === "red",
-                                  })} />
-                                  <span className="text-[10px] font-bold text-zinc-900 dark:text-zinc-100">
-                                    {h.verse.book.name} {h.verse.chapter}:{h.verse.verse}
-                                  </span>
-                                </button>
-                                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
-                                  <button 
-                                    onClick={() => handleDeleteHighlight(h)}
-                                    className="p-1.5 rounded-full hover:bg-red-50 text-zinc-300 hover:text-red-500 transition-colors"
-                                  >
-                                    <Trash2 className="h-3 w-3" />
-                                  </button>
-                                  <ChevronRight className="h-3 w-3 text-zinc-300" />
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        );
-                      })()
-                    )}
-                    {!session && (
-                      <div className="px-6 py-8 mt-4 bg-primary/5 rounded-[2.5rem] border border-primary/10 text-center space-y-3">
-                        <History className="h-6 w-6 text-primary mx-auto opacity-40" />
-                        <p className="text-[10px] font-medium text-zinc-500 leading-relaxed">Your journal is currently saved to this device only. Join the Sanctuary to sync your study history across all your screens.</p>
-                        <button 
-                          onClick={() => signIn("google")}
-                          className="px-6 py-2 bg-primary text-white rounded-full text-[8px] font-black uppercase tracking-widest hover:scale-105 transition-all shadow-lg shadow-primary/20"
+                      localHighlights.map((h: any) => (
+                        <div 
+                          key={h.id}
+                          className="group w-full text-left p-3 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 flex items-center justify-between transition-all hover:border-primary/20"
                         >
-                          Join the Sanctuary
-                        </button>
-                      </div>
+                          <button 
+                            onClick={() => setScrollToOrder(h.verse.globalOrder)}
+                            className="flex items-center gap-3 flex-1"
+                          >
+                            <div className={cn("h-3 w-3 rounded-full shadow-sm", {
+                              "bg-yellow-300": h.color === "yellow",
+                              "bg-blue-300": h.color === "blue",
+                              "bg-green-300": h.color === "green",
+                              "bg-red-300": h.color === "red",
+                            })} />
+                            <span className="text-[10px] font-bold text-zinc-900 dark:text-zinc-100">
+                              {h.verse.book.name} {h.verse.chapter}:{h.verse.verse}
+                            </span>
+                          </button>
+                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                            <button 
+                              onClick={() => handleDeleteHighlight(h)}
+                              className="p-1.5 rounded-full hover:bg-red-50 text-zinc-300 hover:text-red-500 transition-colors"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </button>
+                            <ChevronRight className="h-3 w-3 text-zinc-300" />
+                          </div>
+                        </div>
+                      ))
                     )}
+                  </div>
+                )}
+
+                {studyFilter === "bookmarks" && (
+                  <div className="space-y-2 animate-in fade-in duration-500">
+                    {bookmarks.length === 0 ? (
+                      <div className="py-20 text-center flex flex-col items-center gap-3 text-zinc-300">
+                        <Bookmark className="h-6 w-6 opacity-20" />
+                        <span className="text-[8px] font-black uppercase tracking-widest">Quiet Sanctuary</span>
+                      </div>
+                    ) : (
+                      bookmarks.map(b => (
+                        <div key={b.id} className="relative group">
+                          <button 
+                            onClick={() => {
+                              if (b.globalOrder) {
+                                setScrollToOrder(b.globalOrder);
+                                setActiveTab(null);
+                              } else {
+                                toast.error("Older bookmark: please re-save.");
+                              }
+                            }}
+                            className="w-full text-left p-4 rounded-[1.5rem] border border-zinc-100 dark:border-zinc-800 hover:border-primary/20 hover:bg-primary/[0.01] transition-all"
+                          >
+                            <span className="text-[9px] font-black uppercase text-primary tracking-widest block mb-1">
+                              {books?.find(bk => bk.id === b.bookId)?.abbreviation} {b.chapter}:{b.verse}
+                            </span>
+                            <p className="text-[11px] font-serif italic text-zinc-500 truncate pr-8">Saved verse</p>
+                          </button>
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (!b.id) return;
+                              void db.bookmarks.delete(b.id!);
+                              if (session) {
+                                deleteBookmarkCloud.mutate({ 
+                                  globalOrder: b.globalOrder, 
+                                  translationSlug: b.translationSlug 
+                                });
+                              }
+                              toast.success("Bookmark removed");
+                            }}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 h-8 w-8 flex items-center justify-center rounded-full text-zinc-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all md:opacity-0 md:group-hover:opacity-100"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
+
+                {!session && (
+                  <div className="px-6 py-6 mt-4 bg-primary/5 rounded-[2.5rem] border border-primary/10 text-center space-y-3">
+                    <History className="h-5 w-5 text-primary mx-auto opacity-40" />
+                    <p className="text-[9px] font-medium text-zinc-500 leading-relaxed">Join the Sanctuary to sync your study history across all your screens.</p>
+                    <button 
+                      onClick={() => signIn("google")}
+                      className="px-6 py-2 bg-primary text-white rounded-full text-[8px] font-black uppercase tracking-widest hover:scale-105 transition-all shadow-lg shadow-primary/20"
+                    >
+                      Join the Sanctuary
+                    </button>
                   </div>
                 )}
               </div>
             )}
 
-            {activeTab === "settings" && (
-              <div className="space-y-8 mt-6">
-                <div className="space-y-3 px-1">
-                  <span className="text-[9px] font-black uppercase tracking-widest text-zinc-400 block">Typography</span>
-                  <div className="p-4 rounded-[2rem] bg-zinc-50 dark:bg-zinc-800/30 flex items-center justify-between border border-zinc-100/50 dark:border-zinc-800/50">
-                    <button onClick={() => setFontSize(fontSize - 1)} className="h-8 w-8 flex items-center justify-center rounded-xl bg-white dark:bg-zinc-700 shadow-sm text-zinc-600"><Minus className="h-3 w-3" /></button>
-                    <span className="text-lg font-black tabular-nums text-zinc-900 dark:text-zinc-100">{fontSize}</span>
-                    <button onClick={() => setFontSize(fontSize + 1)} className="h-8 w-8 flex items-center justify-center rounded-xl bg-white dark:bg-zinc-700 shadow-sm text-zinc-600"><Plus className="h-3 w-3" /></button>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeTab === "account" && (
-              <div className="space-y-6 mt-6">
+            {activeTab === "sanctuary" && (
+              <div className="space-y-8 mt-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                {/* Account Section */}
                 {session ? (
-                  <div className="animate-in fade-in duration-500 space-y-6">
+                  <div className="space-y-6">
                     <div className="p-6 rounded-[2.5rem] bg-zinc-50 dark:bg-zinc-800/30 border border-zinc-100/50 dark:border-zinc-800/50 flex flex-col items-center text-center gap-3">
                       <div className="h-20 w-20 rounded-full border-4 border-white dark:border-zinc-900 shadow-xl overflow-hidden mb-2">
                         {session.user.image ? (
@@ -754,34 +749,46 @@ export function SidebarNav() {
                         <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
                       </div>
                     </div>
-
-                    <button 
-                      onClick={() => void signOut()}
-                      className="w-full py-4 rounded-3xl bg-zinc-900 dark:bg-zinc-100 text-white dark:text-zinc-900 font-black text-[9px] uppercase tracking-[0.2em] shadow-xl hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2"
-                    >
-                      <LogOut className="h-3.5 w-3.5" />
-                      Sign Out
-                    </button>
                   </div>
                 ) : (
-                  <div className="animate-in fade-in slide-in-from-bottom-4 duration-700 py-10 flex flex-col items-center text-center gap-6">
-                    <div className="h-20 w-20 rounded-full bg-zinc-50 dark:bg-zinc-800/50 flex items-center justify-center border-2 border-zinc-100 dark:border-zinc-800 mb-2">
-                      <UserIcon className="h-8 w-8 text-zinc-300" />
+                  <div className="py-6 flex flex-col items-center text-center gap-6">
+                    <div className="h-16 w-16 rounded-full bg-zinc-50 dark:bg-zinc-800/50 flex items-center justify-center border-2 border-zinc-100 dark:border-zinc-800">
+                      <UserIcon className="h-6 w-6 text-zinc-300" />
                     </div>
                     <div>
-                      <h3 className="text-xl font-serif font-bold italic text-zinc-900 dark:text-zinc-100 mb-2">Join the Sanctuary</h3>
-                      <p className="text-xs text-zinc-500 leading-relaxed px-6 font-medium">
-                        Sign in to sync your reading progress, bookmarks, and notes across all your devices.
+                      <h3 className="text-lg font-serif font-bold italic text-zinc-900 dark:text-zinc-100 mb-2">The Sanctuary</h3>
+                      <p className="text-[10px] text-zinc-500 leading-relaxed px-6 font-medium">
+                        Secure your progress and notes in the cloud.
                       </p>
                     </div>
                     <button 
                       onClick={() => signIn("google")}
-                      className="w-full py-4 rounded-3xl bg-primary text-white font-black text-[9px] uppercase tracking-[0.2em] shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2"
+                      className="w-full py-3 rounded-2xl bg-primary text-white font-black text-[9px] uppercase tracking-[0.2em] shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2"
                     >
                       <LogIn className="h-3.5 w-3.5" />
-                      Sign In with Google
+                      Sign In
                     </button>
                   </div>
+                )}
+
+                {/* Typography Settings (Moved here) */}
+                <div className="space-y-3 px-1">
+                  <span className="text-[9px] font-black uppercase tracking-widest text-zinc-400 block">Appearance</span>
+                  <div className="p-4 rounded-[2rem] bg-zinc-50 dark:bg-zinc-800/30 flex items-center justify-between border border-zinc-100/50 dark:border-zinc-800/50">
+                    <button onClick={() => setFontSize(fontSize - 1)} className="h-8 w-8 flex items-center justify-center rounded-xl bg-white dark:bg-zinc-700 shadow-sm text-zinc-600"><Minus className="h-3 w-3" /></button>
+                    <span className="text-lg font-black tabular-nums text-zinc-900 dark:text-zinc-100">{fontSize}</span>
+                    <button onClick={() => setFontSize(fontSize + 1)} className="h-8 w-8 flex items-center justify-center rounded-xl bg-white dark:bg-zinc-700 shadow-sm text-zinc-600"><Plus className="h-3 w-3" /></button>
+                  </div>
+                </div>
+
+                {session && (
+                  <button 
+                    onClick={() => void signOut()}
+                    className="w-full py-4 rounded-3xl bg-zinc-100 dark:bg-zinc-800/50 text-zinc-500 font-black text-[9px] uppercase tracking-[0.2em] hover:bg-red-50 hover:text-red-500 transition-all flex items-center justify-center gap-2"
+                  >
+                    <LogOut className="h-3.5 w-3.5" />
+                    Sign Out
+                  </button>
                 )}
               </div>
             )}
