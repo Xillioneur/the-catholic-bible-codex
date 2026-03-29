@@ -37,6 +37,11 @@ export function ProgressSyncer() {
     onError: (e) => console.error("[SYNC] Bookmarks save failed", e),
   });
   
+  const syncVerseStatuses = api.user.syncVerseStatuses.useMutation({
+    onSuccess: () => console.log("[SYNC] Verse progress saved to cloud"),
+    onError: (e) => console.error("[SYNC] Verse progress save failed", e),
+  });
+  
   const { data: profile } = api.user.getProfile.useQuery(undefined, {
     enabled: !!session,
   });
@@ -48,7 +53,9 @@ export function ProgressSyncer() {
   const localHighlights = useLiveQuery(() => db.highlights.where("userId").equals(currentUserId).toArray(), [currentUserId]);
   const localNotes = useLiveQuery(() => db.notes.where("userId").equals(currentUserId).toArray(), [currentUserId]);
   const localBookmarks = useLiveQuery(() => db.bookmarks.where("userId").equals(currentUserId).toArray(), [currentUserId]);
+  const localVerseStatuses = useLiveQuery(() => db.verseStatuses.where("userId").equals(currentUserId).toArray(), [currentUserId]);
 
+  const autoProgress = useReaderStore((state) => state.autoProgress);
   const hasInitialSync = useRef(false);
   const hasPulledCloudData = useRef(false);
 
@@ -60,6 +67,11 @@ export function ProgressSyncer() {
 
   // Initial Sync from DB to LocalStore (Progress only)
   useEffect(() => {
+    if (!session) {
+      hasInitialSync.current = true;
+      return;
+    }
+
     if (profile && !hasInitialSync.current) {
       console.log("[SYNC] Initial profile loaded", profile);
       // Only restore if the cloud progress is significantly different or local is 1
@@ -158,6 +170,31 @@ export function ProgressSyncer() {
               });
             }
           }
+
+          // RESTORE VERSE STATUSES (READ Progress)
+          for (const s of cloudData.verseStatuses) {
+            const localVerse = await db.verses
+              .where("[translationId+globalOrder]")
+              .equals([s.verse.translation.slug, s.verse.globalOrder])
+              .first();
+            
+            if (!localVerse) continue;
+
+            const exists = await db.verseStatuses.where("[userId+verseId]")
+              .equals([userId, localVerse.id])
+              .first();
+            
+            if (!exists) {
+              await db.verseStatuses.add({
+                userId,
+                verseId: localVerse.id,
+                globalOrder: localVerse.globalOrder,
+                translationSlug: localVerse.translationId,
+                isRead: true,
+                readAt: s.readAt.getTime(),
+              });
+            }
+          }
           console.log("[SYNC] Restoration complete");
         } catch (e) {
           console.error("[SYNC] Restoration failed", e);
@@ -168,9 +205,9 @@ export function ProgressSyncer() {
     }
   }, [cloudData, session]);
 
-  // Periodic Progress Sync
+  // Periodic Progress Sync (Auto-Sync last position)
   useEffect(() => {
-    if (!session || !hasInitialSync.current) return;
+    if (!session || !hasInitialSync.current || !autoProgress) return;
 
     const timer = setTimeout(() => {
       console.log("[SYNC] Saving progress...", currentOrder);
@@ -182,6 +219,42 @@ export function ProgressSyncer() {
 
     return () => clearTimeout(timer);
   }, [currentOrder, translationSlug, session]);
+
+  // Auto-mark current verse as read (Advanced Mastery)
+  useEffect(() => {
+    if (!autoProgress || currentOrder <= 1) return;
+
+    const timer = setTimeout(async () => {
+      const verse = await db.verses
+        .where("[translationId+globalOrder]")
+        .equals([translationSlug, currentOrder])
+        .first();
+      
+      if (verse) {
+        const exists = await db.verseStatuses.where("[userId+verseId]")
+          .equals([currentUserId, verse.id])
+          .first();
+        
+        if (!exists || !exists.isRead) {
+          console.log("[PROGRESS] Auto-marking verse as read:", currentOrder);
+          if (exists) {
+            await db.verseStatuses.update(exists.id!, { isRead: true, readAt: Date.now() });
+          } else {
+            await db.verseStatuses.add({
+              userId: currentUserId,
+              verseId: verse.id,
+              globalOrder: verse.globalOrder,
+              translationSlug: verse.translationId,
+              isRead: true,
+              readAt: Date.now()
+            });
+          }
+        }
+      }
+    }, 2000); // 2 second dwell time
+
+    return () => clearTimeout(timer);
+  }, [currentOrder, translationSlug, currentUserId, autoProgress]);
 
   // Sync Highlights to Server (Stable Ref)
   useEffect(() => {
@@ -251,6 +324,35 @@ export function ProgressSyncer() {
 
     return () => clearTimeout(timer);
   }, [localBookmarks, session]);
+
+  // Sync Verse Statuses to Server (Manual Progress)
+  useEffect(() => {
+    if (!session || !localVerseStatuses || localVerseStatuses.length === 0 || !hasInitialSync.current) return;
+
+    const timer = setTimeout(async () => {
+      // We need to join with verses to get globalOrder/translationSlug for stable sync
+      const payload = [];
+      for (const s of localVerseStatuses) {
+        if (!s.isRead) continue;
+        const verse = await db.verses.get(s.verseId);
+        if (verse) {
+          payload.push({
+            globalOrder: verse.globalOrder,
+            translationSlug: verse.translationId,
+            isRead: true,
+            readAt: s.readAt,
+          });
+        }
+      }
+
+      if (payload.length > 0) {
+        console.log("[SYNC] Syncing verse progress...");
+        syncVerseStatuses.mutate(payload);
+      }
+    }, 15000);
+
+    return () => clearTimeout(timer);
+  }, [localVerseStatuses, session]);
 
   return null;
 }

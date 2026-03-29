@@ -69,6 +69,26 @@ export type Session = $Result.DefaultSelection<Prisma.$SessionPayload>
  */
 export type User = $Result.DefaultSelection<Prisma.$UserPayload>
 /**
+ * Model VerseStatus
+ * 
+ */
+export type VerseStatus = $Result.DefaultSelection<Prisma.$VerseStatusPayload>
+/**
+ * Model ReadingPlan
+ * 
+ */
+export type ReadingPlan = $Result.DefaultSelection<Prisma.$ReadingPlanPayload>
+/**
+ * Model ReadingPlanDay
+ * 
+ */
+export type ReadingPlanDay = $Result.DefaultSelection<Prisma.$ReadingPlanDayPayload>
+/**
+ * Model UserReadingPlan
+ * 
+ */
+export type UserReadingPlan = $Result.DefaultSelection<Prisma.$UserReadingPlanPayload>
+/**
  * Model VerificationToken
  * 
  */
@@ -301,6 +321,46 @@ export class PrismaClient<
     * ```
     */
   get user(): Prisma.UserDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.verseStatus`: Exposes CRUD operations for the **VerseStatus** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more VerseStatuses
+    * const verseStatuses = await prisma.verseStatus.findMany()
+    * ```
+    */
+  get verseStatus(): Prisma.VerseStatusDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.readingPlan`: Exposes CRUD operations for the **ReadingPlan** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more ReadingPlans
+    * const readingPlans = await prisma.readingPlan.findMany()
+    * ```
+    */
+  get readingPlan(): Prisma.ReadingPlanDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.readingPlanDay`: Exposes CRUD operations for the **ReadingPlanDay** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more ReadingPlanDays
+    * const readingPlanDays = await prisma.readingPlanDay.findMany()
+    * ```
+    */
+  get readingPlanDay(): Prisma.ReadingPlanDayDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.userReadingPlan`: Exposes CRUD operations for the **UserReadingPlan** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more UserReadingPlans
+    * const userReadingPlans = await prisma.userReadingPlan.findMany()
+    * ```
+    */
+  get userReadingPlan(): Prisma.UserReadingPlanDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.verificationToken`: Exposes CRUD operations for the **VerificationToken** model.
@@ -763,6 +823,10 @@ export namespace Prisma {
     Account: 'Account',
     Session: 'Session',
     User: 'User',
+    VerseStatus: 'VerseStatus',
+    ReadingPlan: 'ReadingPlan',
+    ReadingPlanDay: 'ReadingPlanDay',
+    UserReadingPlan: 'UserReadingPlan',
     VerificationToken: 'VerificationToken'
   };
 
@@ -782,7 +846,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "post" | "translation" | "book" | "verse" | "bookmark" | "highlight" | "note" | "dailyReading" | "account" | "session" | "user" | "verificationToken"
+      modelProps: "post" | "translation" | "book" | "verse" | "bookmark" | "highlight" | "note" | "dailyReading" | "account" | "session" | "user" | "verseStatus" | "readingPlan" | "readingPlanDay" | "userReadingPlan" | "verificationToken"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1600,6 +1664,302 @@ export namespace Prisma {
           }
         }
       }
+      VerseStatus: {
+        payload: Prisma.$VerseStatusPayload<ExtArgs>
+        fields: Prisma.VerseStatusFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.VerseStatusFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VerseStatusPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.VerseStatusFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VerseStatusPayload>
+          }
+          findFirst: {
+            args: Prisma.VerseStatusFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VerseStatusPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.VerseStatusFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VerseStatusPayload>
+          }
+          findMany: {
+            args: Prisma.VerseStatusFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VerseStatusPayload>[]
+          }
+          create: {
+            args: Prisma.VerseStatusCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VerseStatusPayload>
+          }
+          createMany: {
+            args: Prisma.VerseStatusCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.VerseStatusCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VerseStatusPayload>[]
+          }
+          delete: {
+            args: Prisma.VerseStatusDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VerseStatusPayload>
+          }
+          update: {
+            args: Prisma.VerseStatusUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VerseStatusPayload>
+          }
+          deleteMany: {
+            args: Prisma.VerseStatusDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.VerseStatusUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.VerseStatusUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VerseStatusPayload>[]
+          }
+          upsert: {
+            args: Prisma.VerseStatusUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$VerseStatusPayload>
+          }
+          aggregate: {
+            args: Prisma.VerseStatusAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateVerseStatus>
+          }
+          groupBy: {
+            args: Prisma.VerseStatusGroupByArgs<ExtArgs>
+            result: $Utils.Optional<VerseStatusGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.VerseStatusCountArgs<ExtArgs>
+            result: $Utils.Optional<VerseStatusCountAggregateOutputType> | number
+          }
+        }
+      }
+      ReadingPlan: {
+        payload: Prisma.$ReadingPlanPayload<ExtArgs>
+        fields: Prisma.ReadingPlanFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.ReadingPlanFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReadingPlanPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.ReadingPlanFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReadingPlanPayload>
+          }
+          findFirst: {
+            args: Prisma.ReadingPlanFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReadingPlanPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.ReadingPlanFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReadingPlanPayload>
+          }
+          findMany: {
+            args: Prisma.ReadingPlanFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReadingPlanPayload>[]
+          }
+          create: {
+            args: Prisma.ReadingPlanCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReadingPlanPayload>
+          }
+          createMany: {
+            args: Prisma.ReadingPlanCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.ReadingPlanCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReadingPlanPayload>[]
+          }
+          delete: {
+            args: Prisma.ReadingPlanDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReadingPlanPayload>
+          }
+          update: {
+            args: Prisma.ReadingPlanUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReadingPlanPayload>
+          }
+          deleteMany: {
+            args: Prisma.ReadingPlanDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.ReadingPlanUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.ReadingPlanUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReadingPlanPayload>[]
+          }
+          upsert: {
+            args: Prisma.ReadingPlanUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReadingPlanPayload>
+          }
+          aggregate: {
+            args: Prisma.ReadingPlanAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateReadingPlan>
+          }
+          groupBy: {
+            args: Prisma.ReadingPlanGroupByArgs<ExtArgs>
+            result: $Utils.Optional<ReadingPlanGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.ReadingPlanCountArgs<ExtArgs>
+            result: $Utils.Optional<ReadingPlanCountAggregateOutputType> | number
+          }
+        }
+      }
+      ReadingPlanDay: {
+        payload: Prisma.$ReadingPlanDayPayload<ExtArgs>
+        fields: Prisma.ReadingPlanDayFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.ReadingPlanDayFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReadingPlanDayPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.ReadingPlanDayFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReadingPlanDayPayload>
+          }
+          findFirst: {
+            args: Prisma.ReadingPlanDayFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReadingPlanDayPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.ReadingPlanDayFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReadingPlanDayPayload>
+          }
+          findMany: {
+            args: Prisma.ReadingPlanDayFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReadingPlanDayPayload>[]
+          }
+          create: {
+            args: Prisma.ReadingPlanDayCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReadingPlanDayPayload>
+          }
+          createMany: {
+            args: Prisma.ReadingPlanDayCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.ReadingPlanDayCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReadingPlanDayPayload>[]
+          }
+          delete: {
+            args: Prisma.ReadingPlanDayDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReadingPlanDayPayload>
+          }
+          update: {
+            args: Prisma.ReadingPlanDayUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReadingPlanDayPayload>
+          }
+          deleteMany: {
+            args: Prisma.ReadingPlanDayDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.ReadingPlanDayUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.ReadingPlanDayUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReadingPlanDayPayload>[]
+          }
+          upsert: {
+            args: Prisma.ReadingPlanDayUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ReadingPlanDayPayload>
+          }
+          aggregate: {
+            args: Prisma.ReadingPlanDayAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateReadingPlanDay>
+          }
+          groupBy: {
+            args: Prisma.ReadingPlanDayGroupByArgs<ExtArgs>
+            result: $Utils.Optional<ReadingPlanDayGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.ReadingPlanDayCountArgs<ExtArgs>
+            result: $Utils.Optional<ReadingPlanDayCountAggregateOutputType> | number
+          }
+        }
+      }
+      UserReadingPlan: {
+        payload: Prisma.$UserReadingPlanPayload<ExtArgs>
+        fields: Prisma.UserReadingPlanFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.UserReadingPlanFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserReadingPlanPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.UserReadingPlanFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserReadingPlanPayload>
+          }
+          findFirst: {
+            args: Prisma.UserReadingPlanFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserReadingPlanPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.UserReadingPlanFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserReadingPlanPayload>
+          }
+          findMany: {
+            args: Prisma.UserReadingPlanFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserReadingPlanPayload>[]
+          }
+          create: {
+            args: Prisma.UserReadingPlanCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserReadingPlanPayload>
+          }
+          createMany: {
+            args: Prisma.UserReadingPlanCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.UserReadingPlanCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserReadingPlanPayload>[]
+          }
+          delete: {
+            args: Prisma.UserReadingPlanDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserReadingPlanPayload>
+          }
+          update: {
+            args: Prisma.UserReadingPlanUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserReadingPlanPayload>
+          }
+          deleteMany: {
+            args: Prisma.UserReadingPlanDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.UserReadingPlanUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.UserReadingPlanUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserReadingPlanPayload>[]
+          }
+          upsert: {
+            args: Prisma.UserReadingPlanUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$UserReadingPlanPayload>
+          }
+          aggregate: {
+            args: Prisma.UserReadingPlanAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateUserReadingPlan>
+          }
+          groupBy: {
+            args: Prisma.UserReadingPlanGroupByArgs<ExtArgs>
+            result: $Utils.Optional<UserReadingPlanGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.UserReadingPlanCountArgs<ExtArgs>
+            result: $Utils.Optional<UserReadingPlanCountAggregateOutputType> | number
+          }
+        }
+      }
       VerificationToken: {
         payload: Prisma.$VerificationTokenPayload<ExtArgs>
         fields: Prisma.VerificationTokenFieldRefs
@@ -1781,6 +2141,10 @@ export namespace Prisma {
     account?: AccountOmit
     session?: SessionOmit
     user?: UserOmit
+    verseStatus?: VerseStatusOmit
+    readingPlan?: ReadingPlanOmit
+    readingPlanDay?: ReadingPlanDayOmit
+    userReadingPlan?: UserReadingPlanOmit
     verificationToken?: VerificationTokenOmit
   }
 
@@ -1927,12 +2291,14 @@ export namespace Prisma {
     bookmarks: number
     highlights: number
     notes: number
+    verseStatuses: number
   }
 
   export type VerseCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     bookmarks?: boolean | VerseCountOutputTypeCountBookmarksArgs
     highlights?: boolean | VerseCountOutputTypeCountHighlightsArgs
     notes?: boolean | VerseCountOutputTypeCountNotesArgs
+    verseStatuses?: boolean | VerseCountOutputTypeCountVerseStatusesArgs
   }
 
   // Custom InputTypes
@@ -1967,6 +2333,13 @@ export namespace Prisma {
     where?: NoteWhereInput
   }
 
+  /**
+   * VerseCountOutputType without action
+   */
+  export type VerseCountOutputTypeCountVerseStatusesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: VerseStatusWhereInput
+  }
+
 
   /**
    * Count Type UserCountOutputType
@@ -1979,6 +2352,8 @@ export namespace Prisma {
     notes: number
     posts: number
     sessions: number
+    verseStatuses: number
+    readingPlans: number
   }
 
   export type UserCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -1988,6 +2363,8 @@ export namespace Prisma {
     notes?: boolean | UserCountOutputTypeCountNotesArgs
     posts?: boolean | UserCountOutputTypeCountPostsArgs
     sessions?: boolean | UserCountOutputTypeCountSessionsArgs
+    verseStatuses?: boolean | UserCountOutputTypeCountVerseStatusesArgs
+    readingPlans?: boolean | UserCountOutputTypeCountReadingPlansArgs
   }
 
   // Custom InputTypes
@@ -2041,6 +2418,60 @@ export namespace Prisma {
    */
   export type UserCountOutputTypeCountSessionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: SessionWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountVerseStatusesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: VerseStatusWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountReadingPlansArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: UserReadingPlanWhereInput
+  }
+
+
+  /**
+   * Count Type ReadingPlanCountOutputType
+   */
+
+  export type ReadingPlanCountOutputType = {
+    days: number
+    userPlans: number
+  }
+
+  export type ReadingPlanCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    days?: boolean | ReadingPlanCountOutputTypeCountDaysArgs
+    userPlans?: boolean | ReadingPlanCountOutputTypeCountUserPlansArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * ReadingPlanCountOutputType without action
+   */
+  export type ReadingPlanCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReadingPlanCountOutputType
+     */
+    select?: ReadingPlanCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * ReadingPlanCountOutputType without action
+   */
+  export type ReadingPlanCountOutputTypeCountDaysArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ReadingPlanDayWhereInput
+  }
+
+  /**
+   * ReadingPlanCountOutputType without action
+   */
+  export type ReadingPlanCountOutputTypeCountUserPlansArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: UserReadingPlanWhereInput
   }
 
 
@@ -5612,6 +6043,7 @@ export namespace Prisma {
     bookmarks?: boolean | Verse$bookmarksArgs<ExtArgs>
     highlights?: boolean | Verse$highlightsArgs<ExtArgs>
     notes?: boolean | Verse$notesArgs<ExtArgs>
+    verseStatuses?: boolean | Verse$verseStatusesArgs<ExtArgs>
     book?: boolean | BookDefaultArgs<ExtArgs>
     translation?: boolean | TranslationDefaultArgs<ExtArgs>
     _count?: boolean | VerseCountOutputTypeDefaultArgs<ExtArgs>
@@ -5656,6 +6088,7 @@ export namespace Prisma {
     bookmarks?: boolean | Verse$bookmarksArgs<ExtArgs>
     highlights?: boolean | Verse$highlightsArgs<ExtArgs>
     notes?: boolean | Verse$notesArgs<ExtArgs>
+    verseStatuses?: boolean | Verse$verseStatusesArgs<ExtArgs>
     book?: boolean | BookDefaultArgs<ExtArgs>
     translation?: boolean | TranslationDefaultArgs<ExtArgs>
     _count?: boolean | VerseCountOutputTypeDefaultArgs<ExtArgs>
@@ -5675,6 +6108,7 @@ export namespace Prisma {
       bookmarks: Prisma.$BookmarkPayload<ExtArgs>[]
       highlights: Prisma.$HighlightPayload<ExtArgs>[]
       notes: Prisma.$NotePayload<ExtArgs>[]
+      verseStatuses: Prisma.$VerseStatusPayload<ExtArgs>[]
       book: Prisma.$BookPayload<ExtArgs>
       translation: Prisma.$TranslationPayload<ExtArgs>
     }
@@ -6083,6 +6517,7 @@ export namespace Prisma {
     bookmarks<T extends Verse$bookmarksArgs<ExtArgs> = {}>(args?: Subset<T, Verse$bookmarksArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BookmarkPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     highlights<T extends Verse$highlightsArgs<ExtArgs> = {}>(args?: Subset<T, Verse$highlightsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$HighlightPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     notes<T extends Verse$notesArgs<ExtArgs> = {}>(args?: Subset<T, Verse$notesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$NotePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    verseStatuses<T extends Verse$verseStatusesArgs<ExtArgs> = {}>(args?: Subset<T, Verse$verseStatusesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$VerseStatusPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     book<T extends BookDefaultArgs<ExtArgs> = {}>(args?: Subset<T, BookDefaultArgs<ExtArgs>>): Prisma__BookClient<$Result.GetResult<Prisma.$BookPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     translation<T extends TranslationDefaultArgs<ExtArgs> = {}>(args?: Subset<T, TranslationDefaultArgs<ExtArgs>>): Prisma__TranslationClient<$Result.GetResult<Prisma.$TranslationPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     /**
@@ -6586,6 +7021,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: NoteScalarFieldEnum | NoteScalarFieldEnum[]
+  }
+
+  /**
+   * Verse.verseStatuses
+   */
+  export type Verse$verseStatusesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VerseStatus
+     */
+    select?: VerseStatusSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the VerseStatus
+     */
+    omit?: VerseStatusOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VerseStatusInclude<ExtArgs> | null
+    where?: VerseStatusWhereInput
+    orderBy?: VerseStatusOrderByWithRelationInput | VerseStatusOrderByWithRelationInput[]
+    cursor?: VerseStatusWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: VerseStatusScalarFieldEnum | VerseStatusScalarFieldEnum[]
   }
 
   /**
@@ -13126,6 +13585,7 @@ export namespace Prisma {
     lastReadOrder: number | null
     lastReadTranslation: string | null
     lastReadAt: Date | null
+    autoProgress: boolean | null
   }
 
   export type UserMaxAggregateOutputType = {
@@ -13137,6 +13597,7 @@ export namespace Prisma {
     lastReadOrder: number | null
     lastReadTranslation: string | null
     lastReadAt: Date | null
+    autoProgress: boolean | null
   }
 
   export type UserCountAggregateOutputType = {
@@ -13148,6 +13609,7 @@ export namespace Prisma {
     lastReadOrder: number
     lastReadTranslation: number
     lastReadAt: number
+    autoProgress: number
     _all: number
   }
 
@@ -13169,6 +13631,7 @@ export namespace Prisma {
     lastReadOrder?: true
     lastReadTranslation?: true
     lastReadAt?: true
+    autoProgress?: true
   }
 
   export type UserMaxAggregateInputType = {
@@ -13180,6 +13643,7 @@ export namespace Prisma {
     lastReadOrder?: true
     lastReadTranslation?: true
     lastReadAt?: true
+    autoProgress?: true
   }
 
   export type UserCountAggregateInputType = {
@@ -13191,6 +13655,7 @@ export namespace Prisma {
     lastReadOrder?: true
     lastReadTranslation?: true
     lastReadAt?: true
+    autoProgress?: true
     _all?: true
   }
 
@@ -13289,6 +13754,7 @@ export namespace Prisma {
     lastReadOrder: number
     lastReadTranslation: string
     lastReadAt: Date
+    autoProgress: boolean
     _count: UserCountAggregateOutputType | null
     _avg: UserAvgAggregateOutputType | null
     _sum: UserSumAggregateOutputType | null
@@ -13319,12 +13785,15 @@ export namespace Prisma {
     lastReadOrder?: boolean
     lastReadTranslation?: boolean
     lastReadAt?: boolean
+    autoProgress?: boolean
     accounts?: boolean | User$accountsArgs<ExtArgs>
     bookmarks?: boolean | User$bookmarksArgs<ExtArgs>
     highlights?: boolean | User$highlightsArgs<ExtArgs>
     notes?: boolean | User$notesArgs<ExtArgs>
     posts?: boolean | User$postsArgs<ExtArgs>
     sessions?: boolean | User$sessionsArgs<ExtArgs>
+    verseStatuses?: boolean | User$verseStatusesArgs<ExtArgs>
+    readingPlans?: boolean | User$readingPlansArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["user"]>
 
@@ -13337,6 +13806,7 @@ export namespace Prisma {
     lastReadOrder?: boolean
     lastReadTranslation?: boolean
     lastReadAt?: boolean
+    autoProgress?: boolean
   }, ExtArgs["result"]["user"]>
 
   export type UserSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -13348,6 +13818,7 @@ export namespace Prisma {
     lastReadOrder?: boolean
     lastReadTranslation?: boolean
     lastReadAt?: boolean
+    autoProgress?: boolean
   }, ExtArgs["result"]["user"]>
 
   export type UserSelectScalar = {
@@ -13359,9 +13830,10 @@ export namespace Prisma {
     lastReadOrder?: boolean
     lastReadTranslation?: boolean
     lastReadAt?: boolean
+    autoProgress?: boolean
   }
 
-  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "email" | "emailVerified" | "image" | "lastReadOrder" | "lastReadTranslation" | "lastReadAt", ExtArgs["result"]["user"]>
+  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "email" | "emailVerified" | "image" | "lastReadOrder" | "lastReadTranslation" | "lastReadAt" | "autoProgress", ExtArgs["result"]["user"]>
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     accounts?: boolean | User$accountsArgs<ExtArgs>
     bookmarks?: boolean | User$bookmarksArgs<ExtArgs>
@@ -13369,6 +13841,8 @@ export namespace Prisma {
     notes?: boolean | User$notesArgs<ExtArgs>
     posts?: boolean | User$postsArgs<ExtArgs>
     sessions?: boolean | User$sessionsArgs<ExtArgs>
+    verseStatuses?: boolean | User$verseStatusesArgs<ExtArgs>
+    readingPlans?: boolean | User$readingPlansArgs<ExtArgs>
     _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type UserIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
@@ -13383,6 +13857,8 @@ export namespace Prisma {
       notes: Prisma.$NotePayload<ExtArgs>[]
       posts: Prisma.$PostPayload<ExtArgs>[]
       sessions: Prisma.$SessionPayload<ExtArgs>[]
+      verseStatuses: Prisma.$VerseStatusPayload<ExtArgs>[]
+      readingPlans: Prisma.$UserReadingPlanPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -13393,6 +13869,7 @@ export namespace Prisma {
       lastReadOrder: number
       lastReadTranslation: string
       lastReadAt: Date
+      autoProgress: boolean
     }, ExtArgs["result"]["user"]>
     composites: {}
   }
@@ -13793,6 +14270,8 @@ export namespace Prisma {
     notes<T extends User$notesArgs<ExtArgs> = {}>(args?: Subset<T, User$notesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$NotePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     posts<T extends User$postsArgs<ExtArgs> = {}>(args?: Subset<T, User$postsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$PostPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     sessions<T extends User$sessionsArgs<ExtArgs> = {}>(args?: Subset<T, User$sessionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SessionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    verseStatuses<T extends User$verseStatusesArgs<ExtArgs> = {}>(args?: Subset<T, User$verseStatusesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$VerseStatusPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    readingPlans<T extends User$readingPlansArgs<ExtArgs> = {}>(args?: Subset<T, User$readingPlansArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserReadingPlanPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -13830,6 +14309,7 @@ export namespace Prisma {
     readonly lastReadOrder: FieldRef<"User", 'Int'>
     readonly lastReadTranslation: FieldRef<"User", 'String'>
     readonly lastReadAt: FieldRef<"User", 'DateTime'>
+    readonly autoProgress: FieldRef<"User", 'Boolean'>
   }
     
 
@@ -14362,6 +14842,54 @@ export namespace Prisma {
   }
 
   /**
+   * User.verseStatuses
+   */
+  export type User$verseStatusesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VerseStatus
+     */
+    select?: VerseStatusSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the VerseStatus
+     */
+    omit?: VerseStatusOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VerseStatusInclude<ExtArgs> | null
+    where?: VerseStatusWhereInput
+    orderBy?: VerseStatusOrderByWithRelationInput | VerseStatusOrderByWithRelationInput[]
+    cursor?: VerseStatusWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: VerseStatusScalarFieldEnum | VerseStatusScalarFieldEnum[]
+  }
+
+  /**
+   * User.readingPlans
+   */
+  export type User$readingPlansArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserReadingPlan
+     */
+    select?: UserReadingPlanSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserReadingPlan
+     */
+    omit?: UserReadingPlanOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserReadingPlanInclude<ExtArgs> | null
+    where?: UserReadingPlanWhereInput
+    orderBy?: UserReadingPlanOrderByWithRelationInput | UserReadingPlanOrderByWithRelationInput[]
+    cursor?: UserReadingPlanWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: UserReadingPlanScalarFieldEnum | UserReadingPlanScalarFieldEnum[]
+  }
+
+  /**
    * User without action
    */
   export type UserDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -14377,6 +14905,4470 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: UserInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model VerseStatus
+   */
+
+  export type AggregateVerseStatus = {
+    _count: VerseStatusCountAggregateOutputType | null
+    _min: VerseStatusMinAggregateOutputType | null
+    _max: VerseStatusMaxAggregateOutputType | null
+  }
+
+  export type VerseStatusMinAggregateOutputType = {
+    id: string | null
+    userId: string | null
+    verseId: string | null
+    isRead: boolean | null
+    readAt: Date | null
+  }
+
+  export type VerseStatusMaxAggregateOutputType = {
+    id: string | null
+    userId: string | null
+    verseId: string | null
+    isRead: boolean | null
+    readAt: Date | null
+  }
+
+  export type VerseStatusCountAggregateOutputType = {
+    id: number
+    userId: number
+    verseId: number
+    isRead: number
+    readAt: number
+    _all: number
+  }
+
+
+  export type VerseStatusMinAggregateInputType = {
+    id?: true
+    userId?: true
+    verseId?: true
+    isRead?: true
+    readAt?: true
+  }
+
+  export type VerseStatusMaxAggregateInputType = {
+    id?: true
+    userId?: true
+    verseId?: true
+    isRead?: true
+    readAt?: true
+  }
+
+  export type VerseStatusCountAggregateInputType = {
+    id?: true
+    userId?: true
+    verseId?: true
+    isRead?: true
+    readAt?: true
+    _all?: true
+  }
+
+  export type VerseStatusAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which VerseStatus to aggregate.
+     */
+    where?: VerseStatusWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of VerseStatuses to fetch.
+     */
+    orderBy?: VerseStatusOrderByWithRelationInput | VerseStatusOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: VerseStatusWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` VerseStatuses from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` VerseStatuses.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned VerseStatuses
+    **/
+    _count?: true | VerseStatusCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: VerseStatusMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: VerseStatusMaxAggregateInputType
+  }
+
+  export type GetVerseStatusAggregateType<T extends VerseStatusAggregateArgs> = {
+        [P in keyof T & keyof AggregateVerseStatus]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateVerseStatus[P]>
+      : GetScalarType<T[P], AggregateVerseStatus[P]>
+  }
+
+
+
+
+  export type VerseStatusGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: VerseStatusWhereInput
+    orderBy?: VerseStatusOrderByWithAggregationInput | VerseStatusOrderByWithAggregationInput[]
+    by: VerseStatusScalarFieldEnum[] | VerseStatusScalarFieldEnum
+    having?: VerseStatusScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: VerseStatusCountAggregateInputType | true
+    _min?: VerseStatusMinAggregateInputType
+    _max?: VerseStatusMaxAggregateInputType
+  }
+
+  export type VerseStatusGroupByOutputType = {
+    id: string
+    userId: string
+    verseId: string
+    isRead: boolean
+    readAt: Date
+    _count: VerseStatusCountAggregateOutputType | null
+    _min: VerseStatusMinAggregateOutputType | null
+    _max: VerseStatusMaxAggregateOutputType | null
+  }
+
+  type GetVerseStatusGroupByPayload<T extends VerseStatusGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<VerseStatusGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof VerseStatusGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], VerseStatusGroupByOutputType[P]>
+            : GetScalarType<T[P], VerseStatusGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type VerseStatusSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    verseId?: boolean
+    isRead?: boolean
+    readAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+    verse?: boolean | VerseDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["verseStatus"]>
+
+  export type VerseStatusSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    verseId?: boolean
+    isRead?: boolean
+    readAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+    verse?: boolean | VerseDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["verseStatus"]>
+
+  export type VerseStatusSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    verseId?: boolean
+    isRead?: boolean
+    readAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+    verse?: boolean | VerseDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["verseStatus"]>
+
+  export type VerseStatusSelectScalar = {
+    id?: boolean
+    userId?: boolean
+    verseId?: boolean
+    isRead?: boolean
+    readAt?: boolean
+  }
+
+  export type VerseStatusOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "verseId" | "isRead" | "readAt", ExtArgs["result"]["verseStatus"]>
+  export type VerseStatusInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+    verse?: boolean | VerseDefaultArgs<ExtArgs>
+  }
+  export type VerseStatusIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+    verse?: boolean | VerseDefaultArgs<ExtArgs>
+  }
+  export type VerseStatusIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+    verse?: boolean | VerseDefaultArgs<ExtArgs>
+  }
+
+  export type $VerseStatusPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "VerseStatus"
+    objects: {
+      user: Prisma.$UserPayload<ExtArgs>
+      verse: Prisma.$VersePayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      userId: string
+      verseId: string
+      isRead: boolean
+      readAt: Date
+    }, ExtArgs["result"]["verseStatus"]>
+    composites: {}
+  }
+
+  type VerseStatusGetPayload<S extends boolean | null | undefined | VerseStatusDefaultArgs> = $Result.GetResult<Prisma.$VerseStatusPayload, S>
+
+  type VerseStatusCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<VerseStatusFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: VerseStatusCountAggregateInputType | true
+    }
+
+  export interface VerseStatusDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['VerseStatus'], meta: { name: 'VerseStatus' } }
+    /**
+     * Find zero or one VerseStatus that matches the filter.
+     * @param {VerseStatusFindUniqueArgs} args - Arguments to find a VerseStatus
+     * @example
+     * // Get one VerseStatus
+     * const verseStatus = await prisma.verseStatus.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends VerseStatusFindUniqueArgs>(args: SelectSubset<T, VerseStatusFindUniqueArgs<ExtArgs>>): Prisma__VerseStatusClient<$Result.GetResult<Prisma.$VerseStatusPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one VerseStatus that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {VerseStatusFindUniqueOrThrowArgs} args - Arguments to find a VerseStatus
+     * @example
+     * // Get one VerseStatus
+     * const verseStatus = await prisma.verseStatus.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends VerseStatusFindUniqueOrThrowArgs>(args: SelectSubset<T, VerseStatusFindUniqueOrThrowArgs<ExtArgs>>): Prisma__VerseStatusClient<$Result.GetResult<Prisma.$VerseStatusPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first VerseStatus that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {VerseStatusFindFirstArgs} args - Arguments to find a VerseStatus
+     * @example
+     * // Get one VerseStatus
+     * const verseStatus = await prisma.verseStatus.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends VerseStatusFindFirstArgs>(args?: SelectSubset<T, VerseStatusFindFirstArgs<ExtArgs>>): Prisma__VerseStatusClient<$Result.GetResult<Prisma.$VerseStatusPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first VerseStatus that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {VerseStatusFindFirstOrThrowArgs} args - Arguments to find a VerseStatus
+     * @example
+     * // Get one VerseStatus
+     * const verseStatus = await prisma.verseStatus.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends VerseStatusFindFirstOrThrowArgs>(args?: SelectSubset<T, VerseStatusFindFirstOrThrowArgs<ExtArgs>>): Prisma__VerseStatusClient<$Result.GetResult<Prisma.$VerseStatusPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more VerseStatuses that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {VerseStatusFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all VerseStatuses
+     * const verseStatuses = await prisma.verseStatus.findMany()
+     * 
+     * // Get first 10 VerseStatuses
+     * const verseStatuses = await prisma.verseStatus.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const verseStatusWithIdOnly = await prisma.verseStatus.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends VerseStatusFindManyArgs>(args?: SelectSubset<T, VerseStatusFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$VerseStatusPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a VerseStatus.
+     * @param {VerseStatusCreateArgs} args - Arguments to create a VerseStatus.
+     * @example
+     * // Create one VerseStatus
+     * const VerseStatus = await prisma.verseStatus.create({
+     *   data: {
+     *     // ... data to create a VerseStatus
+     *   }
+     * })
+     * 
+     */
+    create<T extends VerseStatusCreateArgs>(args: SelectSubset<T, VerseStatusCreateArgs<ExtArgs>>): Prisma__VerseStatusClient<$Result.GetResult<Prisma.$VerseStatusPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many VerseStatuses.
+     * @param {VerseStatusCreateManyArgs} args - Arguments to create many VerseStatuses.
+     * @example
+     * // Create many VerseStatuses
+     * const verseStatus = await prisma.verseStatus.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends VerseStatusCreateManyArgs>(args?: SelectSubset<T, VerseStatusCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many VerseStatuses and returns the data saved in the database.
+     * @param {VerseStatusCreateManyAndReturnArgs} args - Arguments to create many VerseStatuses.
+     * @example
+     * // Create many VerseStatuses
+     * const verseStatus = await prisma.verseStatus.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many VerseStatuses and only return the `id`
+     * const verseStatusWithIdOnly = await prisma.verseStatus.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends VerseStatusCreateManyAndReturnArgs>(args?: SelectSubset<T, VerseStatusCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$VerseStatusPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a VerseStatus.
+     * @param {VerseStatusDeleteArgs} args - Arguments to delete one VerseStatus.
+     * @example
+     * // Delete one VerseStatus
+     * const VerseStatus = await prisma.verseStatus.delete({
+     *   where: {
+     *     // ... filter to delete one VerseStatus
+     *   }
+     * })
+     * 
+     */
+    delete<T extends VerseStatusDeleteArgs>(args: SelectSubset<T, VerseStatusDeleteArgs<ExtArgs>>): Prisma__VerseStatusClient<$Result.GetResult<Prisma.$VerseStatusPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one VerseStatus.
+     * @param {VerseStatusUpdateArgs} args - Arguments to update one VerseStatus.
+     * @example
+     * // Update one VerseStatus
+     * const verseStatus = await prisma.verseStatus.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends VerseStatusUpdateArgs>(args: SelectSubset<T, VerseStatusUpdateArgs<ExtArgs>>): Prisma__VerseStatusClient<$Result.GetResult<Prisma.$VerseStatusPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more VerseStatuses.
+     * @param {VerseStatusDeleteManyArgs} args - Arguments to filter VerseStatuses to delete.
+     * @example
+     * // Delete a few VerseStatuses
+     * const { count } = await prisma.verseStatus.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends VerseStatusDeleteManyArgs>(args?: SelectSubset<T, VerseStatusDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more VerseStatuses.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {VerseStatusUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many VerseStatuses
+     * const verseStatus = await prisma.verseStatus.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends VerseStatusUpdateManyArgs>(args: SelectSubset<T, VerseStatusUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more VerseStatuses and returns the data updated in the database.
+     * @param {VerseStatusUpdateManyAndReturnArgs} args - Arguments to update many VerseStatuses.
+     * @example
+     * // Update many VerseStatuses
+     * const verseStatus = await prisma.verseStatus.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more VerseStatuses and only return the `id`
+     * const verseStatusWithIdOnly = await prisma.verseStatus.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends VerseStatusUpdateManyAndReturnArgs>(args: SelectSubset<T, VerseStatusUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$VerseStatusPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one VerseStatus.
+     * @param {VerseStatusUpsertArgs} args - Arguments to update or create a VerseStatus.
+     * @example
+     * // Update or create a VerseStatus
+     * const verseStatus = await prisma.verseStatus.upsert({
+     *   create: {
+     *     // ... data to create a VerseStatus
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the VerseStatus we want to update
+     *   }
+     * })
+     */
+    upsert<T extends VerseStatusUpsertArgs>(args: SelectSubset<T, VerseStatusUpsertArgs<ExtArgs>>): Prisma__VerseStatusClient<$Result.GetResult<Prisma.$VerseStatusPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of VerseStatuses.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {VerseStatusCountArgs} args - Arguments to filter VerseStatuses to count.
+     * @example
+     * // Count the number of VerseStatuses
+     * const count = await prisma.verseStatus.count({
+     *   where: {
+     *     // ... the filter for the VerseStatuses we want to count
+     *   }
+     * })
+    **/
+    count<T extends VerseStatusCountArgs>(
+      args?: Subset<T, VerseStatusCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], VerseStatusCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a VerseStatus.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {VerseStatusAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends VerseStatusAggregateArgs>(args: Subset<T, VerseStatusAggregateArgs>): Prisma.PrismaPromise<GetVerseStatusAggregateType<T>>
+
+    /**
+     * Group by VerseStatus.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {VerseStatusGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends VerseStatusGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: VerseStatusGroupByArgs['orderBy'] }
+        : { orderBy?: VerseStatusGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, VerseStatusGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetVerseStatusGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the VerseStatus model
+   */
+  readonly fields: VerseStatusFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for VerseStatus.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__VerseStatusClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    verse<T extends VerseDefaultArgs<ExtArgs> = {}>(args?: Subset<T, VerseDefaultArgs<ExtArgs>>): Prisma__VerseClient<$Result.GetResult<Prisma.$VersePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the VerseStatus model
+   */
+  interface VerseStatusFieldRefs {
+    readonly id: FieldRef<"VerseStatus", 'String'>
+    readonly userId: FieldRef<"VerseStatus", 'String'>
+    readonly verseId: FieldRef<"VerseStatus", 'String'>
+    readonly isRead: FieldRef<"VerseStatus", 'Boolean'>
+    readonly readAt: FieldRef<"VerseStatus", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * VerseStatus findUnique
+   */
+  export type VerseStatusFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VerseStatus
+     */
+    select?: VerseStatusSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the VerseStatus
+     */
+    omit?: VerseStatusOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VerseStatusInclude<ExtArgs> | null
+    /**
+     * Filter, which VerseStatus to fetch.
+     */
+    where: VerseStatusWhereUniqueInput
+  }
+
+  /**
+   * VerseStatus findUniqueOrThrow
+   */
+  export type VerseStatusFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VerseStatus
+     */
+    select?: VerseStatusSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the VerseStatus
+     */
+    omit?: VerseStatusOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VerseStatusInclude<ExtArgs> | null
+    /**
+     * Filter, which VerseStatus to fetch.
+     */
+    where: VerseStatusWhereUniqueInput
+  }
+
+  /**
+   * VerseStatus findFirst
+   */
+  export type VerseStatusFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VerseStatus
+     */
+    select?: VerseStatusSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the VerseStatus
+     */
+    omit?: VerseStatusOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VerseStatusInclude<ExtArgs> | null
+    /**
+     * Filter, which VerseStatus to fetch.
+     */
+    where?: VerseStatusWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of VerseStatuses to fetch.
+     */
+    orderBy?: VerseStatusOrderByWithRelationInput | VerseStatusOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for VerseStatuses.
+     */
+    cursor?: VerseStatusWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` VerseStatuses from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` VerseStatuses.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of VerseStatuses.
+     */
+    distinct?: VerseStatusScalarFieldEnum | VerseStatusScalarFieldEnum[]
+  }
+
+  /**
+   * VerseStatus findFirstOrThrow
+   */
+  export type VerseStatusFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VerseStatus
+     */
+    select?: VerseStatusSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the VerseStatus
+     */
+    omit?: VerseStatusOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VerseStatusInclude<ExtArgs> | null
+    /**
+     * Filter, which VerseStatus to fetch.
+     */
+    where?: VerseStatusWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of VerseStatuses to fetch.
+     */
+    orderBy?: VerseStatusOrderByWithRelationInput | VerseStatusOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for VerseStatuses.
+     */
+    cursor?: VerseStatusWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` VerseStatuses from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` VerseStatuses.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of VerseStatuses.
+     */
+    distinct?: VerseStatusScalarFieldEnum | VerseStatusScalarFieldEnum[]
+  }
+
+  /**
+   * VerseStatus findMany
+   */
+  export type VerseStatusFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VerseStatus
+     */
+    select?: VerseStatusSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the VerseStatus
+     */
+    omit?: VerseStatusOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VerseStatusInclude<ExtArgs> | null
+    /**
+     * Filter, which VerseStatuses to fetch.
+     */
+    where?: VerseStatusWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of VerseStatuses to fetch.
+     */
+    orderBy?: VerseStatusOrderByWithRelationInput | VerseStatusOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing VerseStatuses.
+     */
+    cursor?: VerseStatusWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` VerseStatuses from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` VerseStatuses.
+     */
+    skip?: number
+    distinct?: VerseStatusScalarFieldEnum | VerseStatusScalarFieldEnum[]
+  }
+
+  /**
+   * VerseStatus create
+   */
+  export type VerseStatusCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VerseStatus
+     */
+    select?: VerseStatusSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the VerseStatus
+     */
+    omit?: VerseStatusOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VerseStatusInclude<ExtArgs> | null
+    /**
+     * The data needed to create a VerseStatus.
+     */
+    data: XOR<VerseStatusCreateInput, VerseStatusUncheckedCreateInput>
+  }
+
+  /**
+   * VerseStatus createMany
+   */
+  export type VerseStatusCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many VerseStatuses.
+     */
+    data: VerseStatusCreateManyInput | VerseStatusCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * VerseStatus createManyAndReturn
+   */
+  export type VerseStatusCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VerseStatus
+     */
+    select?: VerseStatusSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the VerseStatus
+     */
+    omit?: VerseStatusOmit<ExtArgs> | null
+    /**
+     * The data used to create many VerseStatuses.
+     */
+    data: VerseStatusCreateManyInput | VerseStatusCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VerseStatusIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * VerseStatus update
+   */
+  export type VerseStatusUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VerseStatus
+     */
+    select?: VerseStatusSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the VerseStatus
+     */
+    omit?: VerseStatusOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VerseStatusInclude<ExtArgs> | null
+    /**
+     * The data needed to update a VerseStatus.
+     */
+    data: XOR<VerseStatusUpdateInput, VerseStatusUncheckedUpdateInput>
+    /**
+     * Choose, which VerseStatus to update.
+     */
+    where: VerseStatusWhereUniqueInput
+  }
+
+  /**
+   * VerseStatus updateMany
+   */
+  export type VerseStatusUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update VerseStatuses.
+     */
+    data: XOR<VerseStatusUpdateManyMutationInput, VerseStatusUncheckedUpdateManyInput>
+    /**
+     * Filter which VerseStatuses to update
+     */
+    where?: VerseStatusWhereInput
+    /**
+     * Limit how many VerseStatuses to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * VerseStatus updateManyAndReturn
+   */
+  export type VerseStatusUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VerseStatus
+     */
+    select?: VerseStatusSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the VerseStatus
+     */
+    omit?: VerseStatusOmit<ExtArgs> | null
+    /**
+     * The data used to update VerseStatuses.
+     */
+    data: XOR<VerseStatusUpdateManyMutationInput, VerseStatusUncheckedUpdateManyInput>
+    /**
+     * Filter which VerseStatuses to update
+     */
+    where?: VerseStatusWhereInput
+    /**
+     * Limit how many VerseStatuses to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VerseStatusIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * VerseStatus upsert
+   */
+  export type VerseStatusUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VerseStatus
+     */
+    select?: VerseStatusSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the VerseStatus
+     */
+    omit?: VerseStatusOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VerseStatusInclude<ExtArgs> | null
+    /**
+     * The filter to search for the VerseStatus to update in case it exists.
+     */
+    where: VerseStatusWhereUniqueInput
+    /**
+     * In case the VerseStatus found by the `where` argument doesn't exist, create a new VerseStatus with this data.
+     */
+    create: XOR<VerseStatusCreateInput, VerseStatusUncheckedCreateInput>
+    /**
+     * In case the VerseStatus was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<VerseStatusUpdateInput, VerseStatusUncheckedUpdateInput>
+  }
+
+  /**
+   * VerseStatus delete
+   */
+  export type VerseStatusDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VerseStatus
+     */
+    select?: VerseStatusSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the VerseStatus
+     */
+    omit?: VerseStatusOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VerseStatusInclude<ExtArgs> | null
+    /**
+     * Filter which VerseStatus to delete.
+     */
+    where: VerseStatusWhereUniqueInput
+  }
+
+  /**
+   * VerseStatus deleteMany
+   */
+  export type VerseStatusDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which VerseStatuses to delete
+     */
+    where?: VerseStatusWhereInput
+    /**
+     * Limit how many VerseStatuses to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * VerseStatus without action
+   */
+  export type VerseStatusDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the VerseStatus
+     */
+    select?: VerseStatusSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the VerseStatus
+     */
+    omit?: VerseStatusOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: VerseStatusInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model ReadingPlan
+   */
+
+  export type AggregateReadingPlan = {
+    _count: ReadingPlanCountAggregateOutputType | null
+    _avg: ReadingPlanAvgAggregateOutputType | null
+    _sum: ReadingPlanSumAggregateOutputType | null
+    _min: ReadingPlanMinAggregateOutputType | null
+    _max: ReadingPlanMaxAggregateOutputType | null
+  }
+
+  export type ReadingPlanAvgAggregateOutputType = {
+    totalDays: number | null
+  }
+
+  export type ReadingPlanSumAggregateOutputType = {
+    totalDays: number | null
+  }
+
+  export type ReadingPlanMinAggregateOutputType = {
+    id: string | null
+    slug: string | null
+    name: string | null
+    description: string | null
+    totalDays: number | null
+    category: string | null
+    isPublic: boolean | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type ReadingPlanMaxAggregateOutputType = {
+    id: string | null
+    slug: string | null
+    name: string | null
+    description: string | null
+    totalDays: number | null
+    category: string | null
+    isPublic: boolean | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type ReadingPlanCountAggregateOutputType = {
+    id: number
+    slug: number
+    name: number
+    description: number
+    totalDays: number
+    category: number
+    isPublic: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type ReadingPlanAvgAggregateInputType = {
+    totalDays?: true
+  }
+
+  export type ReadingPlanSumAggregateInputType = {
+    totalDays?: true
+  }
+
+  export type ReadingPlanMinAggregateInputType = {
+    id?: true
+    slug?: true
+    name?: true
+    description?: true
+    totalDays?: true
+    category?: true
+    isPublic?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type ReadingPlanMaxAggregateInputType = {
+    id?: true
+    slug?: true
+    name?: true
+    description?: true
+    totalDays?: true
+    category?: true
+    isPublic?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type ReadingPlanCountAggregateInputType = {
+    id?: true
+    slug?: true
+    name?: true
+    description?: true
+    totalDays?: true
+    category?: true
+    isPublic?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type ReadingPlanAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ReadingPlan to aggregate.
+     */
+    where?: ReadingPlanWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ReadingPlans to fetch.
+     */
+    orderBy?: ReadingPlanOrderByWithRelationInput | ReadingPlanOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: ReadingPlanWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ReadingPlans from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ReadingPlans.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned ReadingPlans
+    **/
+    _count?: true | ReadingPlanCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: ReadingPlanAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: ReadingPlanSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: ReadingPlanMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: ReadingPlanMaxAggregateInputType
+  }
+
+  export type GetReadingPlanAggregateType<T extends ReadingPlanAggregateArgs> = {
+        [P in keyof T & keyof AggregateReadingPlan]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateReadingPlan[P]>
+      : GetScalarType<T[P], AggregateReadingPlan[P]>
+  }
+
+
+
+
+  export type ReadingPlanGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ReadingPlanWhereInput
+    orderBy?: ReadingPlanOrderByWithAggregationInput | ReadingPlanOrderByWithAggregationInput[]
+    by: ReadingPlanScalarFieldEnum[] | ReadingPlanScalarFieldEnum
+    having?: ReadingPlanScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: ReadingPlanCountAggregateInputType | true
+    _avg?: ReadingPlanAvgAggregateInputType
+    _sum?: ReadingPlanSumAggregateInputType
+    _min?: ReadingPlanMinAggregateInputType
+    _max?: ReadingPlanMaxAggregateInputType
+  }
+
+  export type ReadingPlanGroupByOutputType = {
+    id: string
+    slug: string
+    name: string
+    description: string | null
+    totalDays: number
+    category: string
+    isPublic: boolean
+    createdAt: Date
+    updatedAt: Date
+    _count: ReadingPlanCountAggregateOutputType | null
+    _avg: ReadingPlanAvgAggregateOutputType | null
+    _sum: ReadingPlanSumAggregateOutputType | null
+    _min: ReadingPlanMinAggregateOutputType | null
+    _max: ReadingPlanMaxAggregateOutputType | null
+  }
+
+  type GetReadingPlanGroupByPayload<T extends ReadingPlanGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<ReadingPlanGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof ReadingPlanGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], ReadingPlanGroupByOutputType[P]>
+            : GetScalarType<T[P], ReadingPlanGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type ReadingPlanSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    slug?: boolean
+    name?: boolean
+    description?: boolean
+    totalDays?: boolean
+    category?: boolean
+    isPublic?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    days?: boolean | ReadingPlan$daysArgs<ExtArgs>
+    userPlans?: boolean | ReadingPlan$userPlansArgs<ExtArgs>
+    _count?: boolean | ReadingPlanCountOutputTypeDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["readingPlan"]>
+
+  export type ReadingPlanSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    slug?: boolean
+    name?: boolean
+    description?: boolean
+    totalDays?: boolean
+    category?: boolean
+    isPublic?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["readingPlan"]>
+
+  export type ReadingPlanSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    slug?: boolean
+    name?: boolean
+    description?: boolean
+    totalDays?: boolean
+    category?: boolean
+    isPublic?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["readingPlan"]>
+
+  export type ReadingPlanSelectScalar = {
+    id?: boolean
+    slug?: boolean
+    name?: boolean
+    description?: boolean
+    totalDays?: boolean
+    category?: boolean
+    isPublic?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type ReadingPlanOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "slug" | "name" | "description" | "totalDays" | "category" | "isPublic" | "createdAt" | "updatedAt", ExtArgs["result"]["readingPlan"]>
+  export type ReadingPlanInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    days?: boolean | ReadingPlan$daysArgs<ExtArgs>
+    userPlans?: boolean | ReadingPlan$userPlansArgs<ExtArgs>
+    _count?: boolean | ReadingPlanCountOutputTypeDefaultArgs<ExtArgs>
+  }
+  export type ReadingPlanIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
+  export type ReadingPlanIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
+
+  export type $ReadingPlanPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "ReadingPlan"
+    objects: {
+      days: Prisma.$ReadingPlanDayPayload<ExtArgs>[]
+      userPlans: Prisma.$UserReadingPlanPayload<ExtArgs>[]
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      slug: string
+      name: string
+      description: string | null
+      totalDays: number
+      category: string
+      isPublic: boolean
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["readingPlan"]>
+    composites: {}
+  }
+
+  type ReadingPlanGetPayload<S extends boolean | null | undefined | ReadingPlanDefaultArgs> = $Result.GetResult<Prisma.$ReadingPlanPayload, S>
+
+  type ReadingPlanCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<ReadingPlanFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: ReadingPlanCountAggregateInputType | true
+    }
+
+  export interface ReadingPlanDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['ReadingPlan'], meta: { name: 'ReadingPlan' } }
+    /**
+     * Find zero or one ReadingPlan that matches the filter.
+     * @param {ReadingPlanFindUniqueArgs} args - Arguments to find a ReadingPlan
+     * @example
+     * // Get one ReadingPlan
+     * const readingPlan = await prisma.readingPlan.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends ReadingPlanFindUniqueArgs>(args: SelectSubset<T, ReadingPlanFindUniqueArgs<ExtArgs>>): Prisma__ReadingPlanClient<$Result.GetResult<Prisma.$ReadingPlanPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one ReadingPlan that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {ReadingPlanFindUniqueOrThrowArgs} args - Arguments to find a ReadingPlan
+     * @example
+     * // Get one ReadingPlan
+     * const readingPlan = await prisma.readingPlan.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends ReadingPlanFindUniqueOrThrowArgs>(args: SelectSubset<T, ReadingPlanFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ReadingPlanClient<$Result.GetResult<Prisma.$ReadingPlanPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ReadingPlan that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ReadingPlanFindFirstArgs} args - Arguments to find a ReadingPlan
+     * @example
+     * // Get one ReadingPlan
+     * const readingPlan = await prisma.readingPlan.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends ReadingPlanFindFirstArgs>(args?: SelectSubset<T, ReadingPlanFindFirstArgs<ExtArgs>>): Prisma__ReadingPlanClient<$Result.GetResult<Prisma.$ReadingPlanPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ReadingPlan that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ReadingPlanFindFirstOrThrowArgs} args - Arguments to find a ReadingPlan
+     * @example
+     * // Get one ReadingPlan
+     * const readingPlan = await prisma.readingPlan.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends ReadingPlanFindFirstOrThrowArgs>(args?: SelectSubset<T, ReadingPlanFindFirstOrThrowArgs<ExtArgs>>): Prisma__ReadingPlanClient<$Result.GetResult<Prisma.$ReadingPlanPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more ReadingPlans that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ReadingPlanFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all ReadingPlans
+     * const readingPlans = await prisma.readingPlan.findMany()
+     * 
+     * // Get first 10 ReadingPlans
+     * const readingPlans = await prisma.readingPlan.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const readingPlanWithIdOnly = await prisma.readingPlan.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends ReadingPlanFindManyArgs>(args?: SelectSubset<T, ReadingPlanFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ReadingPlanPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a ReadingPlan.
+     * @param {ReadingPlanCreateArgs} args - Arguments to create a ReadingPlan.
+     * @example
+     * // Create one ReadingPlan
+     * const ReadingPlan = await prisma.readingPlan.create({
+     *   data: {
+     *     // ... data to create a ReadingPlan
+     *   }
+     * })
+     * 
+     */
+    create<T extends ReadingPlanCreateArgs>(args: SelectSubset<T, ReadingPlanCreateArgs<ExtArgs>>): Prisma__ReadingPlanClient<$Result.GetResult<Prisma.$ReadingPlanPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many ReadingPlans.
+     * @param {ReadingPlanCreateManyArgs} args - Arguments to create many ReadingPlans.
+     * @example
+     * // Create many ReadingPlans
+     * const readingPlan = await prisma.readingPlan.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends ReadingPlanCreateManyArgs>(args?: SelectSubset<T, ReadingPlanCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many ReadingPlans and returns the data saved in the database.
+     * @param {ReadingPlanCreateManyAndReturnArgs} args - Arguments to create many ReadingPlans.
+     * @example
+     * // Create many ReadingPlans
+     * const readingPlan = await prisma.readingPlan.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many ReadingPlans and only return the `id`
+     * const readingPlanWithIdOnly = await prisma.readingPlan.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends ReadingPlanCreateManyAndReturnArgs>(args?: SelectSubset<T, ReadingPlanCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ReadingPlanPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a ReadingPlan.
+     * @param {ReadingPlanDeleteArgs} args - Arguments to delete one ReadingPlan.
+     * @example
+     * // Delete one ReadingPlan
+     * const ReadingPlan = await prisma.readingPlan.delete({
+     *   where: {
+     *     // ... filter to delete one ReadingPlan
+     *   }
+     * })
+     * 
+     */
+    delete<T extends ReadingPlanDeleteArgs>(args: SelectSubset<T, ReadingPlanDeleteArgs<ExtArgs>>): Prisma__ReadingPlanClient<$Result.GetResult<Prisma.$ReadingPlanPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one ReadingPlan.
+     * @param {ReadingPlanUpdateArgs} args - Arguments to update one ReadingPlan.
+     * @example
+     * // Update one ReadingPlan
+     * const readingPlan = await prisma.readingPlan.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends ReadingPlanUpdateArgs>(args: SelectSubset<T, ReadingPlanUpdateArgs<ExtArgs>>): Prisma__ReadingPlanClient<$Result.GetResult<Prisma.$ReadingPlanPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more ReadingPlans.
+     * @param {ReadingPlanDeleteManyArgs} args - Arguments to filter ReadingPlans to delete.
+     * @example
+     * // Delete a few ReadingPlans
+     * const { count } = await prisma.readingPlan.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends ReadingPlanDeleteManyArgs>(args?: SelectSubset<T, ReadingPlanDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ReadingPlans.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ReadingPlanUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many ReadingPlans
+     * const readingPlan = await prisma.readingPlan.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends ReadingPlanUpdateManyArgs>(args: SelectSubset<T, ReadingPlanUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ReadingPlans and returns the data updated in the database.
+     * @param {ReadingPlanUpdateManyAndReturnArgs} args - Arguments to update many ReadingPlans.
+     * @example
+     * // Update many ReadingPlans
+     * const readingPlan = await prisma.readingPlan.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more ReadingPlans and only return the `id`
+     * const readingPlanWithIdOnly = await prisma.readingPlan.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends ReadingPlanUpdateManyAndReturnArgs>(args: SelectSubset<T, ReadingPlanUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ReadingPlanPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one ReadingPlan.
+     * @param {ReadingPlanUpsertArgs} args - Arguments to update or create a ReadingPlan.
+     * @example
+     * // Update or create a ReadingPlan
+     * const readingPlan = await prisma.readingPlan.upsert({
+     *   create: {
+     *     // ... data to create a ReadingPlan
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the ReadingPlan we want to update
+     *   }
+     * })
+     */
+    upsert<T extends ReadingPlanUpsertArgs>(args: SelectSubset<T, ReadingPlanUpsertArgs<ExtArgs>>): Prisma__ReadingPlanClient<$Result.GetResult<Prisma.$ReadingPlanPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of ReadingPlans.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ReadingPlanCountArgs} args - Arguments to filter ReadingPlans to count.
+     * @example
+     * // Count the number of ReadingPlans
+     * const count = await prisma.readingPlan.count({
+     *   where: {
+     *     // ... the filter for the ReadingPlans we want to count
+     *   }
+     * })
+    **/
+    count<T extends ReadingPlanCountArgs>(
+      args?: Subset<T, ReadingPlanCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], ReadingPlanCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a ReadingPlan.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ReadingPlanAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends ReadingPlanAggregateArgs>(args: Subset<T, ReadingPlanAggregateArgs>): Prisma.PrismaPromise<GetReadingPlanAggregateType<T>>
+
+    /**
+     * Group by ReadingPlan.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ReadingPlanGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends ReadingPlanGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: ReadingPlanGroupByArgs['orderBy'] }
+        : { orderBy?: ReadingPlanGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, ReadingPlanGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetReadingPlanGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the ReadingPlan model
+   */
+  readonly fields: ReadingPlanFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for ReadingPlan.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__ReadingPlanClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    days<T extends ReadingPlan$daysArgs<ExtArgs> = {}>(args?: Subset<T, ReadingPlan$daysArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ReadingPlanDayPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    userPlans<T extends ReadingPlan$userPlansArgs<ExtArgs> = {}>(args?: Subset<T, ReadingPlan$userPlansArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserReadingPlanPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the ReadingPlan model
+   */
+  interface ReadingPlanFieldRefs {
+    readonly id: FieldRef<"ReadingPlan", 'String'>
+    readonly slug: FieldRef<"ReadingPlan", 'String'>
+    readonly name: FieldRef<"ReadingPlan", 'String'>
+    readonly description: FieldRef<"ReadingPlan", 'String'>
+    readonly totalDays: FieldRef<"ReadingPlan", 'Int'>
+    readonly category: FieldRef<"ReadingPlan", 'String'>
+    readonly isPublic: FieldRef<"ReadingPlan", 'Boolean'>
+    readonly createdAt: FieldRef<"ReadingPlan", 'DateTime'>
+    readonly updatedAt: FieldRef<"ReadingPlan", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * ReadingPlan findUnique
+   */
+  export type ReadingPlanFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReadingPlan
+     */
+    select?: ReadingPlanSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReadingPlan
+     */
+    omit?: ReadingPlanOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReadingPlanInclude<ExtArgs> | null
+    /**
+     * Filter, which ReadingPlan to fetch.
+     */
+    where: ReadingPlanWhereUniqueInput
+  }
+
+  /**
+   * ReadingPlan findUniqueOrThrow
+   */
+  export type ReadingPlanFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReadingPlan
+     */
+    select?: ReadingPlanSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReadingPlan
+     */
+    omit?: ReadingPlanOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReadingPlanInclude<ExtArgs> | null
+    /**
+     * Filter, which ReadingPlan to fetch.
+     */
+    where: ReadingPlanWhereUniqueInput
+  }
+
+  /**
+   * ReadingPlan findFirst
+   */
+  export type ReadingPlanFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReadingPlan
+     */
+    select?: ReadingPlanSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReadingPlan
+     */
+    omit?: ReadingPlanOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReadingPlanInclude<ExtArgs> | null
+    /**
+     * Filter, which ReadingPlan to fetch.
+     */
+    where?: ReadingPlanWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ReadingPlans to fetch.
+     */
+    orderBy?: ReadingPlanOrderByWithRelationInput | ReadingPlanOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ReadingPlans.
+     */
+    cursor?: ReadingPlanWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ReadingPlans from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ReadingPlans.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ReadingPlans.
+     */
+    distinct?: ReadingPlanScalarFieldEnum | ReadingPlanScalarFieldEnum[]
+  }
+
+  /**
+   * ReadingPlan findFirstOrThrow
+   */
+  export type ReadingPlanFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReadingPlan
+     */
+    select?: ReadingPlanSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReadingPlan
+     */
+    omit?: ReadingPlanOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReadingPlanInclude<ExtArgs> | null
+    /**
+     * Filter, which ReadingPlan to fetch.
+     */
+    where?: ReadingPlanWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ReadingPlans to fetch.
+     */
+    orderBy?: ReadingPlanOrderByWithRelationInput | ReadingPlanOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ReadingPlans.
+     */
+    cursor?: ReadingPlanWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ReadingPlans from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ReadingPlans.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ReadingPlans.
+     */
+    distinct?: ReadingPlanScalarFieldEnum | ReadingPlanScalarFieldEnum[]
+  }
+
+  /**
+   * ReadingPlan findMany
+   */
+  export type ReadingPlanFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReadingPlan
+     */
+    select?: ReadingPlanSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReadingPlan
+     */
+    omit?: ReadingPlanOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReadingPlanInclude<ExtArgs> | null
+    /**
+     * Filter, which ReadingPlans to fetch.
+     */
+    where?: ReadingPlanWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ReadingPlans to fetch.
+     */
+    orderBy?: ReadingPlanOrderByWithRelationInput | ReadingPlanOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing ReadingPlans.
+     */
+    cursor?: ReadingPlanWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ReadingPlans from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ReadingPlans.
+     */
+    skip?: number
+    distinct?: ReadingPlanScalarFieldEnum | ReadingPlanScalarFieldEnum[]
+  }
+
+  /**
+   * ReadingPlan create
+   */
+  export type ReadingPlanCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReadingPlan
+     */
+    select?: ReadingPlanSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReadingPlan
+     */
+    omit?: ReadingPlanOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReadingPlanInclude<ExtArgs> | null
+    /**
+     * The data needed to create a ReadingPlan.
+     */
+    data: XOR<ReadingPlanCreateInput, ReadingPlanUncheckedCreateInput>
+  }
+
+  /**
+   * ReadingPlan createMany
+   */
+  export type ReadingPlanCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many ReadingPlans.
+     */
+    data: ReadingPlanCreateManyInput | ReadingPlanCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * ReadingPlan createManyAndReturn
+   */
+  export type ReadingPlanCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReadingPlan
+     */
+    select?: ReadingPlanSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReadingPlan
+     */
+    omit?: ReadingPlanOmit<ExtArgs> | null
+    /**
+     * The data used to create many ReadingPlans.
+     */
+    data: ReadingPlanCreateManyInput | ReadingPlanCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * ReadingPlan update
+   */
+  export type ReadingPlanUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReadingPlan
+     */
+    select?: ReadingPlanSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReadingPlan
+     */
+    omit?: ReadingPlanOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReadingPlanInclude<ExtArgs> | null
+    /**
+     * The data needed to update a ReadingPlan.
+     */
+    data: XOR<ReadingPlanUpdateInput, ReadingPlanUncheckedUpdateInput>
+    /**
+     * Choose, which ReadingPlan to update.
+     */
+    where: ReadingPlanWhereUniqueInput
+  }
+
+  /**
+   * ReadingPlan updateMany
+   */
+  export type ReadingPlanUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update ReadingPlans.
+     */
+    data: XOR<ReadingPlanUpdateManyMutationInput, ReadingPlanUncheckedUpdateManyInput>
+    /**
+     * Filter which ReadingPlans to update
+     */
+    where?: ReadingPlanWhereInput
+    /**
+     * Limit how many ReadingPlans to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * ReadingPlan updateManyAndReturn
+   */
+  export type ReadingPlanUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReadingPlan
+     */
+    select?: ReadingPlanSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReadingPlan
+     */
+    omit?: ReadingPlanOmit<ExtArgs> | null
+    /**
+     * The data used to update ReadingPlans.
+     */
+    data: XOR<ReadingPlanUpdateManyMutationInput, ReadingPlanUncheckedUpdateManyInput>
+    /**
+     * Filter which ReadingPlans to update
+     */
+    where?: ReadingPlanWhereInput
+    /**
+     * Limit how many ReadingPlans to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * ReadingPlan upsert
+   */
+  export type ReadingPlanUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReadingPlan
+     */
+    select?: ReadingPlanSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReadingPlan
+     */
+    omit?: ReadingPlanOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReadingPlanInclude<ExtArgs> | null
+    /**
+     * The filter to search for the ReadingPlan to update in case it exists.
+     */
+    where: ReadingPlanWhereUniqueInput
+    /**
+     * In case the ReadingPlan found by the `where` argument doesn't exist, create a new ReadingPlan with this data.
+     */
+    create: XOR<ReadingPlanCreateInput, ReadingPlanUncheckedCreateInput>
+    /**
+     * In case the ReadingPlan was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<ReadingPlanUpdateInput, ReadingPlanUncheckedUpdateInput>
+  }
+
+  /**
+   * ReadingPlan delete
+   */
+  export type ReadingPlanDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReadingPlan
+     */
+    select?: ReadingPlanSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReadingPlan
+     */
+    omit?: ReadingPlanOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReadingPlanInclude<ExtArgs> | null
+    /**
+     * Filter which ReadingPlan to delete.
+     */
+    where: ReadingPlanWhereUniqueInput
+  }
+
+  /**
+   * ReadingPlan deleteMany
+   */
+  export type ReadingPlanDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ReadingPlans to delete
+     */
+    where?: ReadingPlanWhereInput
+    /**
+     * Limit how many ReadingPlans to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * ReadingPlan.days
+   */
+  export type ReadingPlan$daysArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReadingPlanDay
+     */
+    select?: ReadingPlanDaySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReadingPlanDay
+     */
+    omit?: ReadingPlanDayOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReadingPlanDayInclude<ExtArgs> | null
+    where?: ReadingPlanDayWhereInput
+    orderBy?: ReadingPlanDayOrderByWithRelationInput | ReadingPlanDayOrderByWithRelationInput[]
+    cursor?: ReadingPlanDayWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: ReadingPlanDayScalarFieldEnum | ReadingPlanDayScalarFieldEnum[]
+  }
+
+  /**
+   * ReadingPlan.userPlans
+   */
+  export type ReadingPlan$userPlansArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserReadingPlan
+     */
+    select?: UserReadingPlanSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserReadingPlan
+     */
+    omit?: UserReadingPlanOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserReadingPlanInclude<ExtArgs> | null
+    where?: UserReadingPlanWhereInput
+    orderBy?: UserReadingPlanOrderByWithRelationInput | UserReadingPlanOrderByWithRelationInput[]
+    cursor?: UserReadingPlanWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: UserReadingPlanScalarFieldEnum | UserReadingPlanScalarFieldEnum[]
+  }
+
+  /**
+   * ReadingPlan without action
+   */
+  export type ReadingPlanDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReadingPlan
+     */
+    select?: ReadingPlanSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReadingPlan
+     */
+    omit?: ReadingPlanOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReadingPlanInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model ReadingPlanDay
+   */
+
+  export type AggregateReadingPlanDay = {
+    _count: ReadingPlanDayCountAggregateOutputType | null
+    _avg: ReadingPlanDayAvgAggregateOutputType | null
+    _sum: ReadingPlanDaySumAggregateOutputType | null
+    _min: ReadingPlanDayMinAggregateOutputType | null
+    _max: ReadingPlanDayMaxAggregateOutputType | null
+  }
+
+  export type ReadingPlanDayAvgAggregateOutputType = {
+    dayNumber: number | null
+  }
+
+  export type ReadingPlanDaySumAggregateOutputType = {
+    dayNumber: number | null
+  }
+
+  export type ReadingPlanDayMinAggregateOutputType = {
+    id: string | null
+    planId: string | null
+    dayNumber: number | null
+    title: string | null
+  }
+
+  export type ReadingPlanDayMaxAggregateOutputType = {
+    id: string | null
+    planId: string | null
+    dayNumber: number | null
+    title: string | null
+  }
+
+  export type ReadingPlanDayCountAggregateOutputType = {
+    id: number
+    planId: number
+    dayNumber: number
+    title: number
+    references: number
+    _all: number
+  }
+
+
+  export type ReadingPlanDayAvgAggregateInputType = {
+    dayNumber?: true
+  }
+
+  export type ReadingPlanDaySumAggregateInputType = {
+    dayNumber?: true
+  }
+
+  export type ReadingPlanDayMinAggregateInputType = {
+    id?: true
+    planId?: true
+    dayNumber?: true
+    title?: true
+  }
+
+  export type ReadingPlanDayMaxAggregateInputType = {
+    id?: true
+    planId?: true
+    dayNumber?: true
+    title?: true
+  }
+
+  export type ReadingPlanDayCountAggregateInputType = {
+    id?: true
+    planId?: true
+    dayNumber?: true
+    title?: true
+    references?: true
+    _all?: true
+  }
+
+  export type ReadingPlanDayAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ReadingPlanDay to aggregate.
+     */
+    where?: ReadingPlanDayWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ReadingPlanDays to fetch.
+     */
+    orderBy?: ReadingPlanDayOrderByWithRelationInput | ReadingPlanDayOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: ReadingPlanDayWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ReadingPlanDays from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ReadingPlanDays.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned ReadingPlanDays
+    **/
+    _count?: true | ReadingPlanDayCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: ReadingPlanDayAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: ReadingPlanDaySumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: ReadingPlanDayMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: ReadingPlanDayMaxAggregateInputType
+  }
+
+  export type GetReadingPlanDayAggregateType<T extends ReadingPlanDayAggregateArgs> = {
+        [P in keyof T & keyof AggregateReadingPlanDay]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateReadingPlanDay[P]>
+      : GetScalarType<T[P], AggregateReadingPlanDay[P]>
+  }
+
+
+
+
+  export type ReadingPlanDayGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ReadingPlanDayWhereInput
+    orderBy?: ReadingPlanDayOrderByWithAggregationInput | ReadingPlanDayOrderByWithAggregationInput[]
+    by: ReadingPlanDayScalarFieldEnum[] | ReadingPlanDayScalarFieldEnum
+    having?: ReadingPlanDayScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: ReadingPlanDayCountAggregateInputType | true
+    _avg?: ReadingPlanDayAvgAggregateInputType
+    _sum?: ReadingPlanDaySumAggregateInputType
+    _min?: ReadingPlanDayMinAggregateInputType
+    _max?: ReadingPlanDayMaxAggregateInputType
+  }
+
+  export type ReadingPlanDayGroupByOutputType = {
+    id: string
+    planId: string
+    dayNumber: number
+    title: string | null
+    references: string[]
+    _count: ReadingPlanDayCountAggregateOutputType | null
+    _avg: ReadingPlanDayAvgAggregateOutputType | null
+    _sum: ReadingPlanDaySumAggregateOutputType | null
+    _min: ReadingPlanDayMinAggregateOutputType | null
+    _max: ReadingPlanDayMaxAggregateOutputType | null
+  }
+
+  type GetReadingPlanDayGroupByPayload<T extends ReadingPlanDayGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<ReadingPlanDayGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof ReadingPlanDayGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], ReadingPlanDayGroupByOutputType[P]>
+            : GetScalarType<T[P], ReadingPlanDayGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type ReadingPlanDaySelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    planId?: boolean
+    dayNumber?: boolean
+    title?: boolean
+    references?: boolean
+    plan?: boolean | ReadingPlanDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["readingPlanDay"]>
+
+  export type ReadingPlanDaySelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    planId?: boolean
+    dayNumber?: boolean
+    title?: boolean
+    references?: boolean
+    plan?: boolean | ReadingPlanDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["readingPlanDay"]>
+
+  export type ReadingPlanDaySelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    planId?: boolean
+    dayNumber?: boolean
+    title?: boolean
+    references?: boolean
+    plan?: boolean | ReadingPlanDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["readingPlanDay"]>
+
+  export type ReadingPlanDaySelectScalar = {
+    id?: boolean
+    planId?: boolean
+    dayNumber?: boolean
+    title?: boolean
+    references?: boolean
+  }
+
+  export type ReadingPlanDayOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "planId" | "dayNumber" | "title" | "references", ExtArgs["result"]["readingPlanDay"]>
+  export type ReadingPlanDayInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    plan?: boolean | ReadingPlanDefaultArgs<ExtArgs>
+  }
+  export type ReadingPlanDayIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    plan?: boolean | ReadingPlanDefaultArgs<ExtArgs>
+  }
+  export type ReadingPlanDayIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    plan?: boolean | ReadingPlanDefaultArgs<ExtArgs>
+  }
+
+  export type $ReadingPlanDayPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "ReadingPlanDay"
+    objects: {
+      plan: Prisma.$ReadingPlanPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      planId: string
+      dayNumber: number
+      title: string | null
+      references: string[]
+    }, ExtArgs["result"]["readingPlanDay"]>
+    composites: {}
+  }
+
+  type ReadingPlanDayGetPayload<S extends boolean | null | undefined | ReadingPlanDayDefaultArgs> = $Result.GetResult<Prisma.$ReadingPlanDayPayload, S>
+
+  type ReadingPlanDayCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<ReadingPlanDayFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: ReadingPlanDayCountAggregateInputType | true
+    }
+
+  export interface ReadingPlanDayDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['ReadingPlanDay'], meta: { name: 'ReadingPlanDay' } }
+    /**
+     * Find zero or one ReadingPlanDay that matches the filter.
+     * @param {ReadingPlanDayFindUniqueArgs} args - Arguments to find a ReadingPlanDay
+     * @example
+     * // Get one ReadingPlanDay
+     * const readingPlanDay = await prisma.readingPlanDay.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends ReadingPlanDayFindUniqueArgs>(args: SelectSubset<T, ReadingPlanDayFindUniqueArgs<ExtArgs>>): Prisma__ReadingPlanDayClient<$Result.GetResult<Prisma.$ReadingPlanDayPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one ReadingPlanDay that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {ReadingPlanDayFindUniqueOrThrowArgs} args - Arguments to find a ReadingPlanDay
+     * @example
+     * // Get one ReadingPlanDay
+     * const readingPlanDay = await prisma.readingPlanDay.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends ReadingPlanDayFindUniqueOrThrowArgs>(args: SelectSubset<T, ReadingPlanDayFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ReadingPlanDayClient<$Result.GetResult<Prisma.$ReadingPlanDayPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ReadingPlanDay that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ReadingPlanDayFindFirstArgs} args - Arguments to find a ReadingPlanDay
+     * @example
+     * // Get one ReadingPlanDay
+     * const readingPlanDay = await prisma.readingPlanDay.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends ReadingPlanDayFindFirstArgs>(args?: SelectSubset<T, ReadingPlanDayFindFirstArgs<ExtArgs>>): Prisma__ReadingPlanDayClient<$Result.GetResult<Prisma.$ReadingPlanDayPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ReadingPlanDay that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ReadingPlanDayFindFirstOrThrowArgs} args - Arguments to find a ReadingPlanDay
+     * @example
+     * // Get one ReadingPlanDay
+     * const readingPlanDay = await prisma.readingPlanDay.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends ReadingPlanDayFindFirstOrThrowArgs>(args?: SelectSubset<T, ReadingPlanDayFindFirstOrThrowArgs<ExtArgs>>): Prisma__ReadingPlanDayClient<$Result.GetResult<Prisma.$ReadingPlanDayPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more ReadingPlanDays that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ReadingPlanDayFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all ReadingPlanDays
+     * const readingPlanDays = await prisma.readingPlanDay.findMany()
+     * 
+     * // Get first 10 ReadingPlanDays
+     * const readingPlanDays = await prisma.readingPlanDay.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const readingPlanDayWithIdOnly = await prisma.readingPlanDay.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends ReadingPlanDayFindManyArgs>(args?: SelectSubset<T, ReadingPlanDayFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ReadingPlanDayPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a ReadingPlanDay.
+     * @param {ReadingPlanDayCreateArgs} args - Arguments to create a ReadingPlanDay.
+     * @example
+     * // Create one ReadingPlanDay
+     * const ReadingPlanDay = await prisma.readingPlanDay.create({
+     *   data: {
+     *     // ... data to create a ReadingPlanDay
+     *   }
+     * })
+     * 
+     */
+    create<T extends ReadingPlanDayCreateArgs>(args: SelectSubset<T, ReadingPlanDayCreateArgs<ExtArgs>>): Prisma__ReadingPlanDayClient<$Result.GetResult<Prisma.$ReadingPlanDayPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many ReadingPlanDays.
+     * @param {ReadingPlanDayCreateManyArgs} args - Arguments to create many ReadingPlanDays.
+     * @example
+     * // Create many ReadingPlanDays
+     * const readingPlanDay = await prisma.readingPlanDay.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends ReadingPlanDayCreateManyArgs>(args?: SelectSubset<T, ReadingPlanDayCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many ReadingPlanDays and returns the data saved in the database.
+     * @param {ReadingPlanDayCreateManyAndReturnArgs} args - Arguments to create many ReadingPlanDays.
+     * @example
+     * // Create many ReadingPlanDays
+     * const readingPlanDay = await prisma.readingPlanDay.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many ReadingPlanDays and only return the `id`
+     * const readingPlanDayWithIdOnly = await prisma.readingPlanDay.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends ReadingPlanDayCreateManyAndReturnArgs>(args?: SelectSubset<T, ReadingPlanDayCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ReadingPlanDayPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a ReadingPlanDay.
+     * @param {ReadingPlanDayDeleteArgs} args - Arguments to delete one ReadingPlanDay.
+     * @example
+     * // Delete one ReadingPlanDay
+     * const ReadingPlanDay = await prisma.readingPlanDay.delete({
+     *   where: {
+     *     // ... filter to delete one ReadingPlanDay
+     *   }
+     * })
+     * 
+     */
+    delete<T extends ReadingPlanDayDeleteArgs>(args: SelectSubset<T, ReadingPlanDayDeleteArgs<ExtArgs>>): Prisma__ReadingPlanDayClient<$Result.GetResult<Prisma.$ReadingPlanDayPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one ReadingPlanDay.
+     * @param {ReadingPlanDayUpdateArgs} args - Arguments to update one ReadingPlanDay.
+     * @example
+     * // Update one ReadingPlanDay
+     * const readingPlanDay = await prisma.readingPlanDay.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends ReadingPlanDayUpdateArgs>(args: SelectSubset<T, ReadingPlanDayUpdateArgs<ExtArgs>>): Prisma__ReadingPlanDayClient<$Result.GetResult<Prisma.$ReadingPlanDayPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more ReadingPlanDays.
+     * @param {ReadingPlanDayDeleteManyArgs} args - Arguments to filter ReadingPlanDays to delete.
+     * @example
+     * // Delete a few ReadingPlanDays
+     * const { count } = await prisma.readingPlanDay.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends ReadingPlanDayDeleteManyArgs>(args?: SelectSubset<T, ReadingPlanDayDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ReadingPlanDays.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ReadingPlanDayUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many ReadingPlanDays
+     * const readingPlanDay = await prisma.readingPlanDay.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends ReadingPlanDayUpdateManyArgs>(args: SelectSubset<T, ReadingPlanDayUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ReadingPlanDays and returns the data updated in the database.
+     * @param {ReadingPlanDayUpdateManyAndReturnArgs} args - Arguments to update many ReadingPlanDays.
+     * @example
+     * // Update many ReadingPlanDays
+     * const readingPlanDay = await prisma.readingPlanDay.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more ReadingPlanDays and only return the `id`
+     * const readingPlanDayWithIdOnly = await prisma.readingPlanDay.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends ReadingPlanDayUpdateManyAndReturnArgs>(args: SelectSubset<T, ReadingPlanDayUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ReadingPlanDayPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one ReadingPlanDay.
+     * @param {ReadingPlanDayUpsertArgs} args - Arguments to update or create a ReadingPlanDay.
+     * @example
+     * // Update or create a ReadingPlanDay
+     * const readingPlanDay = await prisma.readingPlanDay.upsert({
+     *   create: {
+     *     // ... data to create a ReadingPlanDay
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the ReadingPlanDay we want to update
+     *   }
+     * })
+     */
+    upsert<T extends ReadingPlanDayUpsertArgs>(args: SelectSubset<T, ReadingPlanDayUpsertArgs<ExtArgs>>): Prisma__ReadingPlanDayClient<$Result.GetResult<Prisma.$ReadingPlanDayPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of ReadingPlanDays.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ReadingPlanDayCountArgs} args - Arguments to filter ReadingPlanDays to count.
+     * @example
+     * // Count the number of ReadingPlanDays
+     * const count = await prisma.readingPlanDay.count({
+     *   where: {
+     *     // ... the filter for the ReadingPlanDays we want to count
+     *   }
+     * })
+    **/
+    count<T extends ReadingPlanDayCountArgs>(
+      args?: Subset<T, ReadingPlanDayCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], ReadingPlanDayCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a ReadingPlanDay.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ReadingPlanDayAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends ReadingPlanDayAggregateArgs>(args: Subset<T, ReadingPlanDayAggregateArgs>): Prisma.PrismaPromise<GetReadingPlanDayAggregateType<T>>
+
+    /**
+     * Group by ReadingPlanDay.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ReadingPlanDayGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends ReadingPlanDayGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: ReadingPlanDayGroupByArgs['orderBy'] }
+        : { orderBy?: ReadingPlanDayGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, ReadingPlanDayGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetReadingPlanDayGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the ReadingPlanDay model
+   */
+  readonly fields: ReadingPlanDayFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for ReadingPlanDay.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__ReadingPlanDayClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    plan<T extends ReadingPlanDefaultArgs<ExtArgs> = {}>(args?: Subset<T, ReadingPlanDefaultArgs<ExtArgs>>): Prisma__ReadingPlanClient<$Result.GetResult<Prisma.$ReadingPlanPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the ReadingPlanDay model
+   */
+  interface ReadingPlanDayFieldRefs {
+    readonly id: FieldRef<"ReadingPlanDay", 'String'>
+    readonly planId: FieldRef<"ReadingPlanDay", 'String'>
+    readonly dayNumber: FieldRef<"ReadingPlanDay", 'Int'>
+    readonly title: FieldRef<"ReadingPlanDay", 'String'>
+    readonly references: FieldRef<"ReadingPlanDay", 'String[]'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * ReadingPlanDay findUnique
+   */
+  export type ReadingPlanDayFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReadingPlanDay
+     */
+    select?: ReadingPlanDaySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReadingPlanDay
+     */
+    omit?: ReadingPlanDayOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReadingPlanDayInclude<ExtArgs> | null
+    /**
+     * Filter, which ReadingPlanDay to fetch.
+     */
+    where: ReadingPlanDayWhereUniqueInput
+  }
+
+  /**
+   * ReadingPlanDay findUniqueOrThrow
+   */
+  export type ReadingPlanDayFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReadingPlanDay
+     */
+    select?: ReadingPlanDaySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReadingPlanDay
+     */
+    omit?: ReadingPlanDayOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReadingPlanDayInclude<ExtArgs> | null
+    /**
+     * Filter, which ReadingPlanDay to fetch.
+     */
+    where: ReadingPlanDayWhereUniqueInput
+  }
+
+  /**
+   * ReadingPlanDay findFirst
+   */
+  export type ReadingPlanDayFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReadingPlanDay
+     */
+    select?: ReadingPlanDaySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReadingPlanDay
+     */
+    omit?: ReadingPlanDayOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReadingPlanDayInclude<ExtArgs> | null
+    /**
+     * Filter, which ReadingPlanDay to fetch.
+     */
+    where?: ReadingPlanDayWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ReadingPlanDays to fetch.
+     */
+    orderBy?: ReadingPlanDayOrderByWithRelationInput | ReadingPlanDayOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ReadingPlanDays.
+     */
+    cursor?: ReadingPlanDayWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ReadingPlanDays from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ReadingPlanDays.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ReadingPlanDays.
+     */
+    distinct?: ReadingPlanDayScalarFieldEnum | ReadingPlanDayScalarFieldEnum[]
+  }
+
+  /**
+   * ReadingPlanDay findFirstOrThrow
+   */
+  export type ReadingPlanDayFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReadingPlanDay
+     */
+    select?: ReadingPlanDaySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReadingPlanDay
+     */
+    omit?: ReadingPlanDayOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReadingPlanDayInclude<ExtArgs> | null
+    /**
+     * Filter, which ReadingPlanDay to fetch.
+     */
+    where?: ReadingPlanDayWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ReadingPlanDays to fetch.
+     */
+    orderBy?: ReadingPlanDayOrderByWithRelationInput | ReadingPlanDayOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ReadingPlanDays.
+     */
+    cursor?: ReadingPlanDayWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ReadingPlanDays from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ReadingPlanDays.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ReadingPlanDays.
+     */
+    distinct?: ReadingPlanDayScalarFieldEnum | ReadingPlanDayScalarFieldEnum[]
+  }
+
+  /**
+   * ReadingPlanDay findMany
+   */
+  export type ReadingPlanDayFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReadingPlanDay
+     */
+    select?: ReadingPlanDaySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReadingPlanDay
+     */
+    omit?: ReadingPlanDayOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReadingPlanDayInclude<ExtArgs> | null
+    /**
+     * Filter, which ReadingPlanDays to fetch.
+     */
+    where?: ReadingPlanDayWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ReadingPlanDays to fetch.
+     */
+    orderBy?: ReadingPlanDayOrderByWithRelationInput | ReadingPlanDayOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing ReadingPlanDays.
+     */
+    cursor?: ReadingPlanDayWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ReadingPlanDays from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ReadingPlanDays.
+     */
+    skip?: number
+    distinct?: ReadingPlanDayScalarFieldEnum | ReadingPlanDayScalarFieldEnum[]
+  }
+
+  /**
+   * ReadingPlanDay create
+   */
+  export type ReadingPlanDayCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReadingPlanDay
+     */
+    select?: ReadingPlanDaySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReadingPlanDay
+     */
+    omit?: ReadingPlanDayOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReadingPlanDayInclude<ExtArgs> | null
+    /**
+     * The data needed to create a ReadingPlanDay.
+     */
+    data: XOR<ReadingPlanDayCreateInput, ReadingPlanDayUncheckedCreateInput>
+  }
+
+  /**
+   * ReadingPlanDay createMany
+   */
+  export type ReadingPlanDayCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many ReadingPlanDays.
+     */
+    data: ReadingPlanDayCreateManyInput | ReadingPlanDayCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * ReadingPlanDay createManyAndReturn
+   */
+  export type ReadingPlanDayCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReadingPlanDay
+     */
+    select?: ReadingPlanDaySelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReadingPlanDay
+     */
+    omit?: ReadingPlanDayOmit<ExtArgs> | null
+    /**
+     * The data used to create many ReadingPlanDays.
+     */
+    data: ReadingPlanDayCreateManyInput | ReadingPlanDayCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReadingPlanDayIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * ReadingPlanDay update
+   */
+  export type ReadingPlanDayUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReadingPlanDay
+     */
+    select?: ReadingPlanDaySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReadingPlanDay
+     */
+    omit?: ReadingPlanDayOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReadingPlanDayInclude<ExtArgs> | null
+    /**
+     * The data needed to update a ReadingPlanDay.
+     */
+    data: XOR<ReadingPlanDayUpdateInput, ReadingPlanDayUncheckedUpdateInput>
+    /**
+     * Choose, which ReadingPlanDay to update.
+     */
+    where: ReadingPlanDayWhereUniqueInput
+  }
+
+  /**
+   * ReadingPlanDay updateMany
+   */
+  export type ReadingPlanDayUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update ReadingPlanDays.
+     */
+    data: XOR<ReadingPlanDayUpdateManyMutationInput, ReadingPlanDayUncheckedUpdateManyInput>
+    /**
+     * Filter which ReadingPlanDays to update
+     */
+    where?: ReadingPlanDayWhereInput
+    /**
+     * Limit how many ReadingPlanDays to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * ReadingPlanDay updateManyAndReturn
+   */
+  export type ReadingPlanDayUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReadingPlanDay
+     */
+    select?: ReadingPlanDaySelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReadingPlanDay
+     */
+    omit?: ReadingPlanDayOmit<ExtArgs> | null
+    /**
+     * The data used to update ReadingPlanDays.
+     */
+    data: XOR<ReadingPlanDayUpdateManyMutationInput, ReadingPlanDayUncheckedUpdateManyInput>
+    /**
+     * Filter which ReadingPlanDays to update
+     */
+    where?: ReadingPlanDayWhereInput
+    /**
+     * Limit how many ReadingPlanDays to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReadingPlanDayIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * ReadingPlanDay upsert
+   */
+  export type ReadingPlanDayUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReadingPlanDay
+     */
+    select?: ReadingPlanDaySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReadingPlanDay
+     */
+    omit?: ReadingPlanDayOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReadingPlanDayInclude<ExtArgs> | null
+    /**
+     * The filter to search for the ReadingPlanDay to update in case it exists.
+     */
+    where: ReadingPlanDayWhereUniqueInput
+    /**
+     * In case the ReadingPlanDay found by the `where` argument doesn't exist, create a new ReadingPlanDay with this data.
+     */
+    create: XOR<ReadingPlanDayCreateInput, ReadingPlanDayUncheckedCreateInput>
+    /**
+     * In case the ReadingPlanDay was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<ReadingPlanDayUpdateInput, ReadingPlanDayUncheckedUpdateInput>
+  }
+
+  /**
+   * ReadingPlanDay delete
+   */
+  export type ReadingPlanDayDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReadingPlanDay
+     */
+    select?: ReadingPlanDaySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReadingPlanDay
+     */
+    omit?: ReadingPlanDayOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReadingPlanDayInclude<ExtArgs> | null
+    /**
+     * Filter which ReadingPlanDay to delete.
+     */
+    where: ReadingPlanDayWhereUniqueInput
+  }
+
+  /**
+   * ReadingPlanDay deleteMany
+   */
+  export type ReadingPlanDayDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ReadingPlanDays to delete
+     */
+    where?: ReadingPlanDayWhereInput
+    /**
+     * Limit how many ReadingPlanDays to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * ReadingPlanDay without action
+   */
+  export type ReadingPlanDayDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ReadingPlanDay
+     */
+    select?: ReadingPlanDaySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ReadingPlanDay
+     */
+    omit?: ReadingPlanDayOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ReadingPlanDayInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model UserReadingPlan
+   */
+
+  export type AggregateUserReadingPlan = {
+    _count: UserReadingPlanCountAggregateOutputType | null
+    _avg: UserReadingPlanAvgAggregateOutputType | null
+    _sum: UserReadingPlanSumAggregateOutputType | null
+    _min: UserReadingPlanMinAggregateOutputType | null
+    _max: UserReadingPlanMaxAggregateOutputType | null
+  }
+
+  export type UserReadingPlanAvgAggregateOutputType = {
+    currentDay: number | null
+  }
+
+  export type UserReadingPlanSumAggregateOutputType = {
+    currentDay: number | null
+  }
+
+  export type UserReadingPlanMinAggregateOutputType = {
+    id: string | null
+    userId: string | null
+    planId: string | null
+    currentDay: number | null
+    isCompleted: boolean | null
+    startedAt: Date | null
+    completedAt: Date | null
+  }
+
+  export type UserReadingPlanMaxAggregateOutputType = {
+    id: string | null
+    userId: string | null
+    planId: string | null
+    currentDay: number | null
+    isCompleted: boolean | null
+    startedAt: Date | null
+    completedAt: Date | null
+  }
+
+  export type UserReadingPlanCountAggregateOutputType = {
+    id: number
+    userId: number
+    planId: number
+    currentDay: number
+    isCompleted: number
+    startedAt: number
+    completedAt: number
+    _all: number
+  }
+
+
+  export type UserReadingPlanAvgAggregateInputType = {
+    currentDay?: true
+  }
+
+  export type UserReadingPlanSumAggregateInputType = {
+    currentDay?: true
+  }
+
+  export type UserReadingPlanMinAggregateInputType = {
+    id?: true
+    userId?: true
+    planId?: true
+    currentDay?: true
+    isCompleted?: true
+    startedAt?: true
+    completedAt?: true
+  }
+
+  export type UserReadingPlanMaxAggregateInputType = {
+    id?: true
+    userId?: true
+    planId?: true
+    currentDay?: true
+    isCompleted?: true
+    startedAt?: true
+    completedAt?: true
+  }
+
+  export type UserReadingPlanCountAggregateInputType = {
+    id?: true
+    userId?: true
+    planId?: true
+    currentDay?: true
+    isCompleted?: true
+    startedAt?: true
+    completedAt?: true
+    _all?: true
+  }
+
+  export type UserReadingPlanAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which UserReadingPlan to aggregate.
+     */
+    where?: UserReadingPlanWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of UserReadingPlans to fetch.
+     */
+    orderBy?: UserReadingPlanOrderByWithRelationInput | UserReadingPlanOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: UserReadingPlanWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` UserReadingPlans from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` UserReadingPlans.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned UserReadingPlans
+    **/
+    _count?: true | UserReadingPlanCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: UserReadingPlanAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: UserReadingPlanSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: UserReadingPlanMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: UserReadingPlanMaxAggregateInputType
+  }
+
+  export type GetUserReadingPlanAggregateType<T extends UserReadingPlanAggregateArgs> = {
+        [P in keyof T & keyof AggregateUserReadingPlan]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateUserReadingPlan[P]>
+      : GetScalarType<T[P], AggregateUserReadingPlan[P]>
+  }
+
+
+
+
+  export type UserReadingPlanGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: UserReadingPlanWhereInput
+    orderBy?: UserReadingPlanOrderByWithAggregationInput | UserReadingPlanOrderByWithAggregationInput[]
+    by: UserReadingPlanScalarFieldEnum[] | UserReadingPlanScalarFieldEnum
+    having?: UserReadingPlanScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: UserReadingPlanCountAggregateInputType | true
+    _avg?: UserReadingPlanAvgAggregateInputType
+    _sum?: UserReadingPlanSumAggregateInputType
+    _min?: UserReadingPlanMinAggregateInputType
+    _max?: UserReadingPlanMaxAggregateInputType
+  }
+
+  export type UserReadingPlanGroupByOutputType = {
+    id: string
+    userId: string
+    planId: string
+    currentDay: number
+    isCompleted: boolean
+    startedAt: Date
+    completedAt: Date | null
+    _count: UserReadingPlanCountAggregateOutputType | null
+    _avg: UserReadingPlanAvgAggregateOutputType | null
+    _sum: UserReadingPlanSumAggregateOutputType | null
+    _min: UserReadingPlanMinAggregateOutputType | null
+    _max: UserReadingPlanMaxAggregateOutputType | null
+  }
+
+  type GetUserReadingPlanGroupByPayload<T extends UserReadingPlanGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<UserReadingPlanGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof UserReadingPlanGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], UserReadingPlanGroupByOutputType[P]>
+            : GetScalarType<T[P], UserReadingPlanGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type UserReadingPlanSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    planId?: boolean
+    currentDay?: boolean
+    isCompleted?: boolean
+    startedAt?: boolean
+    completedAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+    plan?: boolean | ReadingPlanDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["userReadingPlan"]>
+
+  export type UserReadingPlanSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    planId?: boolean
+    currentDay?: boolean
+    isCompleted?: boolean
+    startedAt?: boolean
+    completedAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+    plan?: boolean | ReadingPlanDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["userReadingPlan"]>
+
+  export type UserReadingPlanSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    planId?: boolean
+    currentDay?: boolean
+    isCompleted?: boolean
+    startedAt?: boolean
+    completedAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+    plan?: boolean | ReadingPlanDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["userReadingPlan"]>
+
+  export type UserReadingPlanSelectScalar = {
+    id?: boolean
+    userId?: boolean
+    planId?: boolean
+    currentDay?: boolean
+    isCompleted?: boolean
+    startedAt?: boolean
+    completedAt?: boolean
+  }
+
+  export type UserReadingPlanOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "planId" | "currentDay" | "isCompleted" | "startedAt" | "completedAt", ExtArgs["result"]["userReadingPlan"]>
+  export type UserReadingPlanInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+    plan?: boolean | ReadingPlanDefaultArgs<ExtArgs>
+  }
+  export type UserReadingPlanIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+    plan?: boolean | ReadingPlanDefaultArgs<ExtArgs>
+  }
+  export type UserReadingPlanIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+    plan?: boolean | ReadingPlanDefaultArgs<ExtArgs>
+  }
+
+  export type $UserReadingPlanPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "UserReadingPlan"
+    objects: {
+      user: Prisma.$UserPayload<ExtArgs>
+      plan: Prisma.$ReadingPlanPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      userId: string
+      planId: string
+      currentDay: number
+      isCompleted: boolean
+      startedAt: Date
+      completedAt: Date | null
+    }, ExtArgs["result"]["userReadingPlan"]>
+    composites: {}
+  }
+
+  type UserReadingPlanGetPayload<S extends boolean | null | undefined | UserReadingPlanDefaultArgs> = $Result.GetResult<Prisma.$UserReadingPlanPayload, S>
+
+  type UserReadingPlanCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<UserReadingPlanFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: UserReadingPlanCountAggregateInputType | true
+    }
+
+  export interface UserReadingPlanDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['UserReadingPlan'], meta: { name: 'UserReadingPlan' } }
+    /**
+     * Find zero or one UserReadingPlan that matches the filter.
+     * @param {UserReadingPlanFindUniqueArgs} args - Arguments to find a UserReadingPlan
+     * @example
+     * // Get one UserReadingPlan
+     * const userReadingPlan = await prisma.userReadingPlan.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends UserReadingPlanFindUniqueArgs>(args: SelectSubset<T, UserReadingPlanFindUniqueArgs<ExtArgs>>): Prisma__UserReadingPlanClient<$Result.GetResult<Prisma.$UserReadingPlanPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one UserReadingPlan that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {UserReadingPlanFindUniqueOrThrowArgs} args - Arguments to find a UserReadingPlan
+     * @example
+     * // Get one UserReadingPlan
+     * const userReadingPlan = await prisma.userReadingPlan.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends UserReadingPlanFindUniqueOrThrowArgs>(args: SelectSubset<T, UserReadingPlanFindUniqueOrThrowArgs<ExtArgs>>): Prisma__UserReadingPlanClient<$Result.GetResult<Prisma.$UserReadingPlanPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first UserReadingPlan that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UserReadingPlanFindFirstArgs} args - Arguments to find a UserReadingPlan
+     * @example
+     * // Get one UserReadingPlan
+     * const userReadingPlan = await prisma.userReadingPlan.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends UserReadingPlanFindFirstArgs>(args?: SelectSubset<T, UserReadingPlanFindFirstArgs<ExtArgs>>): Prisma__UserReadingPlanClient<$Result.GetResult<Prisma.$UserReadingPlanPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first UserReadingPlan that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UserReadingPlanFindFirstOrThrowArgs} args - Arguments to find a UserReadingPlan
+     * @example
+     * // Get one UserReadingPlan
+     * const userReadingPlan = await prisma.userReadingPlan.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends UserReadingPlanFindFirstOrThrowArgs>(args?: SelectSubset<T, UserReadingPlanFindFirstOrThrowArgs<ExtArgs>>): Prisma__UserReadingPlanClient<$Result.GetResult<Prisma.$UserReadingPlanPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more UserReadingPlans that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UserReadingPlanFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all UserReadingPlans
+     * const userReadingPlans = await prisma.userReadingPlan.findMany()
+     * 
+     * // Get first 10 UserReadingPlans
+     * const userReadingPlans = await prisma.userReadingPlan.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const userReadingPlanWithIdOnly = await prisma.userReadingPlan.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends UserReadingPlanFindManyArgs>(args?: SelectSubset<T, UserReadingPlanFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserReadingPlanPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a UserReadingPlan.
+     * @param {UserReadingPlanCreateArgs} args - Arguments to create a UserReadingPlan.
+     * @example
+     * // Create one UserReadingPlan
+     * const UserReadingPlan = await prisma.userReadingPlan.create({
+     *   data: {
+     *     // ... data to create a UserReadingPlan
+     *   }
+     * })
+     * 
+     */
+    create<T extends UserReadingPlanCreateArgs>(args: SelectSubset<T, UserReadingPlanCreateArgs<ExtArgs>>): Prisma__UserReadingPlanClient<$Result.GetResult<Prisma.$UserReadingPlanPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many UserReadingPlans.
+     * @param {UserReadingPlanCreateManyArgs} args - Arguments to create many UserReadingPlans.
+     * @example
+     * // Create many UserReadingPlans
+     * const userReadingPlan = await prisma.userReadingPlan.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends UserReadingPlanCreateManyArgs>(args?: SelectSubset<T, UserReadingPlanCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many UserReadingPlans and returns the data saved in the database.
+     * @param {UserReadingPlanCreateManyAndReturnArgs} args - Arguments to create many UserReadingPlans.
+     * @example
+     * // Create many UserReadingPlans
+     * const userReadingPlan = await prisma.userReadingPlan.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many UserReadingPlans and only return the `id`
+     * const userReadingPlanWithIdOnly = await prisma.userReadingPlan.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends UserReadingPlanCreateManyAndReturnArgs>(args?: SelectSubset<T, UserReadingPlanCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserReadingPlanPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a UserReadingPlan.
+     * @param {UserReadingPlanDeleteArgs} args - Arguments to delete one UserReadingPlan.
+     * @example
+     * // Delete one UserReadingPlan
+     * const UserReadingPlan = await prisma.userReadingPlan.delete({
+     *   where: {
+     *     // ... filter to delete one UserReadingPlan
+     *   }
+     * })
+     * 
+     */
+    delete<T extends UserReadingPlanDeleteArgs>(args: SelectSubset<T, UserReadingPlanDeleteArgs<ExtArgs>>): Prisma__UserReadingPlanClient<$Result.GetResult<Prisma.$UserReadingPlanPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one UserReadingPlan.
+     * @param {UserReadingPlanUpdateArgs} args - Arguments to update one UserReadingPlan.
+     * @example
+     * // Update one UserReadingPlan
+     * const userReadingPlan = await prisma.userReadingPlan.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends UserReadingPlanUpdateArgs>(args: SelectSubset<T, UserReadingPlanUpdateArgs<ExtArgs>>): Prisma__UserReadingPlanClient<$Result.GetResult<Prisma.$UserReadingPlanPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more UserReadingPlans.
+     * @param {UserReadingPlanDeleteManyArgs} args - Arguments to filter UserReadingPlans to delete.
+     * @example
+     * // Delete a few UserReadingPlans
+     * const { count } = await prisma.userReadingPlan.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends UserReadingPlanDeleteManyArgs>(args?: SelectSubset<T, UserReadingPlanDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more UserReadingPlans.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UserReadingPlanUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many UserReadingPlans
+     * const userReadingPlan = await prisma.userReadingPlan.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends UserReadingPlanUpdateManyArgs>(args: SelectSubset<T, UserReadingPlanUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more UserReadingPlans and returns the data updated in the database.
+     * @param {UserReadingPlanUpdateManyAndReturnArgs} args - Arguments to update many UserReadingPlans.
+     * @example
+     * // Update many UserReadingPlans
+     * const userReadingPlan = await prisma.userReadingPlan.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more UserReadingPlans and only return the `id`
+     * const userReadingPlanWithIdOnly = await prisma.userReadingPlan.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends UserReadingPlanUpdateManyAndReturnArgs>(args: SelectSubset<T, UserReadingPlanUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserReadingPlanPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one UserReadingPlan.
+     * @param {UserReadingPlanUpsertArgs} args - Arguments to update or create a UserReadingPlan.
+     * @example
+     * // Update or create a UserReadingPlan
+     * const userReadingPlan = await prisma.userReadingPlan.upsert({
+     *   create: {
+     *     // ... data to create a UserReadingPlan
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the UserReadingPlan we want to update
+     *   }
+     * })
+     */
+    upsert<T extends UserReadingPlanUpsertArgs>(args: SelectSubset<T, UserReadingPlanUpsertArgs<ExtArgs>>): Prisma__UserReadingPlanClient<$Result.GetResult<Prisma.$UserReadingPlanPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of UserReadingPlans.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UserReadingPlanCountArgs} args - Arguments to filter UserReadingPlans to count.
+     * @example
+     * // Count the number of UserReadingPlans
+     * const count = await prisma.userReadingPlan.count({
+     *   where: {
+     *     // ... the filter for the UserReadingPlans we want to count
+     *   }
+     * })
+    **/
+    count<T extends UserReadingPlanCountArgs>(
+      args?: Subset<T, UserReadingPlanCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], UserReadingPlanCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a UserReadingPlan.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UserReadingPlanAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends UserReadingPlanAggregateArgs>(args: Subset<T, UserReadingPlanAggregateArgs>): Prisma.PrismaPromise<GetUserReadingPlanAggregateType<T>>
+
+    /**
+     * Group by UserReadingPlan.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {UserReadingPlanGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends UserReadingPlanGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: UserReadingPlanGroupByArgs['orderBy'] }
+        : { orderBy?: UserReadingPlanGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, UserReadingPlanGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetUserReadingPlanGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the UserReadingPlan model
+   */
+  readonly fields: UserReadingPlanFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for UserReadingPlan.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__UserReadingPlanClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    plan<T extends ReadingPlanDefaultArgs<ExtArgs> = {}>(args?: Subset<T, ReadingPlanDefaultArgs<ExtArgs>>): Prisma__ReadingPlanClient<$Result.GetResult<Prisma.$ReadingPlanPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the UserReadingPlan model
+   */
+  interface UserReadingPlanFieldRefs {
+    readonly id: FieldRef<"UserReadingPlan", 'String'>
+    readonly userId: FieldRef<"UserReadingPlan", 'String'>
+    readonly planId: FieldRef<"UserReadingPlan", 'String'>
+    readonly currentDay: FieldRef<"UserReadingPlan", 'Int'>
+    readonly isCompleted: FieldRef<"UserReadingPlan", 'Boolean'>
+    readonly startedAt: FieldRef<"UserReadingPlan", 'DateTime'>
+    readonly completedAt: FieldRef<"UserReadingPlan", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * UserReadingPlan findUnique
+   */
+  export type UserReadingPlanFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserReadingPlan
+     */
+    select?: UserReadingPlanSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserReadingPlan
+     */
+    omit?: UserReadingPlanOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserReadingPlanInclude<ExtArgs> | null
+    /**
+     * Filter, which UserReadingPlan to fetch.
+     */
+    where: UserReadingPlanWhereUniqueInput
+  }
+
+  /**
+   * UserReadingPlan findUniqueOrThrow
+   */
+  export type UserReadingPlanFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserReadingPlan
+     */
+    select?: UserReadingPlanSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserReadingPlan
+     */
+    omit?: UserReadingPlanOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserReadingPlanInclude<ExtArgs> | null
+    /**
+     * Filter, which UserReadingPlan to fetch.
+     */
+    where: UserReadingPlanWhereUniqueInput
+  }
+
+  /**
+   * UserReadingPlan findFirst
+   */
+  export type UserReadingPlanFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserReadingPlan
+     */
+    select?: UserReadingPlanSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserReadingPlan
+     */
+    omit?: UserReadingPlanOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserReadingPlanInclude<ExtArgs> | null
+    /**
+     * Filter, which UserReadingPlan to fetch.
+     */
+    where?: UserReadingPlanWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of UserReadingPlans to fetch.
+     */
+    orderBy?: UserReadingPlanOrderByWithRelationInput | UserReadingPlanOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for UserReadingPlans.
+     */
+    cursor?: UserReadingPlanWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` UserReadingPlans from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` UserReadingPlans.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of UserReadingPlans.
+     */
+    distinct?: UserReadingPlanScalarFieldEnum | UserReadingPlanScalarFieldEnum[]
+  }
+
+  /**
+   * UserReadingPlan findFirstOrThrow
+   */
+  export type UserReadingPlanFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserReadingPlan
+     */
+    select?: UserReadingPlanSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserReadingPlan
+     */
+    omit?: UserReadingPlanOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserReadingPlanInclude<ExtArgs> | null
+    /**
+     * Filter, which UserReadingPlan to fetch.
+     */
+    where?: UserReadingPlanWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of UserReadingPlans to fetch.
+     */
+    orderBy?: UserReadingPlanOrderByWithRelationInput | UserReadingPlanOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for UserReadingPlans.
+     */
+    cursor?: UserReadingPlanWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` UserReadingPlans from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` UserReadingPlans.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of UserReadingPlans.
+     */
+    distinct?: UserReadingPlanScalarFieldEnum | UserReadingPlanScalarFieldEnum[]
+  }
+
+  /**
+   * UserReadingPlan findMany
+   */
+  export type UserReadingPlanFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserReadingPlan
+     */
+    select?: UserReadingPlanSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserReadingPlan
+     */
+    omit?: UserReadingPlanOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserReadingPlanInclude<ExtArgs> | null
+    /**
+     * Filter, which UserReadingPlans to fetch.
+     */
+    where?: UserReadingPlanWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of UserReadingPlans to fetch.
+     */
+    orderBy?: UserReadingPlanOrderByWithRelationInput | UserReadingPlanOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing UserReadingPlans.
+     */
+    cursor?: UserReadingPlanWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` UserReadingPlans from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` UserReadingPlans.
+     */
+    skip?: number
+    distinct?: UserReadingPlanScalarFieldEnum | UserReadingPlanScalarFieldEnum[]
+  }
+
+  /**
+   * UserReadingPlan create
+   */
+  export type UserReadingPlanCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserReadingPlan
+     */
+    select?: UserReadingPlanSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserReadingPlan
+     */
+    omit?: UserReadingPlanOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserReadingPlanInclude<ExtArgs> | null
+    /**
+     * The data needed to create a UserReadingPlan.
+     */
+    data: XOR<UserReadingPlanCreateInput, UserReadingPlanUncheckedCreateInput>
+  }
+
+  /**
+   * UserReadingPlan createMany
+   */
+  export type UserReadingPlanCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many UserReadingPlans.
+     */
+    data: UserReadingPlanCreateManyInput | UserReadingPlanCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * UserReadingPlan createManyAndReturn
+   */
+  export type UserReadingPlanCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserReadingPlan
+     */
+    select?: UserReadingPlanSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserReadingPlan
+     */
+    omit?: UserReadingPlanOmit<ExtArgs> | null
+    /**
+     * The data used to create many UserReadingPlans.
+     */
+    data: UserReadingPlanCreateManyInput | UserReadingPlanCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserReadingPlanIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * UserReadingPlan update
+   */
+  export type UserReadingPlanUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserReadingPlan
+     */
+    select?: UserReadingPlanSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserReadingPlan
+     */
+    omit?: UserReadingPlanOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserReadingPlanInclude<ExtArgs> | null
+    /**
+     * The data needed to update a UserReadingPlan.
+     */
+    data: XOR<UserReadingPlanUpdateInput, UserReadingPlanUncheckedUpdateInput>
+    /**
+     * Choose, which UserReadingPlan to update.
+     */
+    where: UserReadingPlanWhereUniqueInput
+  }
+
+  /**
+   * UserReadingPlan updateMany
+   */
+  export type UserReadingPlanUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update UserReadingPlans.
+     */
+    data: XOR<UserReadingPlanUpdateManyMutationInput, UserReadingPlanUncheckedUpdateManyInput>
+    /**
+     * Filter which UserReadingPlans to update
+     */
+    where?: UserReadingPlanWhereInput
+    /**
+     * Limit how many UserReadingPlans to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * UserReadingPlan updateManyAndReturn
+   */
+  export type UserReadingPlanUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserReadingPlan
+     */
+    select?: UserReadingPlanSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserReadingPlan
+     */
+    omit?: UserReadingPlanOmit<ExtArgs> | null
+    /**
+     * The data used to update UserReadingPlans.
+     */
+    data: XOR<UserReadingPlanUpdateManyMutationInput, UserReadingPlanUncheckedUpdateManyInput>
+    /**
+     * Filter which UserReadingPlans to update
+     */
+    where?: UserReadingPlanWhereInput
+    /**
+     * Limit how many UserReadingPlans to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserReadingPlanIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * UserReadingPlan upsert
+   */
+  export type UserReadingPlanUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserReadingPlan
+     */
+    select?: UserReadingPlanSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserReadingPlan
+     */
+    omit?: UserReadingPlanOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserReadingPlanInclude<ExtArgs> | null
+    /**
+     * The filter to search for the UserReadingPlan to update in case it exists.
+     */
+    where: UserReadingPlanWhereUniqueInput
+    /**
+     * In case the UserReadingPlan found by the `where` argument doesn't exist, create a new UserReadingPlan with this data.
+     */
+    create: XOR<UserReadingPlanCreateInput, UserReadingPlanUncheckedCreateInput>
+    /**
+     * In case the UserReadingPlan was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<UserReadingPlanUpdateInput, UserReadingPlanUncheckedUpdateInput>
+  }
+
+  /**
+   * UserReadingPlan delete
+   */
+  export type UserReadingPlanDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserReadingPlan
+     */
+    select?: UserReadingPlanSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserReadingPlan
+     */
+    omit?: UserReadingPlanOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserReadingPlanInclude<ExtArgs> | null
+    /**
+     * Filter which UserReadingPlan to delete.
+     */
+    where: UserReadingPlanWhereUniqueInput
+  }
+
+  /**
+   * UserReadingPlan deleteMany
+   */
+  export type UserReadingPlanDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which UserReadingPlans to delete
+     */
+    where?: UserReadingPlanWhereInput
+    /**
+     * Limit how many UserReadingPlans to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * UserReadingPlan without action
+   */
+  export type UserReadingPlanDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserReadingPlan
+     */
+    select?: UserReadingPlanSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the UserReadingPlan
+     */
+    omit?: UserReadingPlanOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserReadingPlanInclude<ExtArgs> | null
   }
 
 
@@ -15499,10 +20491,61 @@ export namespace Prisma {
     image: 'image',
     lastReadOrder: 'lastReadOrder',
     lastReadTranslation: 'lastReadTranslation',
-    lastReadAt: 'lastReadAt'
+    lastReadAt: 'lastReadAt',
+    autoProgress: 'autoProgress'
   };
 
   export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
+
+
+  export const VerseStatusScalarFieldEnum: {
+    id: 'id',
+    userId: 'userId',
+    verseId: 'verseId',
+    isRead: 'isRead',
+    readAt: 'readAt'
+  };
+
+  export type VerseStatusScalarFieldEnum = (typeof VerseStatusScalarFieldEnum)[keyof typeof VerseStatusScalarFieldEnum]
+
+
+  export const ReadingPlanScalarFieldEnum: {
+    id: 'id',
+    slug: 'slug',
+    name: 'name',
+    description: 'description',
+    totalDays: 'totalDays',
+    category: 'category',
+    isPublic: 'isPublic',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type ReadingPlanScalarFieldEnum = (typeof ReadingPlanScalarFieldEnum)[keyof typeof ReadingPlanScalarFieldEnum]
+
+
+  export const ReadingPlanDayScalarFieldEnum: {
+    id: 'id',
+    planId: 'planId',
+    dayNumber: 'dayNumber',
+    title: 'title',
+    references: 'references'
+  };
+
+  export type ReadingPlanDayScalarFieldEnum = (typeof ReadingPlanDayScalarFieldEnum)[keyof typeof ReadingPlanDayScalarFieldEnum]
+
+
+  export const UserReadingPlanScalarFieldEnum: {
+    id: 'id',
+    userId: 'userId',
+    planId: 'planId',
+    currentDay: 'currentDay',
+    isCompleted: 'isCompleted',
+    startedAt: 'startedAt',
+    completedAt: 'completedAt'
+  };
+
+  export type UserReadingPlanScalarFieldEnum = (typeof UserReadingPlanScalarFieldEnum)[keyof typeof UserReadingPlanScalarFieldEnum]
 
 
   export const VerificationTokenScalarFieldEnum: {
@@ -15817,6 +20860,7 @@ export namespace Prisma {
     bookmarks?: BookmarkListRelationFilter
     highlights?: HighlightListRelationFilter
     notes?: NoteListRelationFilter
+    verseStatuses?: VerseStatusListRelationFilter
     book?: XOR<BookScalarRelationFilter, BookWhereInput>
     translation?: XOR<TranslationScalarRelationFilter, TranslationWhereInput>
   }
@@ -15832,6 +20876,7 @@ export namespace Prisma {
     bookmarks?: BookmarkOrderByRelationAggregateInput
     highlights?: HighlightOrderByRelationAggregateInput
     notes?: NoteOrderByRelationAggregateInput
+    verseStatuses?: VerseStatusOrderByRelationAggregateInput
     book?: BookOrderByWithRelationInput
     translation?: TranslationOrderByWithRelationInput
   }
@@ -15851,6 +20896,7 @@ export namespace Prisma {
     bookmarks?: BookmarkListRelationFilter
     highlights?: HighlightListRelationFilter
     notes?: NoteListRelationFilter
+    verseStatuses?: VerseStatusListRelationFilter
     book?: XOR<BookScalarRelationFilter, BookWhereInput>
     translation?: XOR<TranslationScalarRelationFilter, TranslationWhereInput>
   }, "id" | "translationId_bookId_chapter_verse">
@@ -16292,12 +21338,15 @@ export namespace Prisma {
     lastReadOrder?: IntFilter<"User"> | number
     lastReadTranslation?: StringFilter<"User"> | string
     lastReadAt?: DateTimeFilter<"User"> | Date | string
+    autoProgress?: BoolFilter<"User"> | boolean
     accounts?: AccountListRelationFilter
     bookmarks?: BookmarkListRelationFilter
     highlights?: HighlightListRelationFilter
     notes?: NoteListRelationFilter
     posts?: PostListRelationFilter
     sessions?: SessionListRelationFilter
+    verseStatuses?: VerseStatusListRelationFilter
+    readingPlans?: UserReadingPlanListRelationFilter
   }
 
   export type UserOrderByWithRelationInput = {
@@ -16309,12 +21358,15 @@ export namespace Prisma {
     lastReadOrder?: SortOrder
     lastReadTranslation?: SortOrder
     lastReadAt?: SortOrder
+    autoProgress?: SortOrder
     accounts?: AccountOrderByRelationAggregateInput
     bookmarks?: BookmarkOrderByRelationAggregateInput
     highlights?: HighlightOrderByRelationAggregateInput
     notes?: NoteOrderByRelationAggregateInput
     posts?: PostOrderByRelationAggregateInput
     sessions?: SessionOrderByRelationAggregateInput
+    verseStatuses?: VerseStatusOrderByRelationAggregateInput
+    readingPlans?: UserReadingPlanOrderByRelationAggregateInput
   }
 
   export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -16329,12 +21381,15 @@ export namespace Prisma {
     lastReadOrder?: IntFilter<"User"> | number
     lastReadTranslation?: StringFilter<"User"> | string
     lastReadAt?: DateTimeFilter<"User"> | Date | string
+    autoProgress?: BoolFilter<"User"> | boolean
     accounts?: AccountListRelationFilter
     bookmarks?: BookmarkListRelationFilter
     highlights?: HighlightListRelationFilter
     notes?: NoteListRelationFilter
     posts?: PostListRelationFilter
     sessions?: SessionListRelationFilter
+    verseStatuses?: VerseStatusListRelationFilter
+    readingPlans?: UserReadingPlanListRelationFilter
   }, "id" | "email">
 
   export type UserOrderByWithAggregationInput = {
@@ -16346,6 +21401,7 @@ export namespace Prisma {
     lastReadOrder?: SortOrder
     lastReadTranslation?: SortOrder
     lastReadAt?: SortOrder
+    autoProgress?: SortOrder
     _count?: UserCountOrderByAggregateInput
     _avg?: UserAvgOrderByAggregateInput
     _max?: UserMaxOrderByAggregateInput
@@ -16365,6 +21421,275 @@ export namespace Prisma {
     lastReadOrder?: IntWithAggregatesFilter<"User"> | number
     lastReadTranslation?: StringWithAggregatesFilter<"User"> | string
     lastReadAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
+    autoProgress?: BoolWithAggregatesFilter<"User"> | boolean
+  }
+
+  export type VerseStatusWhereInput = {
+    AND?: VerseStatusWhereInput | VerseStatusWhereInput[]
+    OR?: VerseStatusWhereInput[]
+    NOT?: VerseStatusWhereInput | VerseStatusWhereInput[]
+    id?: StringFilter<"VerseStatus"> | string
+    userId?: StringFilter<"VerseStatus"> | string
+    verseId?: StringFilter<"VerseStatus"> | string
+    isRead?: BoolFilter<"VerseStatus"> | boolean
+    readAt?: DateTimeFilter<"VerseStatus"> | Date | string
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+    verse?: XOR<VerseScalarRelationFilter, VerseWhereInput>
+  }
+
+  export type VerseStatusOrderByWithRelationInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    verseId?: SortOrder
+    isRead?: SortOrder
+    readAt?: SortOrder
+    user?: UserOrderByWithRelationInput
+    verse?: VerseOrderByWithRelationInput
+  }
+
+  export type VerseStatusWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    userId_verseId?: VerseStatusUserIdVerseIdCompoundUniqueInput
+    AND?: VerseStatusWhereInput | VerseStatusWhereInput[]
+    OR?: VerseStatusWhereInput[]
+    NOT?: VerseStatusWhereInput | VerseStatusWhereInput[]
+    userId?: StringFilter<"VerseStatus"> | string
+    verseId?: StringFilter<"VerseStatus"> | string
+    isRead?: BoolFilter<"VerseStatus"> | boolean
+    readAt?: DateTimeFilter<"VerseStatus"> | Date | string
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+    verse?: XOR<VerseScalarRelationFilter, VerseWhereInput>
+  }, "id" | "userId_verseId">
+
+  export type VerseStatusOrderByWithAggregationInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    verseId?: SortOrder
+    isRead?: SortOrder
+    readAt?: SortOrder
+    _count?: VerseStatusCountOrderByAggregateInput
+    _max?: VerseStatusMaxOrderByAggregateInput
+    _min?: VerseStatusMinOrderByAggregateInput
+  }
+
+  export type VerseStatusScalarWhereWithAggregatesInput = {
+    AND?: VerseStatusScalarWhereWithAggregatesInput | VerseStatusScalarWhereWithAggregatesInput[]
+    OR?: VerseStatusScalarWhereWithAggregatesInput[]
+    NOT?: VerseStatusScalarWhereWithAggregatesInput | VerseStatusScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"VerseStatus"> | string
+    userId?: StringWithAggregatesFilter<"VerseStatus"> | string
+    verseId?: StringWithAggregatesFilter<"VerseStatus"> | string
+    isRead?: BoolWithAggregatesFilter<"VerseStatus"> | boolean
+    readAt?: DateTimeWithAggregatesFilter<"VerseStatus"> | Date | string
+  }
+
+  export type ReadingPlanWhereInput = {
+    AND?: ReadingPlanWhereInput | ReadingPlanWhereInput[]
+    OR?: ReadingPlanWhereInput[]
+    NOT?: ReadingPlanWhereInput | ReadingPlanWhereInput[]
+    id?: StringFilter<"ReadingPlan"> | string
+    slug?: StringFilter<"ReadingPlan"> | string
+    name?: StringFilter<"ReadingPlan"> | string
+    description?: StringNullableFilter<"ReadingPlan"> | string | null
+    totalDays?: IntFilter<"ReadingPlan"> | number
+    category?: StringFilter<"ReadingPlan"> | string
+    isPublic?: BoolFilter<"ReadingPlan"> | boolean
+    createdAt?: DateTimeFilter<"ReadingPlan"> | Date | string
+    updatedAt?: DateTimeFilter<"ReadingPlan"> | Date | string
+    days?: ReadingPlanDayListRelationFilter
+    userPlans?: UserReadingPlanListRelationFilter
+  }
+
+  export type ReadingPlanOrderByWithRelationInput = {
+    id?: SortOrder
+    slug?: SortOrder
+    name?: SortOrder
+    description?: SortOrderInput | SortOrder
+    totalDays?: SortOrder
+    category?: SortOrder
+    isPublic?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    days?: ReadingPlanDayOrderByRelationAggregateInput
+    userPlans?: UserReadingPlanOrderByRelationAggregateInput
+  }
+
+  export type ReadingPlanWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    slug?: string
+    AND?: ReadingPlanWhereInput | ReadingPlanWhereInput[]
+    OR?: ReadingPlanWhereInput[]
+    NOT?: ReadingPlanWhereInput | ReadingPlanWhereInput[]
+    name?: StringFilter<"ReadingPlan"> | string
+    description?: StringNullableFilter<"ReadingPlan"> | string | null
+    totalDays?: IntFilter<"ReadingPlan"> | number
+    category?: StringFilter<"ReadingPlan"> | string
+    isPublic?: BoolFilter<"ReadingPlan"> | boolean
+    createdAt?: DateTimeFilter<"ReadingPlan"> | Date | string
+    updatedAt?: DateTimeFilter<"ReadingPlan"> | Date | string
+    days?: ReadingPlanDayListRelationFilter
+    userPlans?: UserReadingPlanListRelationFilter
+  }, "id" | "slug">
+
+  export type ReadingPlanOrderByWithAggregationInput = {
+    id?: SortOrder
+    slug?: SortOrder
+    name?: SortOrder
+    description?: SortOrderInput | SortOrder
+    totalDays?: SortOrder
+    category?: SortOrder
+    isPublic?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: ReadingPlanCountOrderByAggregateInput
+    _avg?: ReadingPlanAvgOrderByAggregateInput
+    _max?: ReadingPlanMaxOrderByAggregateInput
+    _min?: ReadingPlanMinOrderByAggregateInput
+    _sum?: ReadingPlanSumOrderByAggregateInput
+  }
+
+  export type ReadingPlanScalarWhereWithAggregatesInput = {
+    AND?: ReadingPlanScalarWhereWithAggregatesInput | ReadingPlanScalarWhereWithAggregatesInput[]
+    OR?: ReadingPlanScalarWhereWithAggregatesInput[]
+    NOT?: ReadingPlanScalarWhereWithAggregatesInput | ReadingPlanScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"ReadingPlan"> | string
+    slug?: StringWithAggregatesFilter<"ReadingPlan"> | string
+    name?: StringWithAggregatesFilter<"ReadingPlan"> | string
+    description?: StringNullableWithAggregatesFilter<"ReadingPlan"> | string | null
+    totalDays?: IntWithAggregatesFilter<"ReadingPlan"> | number
+    category?: StringWithAggregatesFilter<"ReadingPlan"> | string
+    isPublic?: BoolWithAggregatesFilter<"ReadingPlan"> | boolean
+    createdAt?: DateTimeWithAggregatesFilter<"ReadingPlan"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"ReadingPlan"> | Date | string
+  }
+
+  export type ReadingPlanDayWhereInput = {
+    AND?: ReadingPlanDayWhereInput | ReadingPlanDayWhereInput[]
+    OR?: ReadingPlanDayWhereInput[]
+    NOT?: ReadingPlanDayWhereInput | ReadingPlanDayWhereInput[]
+    id?: StringFilter<"ReadingPlanDay"> | string
+    planId?: StringFilter<"ReadingPlanDay"> | string
+    dayNumber?: IntFilter<"ReadingPlanDay"> | number
+    title?: StringNullableFilter<"ReadingPlanDay"> | string | null
+    references?: StringNullableListFilter<"ReadingPlanDay">
+    plan?: XOR<ReadingPlanScalarRelationFilter, ReadingPlanWhereInput>
+  }
+
+  export type ReadingPlanDayOrderByWithRelationInput = {
+    id?: SortOrder
+    planId?: SortOrder
+    dayNumber?: SortOrder
+    title?: SortOrderInput | SortOrder
+    references?: SortOrder
+    plan?: ReadingPlanOrderByWithRelationInput
+  }
+
+  export type ReadingPlanDayWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    planId_dayNumber?: ReadingPlanDayPlanIdDayNumberCompoundUniqueInput
+    AND?: ReadingPlanDayWhereInput | ReadingPlanDayWhereInput[]
+    OR?: ReadingPlanDayWhereInput[]
+    NOT?: ReadingPlanDayWhereInput | ReadingPlanDayWhereInput[]
+    planId?: StringFilter<"ReadingPlanDay"> | string
+    dayNumber?: IntFilter<"ReadingPlanDay"> | number
+    title?: StringNullableFilter<"ReadingPlanDay"> | string | null
+    references?: StringNullableListFilter<"ReadingPlanDay">
+    plan?: XOR<ReadingPlanScalarRelationFilter, ReadingPlanWhereInput>
+  }, "id" | "planId_dayNumber">
+
+  export type ReadingPlanDayOrderByWithAggregationInput = {
+    id?: SortOrder
+    planId?: SortOrder
+    dayNumber?: SortOrder
+    title?: SortOrderInput | SortOrder
+    references?: SortOrder
+    _count?: ReadingPlanDayCountOrderByAggregateInput
+    _avg?: ReadingPlanDayAvgOrderByAggregateInput
+    _max?: ReadingPlanDayMaxOrderByAggregateInput
+    _min?: ReadingPlanDayMinOrderByAggregateInput
+    _sum?: ReadingPlanDaySumOrderByAggregateInput
+  }
+
+  export type ReadingPlanDayScalarWhereWithAggregatesInput = {
+    AND?: ReadingPlanDayScalarWhereWithAggregatesInput | ReadingPlanDayScalarWhereWithAggregatesInput[]
+    OR?: ReadingPlanDayScalarWhereWithAggregatesInput[]
+    NOT?: ReadingPlanDayScalarWhereWithAggregatesInput | ReadingPlanDayScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"ReadingPlanDay"> | string
+    planId?: StringWithAggregatesFilter<"ReadingPlanDay"> | string
+    dayNumber?: IntWithAggregatesFilter<"ReadingPlanDay"> | number
+    title?: StringNullableWithAggregatesFilter<"ReadingPlanDay"> | string | null
+    references?: StringNullableListFilter<"ReadingPlanDay">
+  }
+
+  export type UserReadingPlanWhereInput = {
+    AND?: UserReadingPlanWhereInput | UserReadingPlanWhereInput[]
+    OR?: UserReadingPlanWhereInput[]
+    NOT?: UserReadingPlanWhereInput | UserReadingPlanWhereInput[]
+    id?: StringFilter<"UserReadingPlan"> | string
+    userId?: StringFilter<"UserReadingPlan"> | string
+    planId?: StringFilter<"UserReadingPlan"> | string
+    currentDay?: IntFilter<"UserReadingPlan"> | number
+    isCompleted?: BoolFilter<"UserReadingPlan"> | boolean
+    startedAt?: DateTimeFilter<"UserReadingPlan"> | Date | string
+    completedAt?: DateTimeNullableFilter<"UserReadingPlan"> | Date | string | null
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+    plan?: XOR<ReadingPlanScalarRelationFilter, ReadingPlanWhereInput>
+  }
+
+  export type UserReadingPlanOrderByWithRelationInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    planId?: SortOrder
+    currentDay?: SortOrder
+    isCompleted?: SortOrder
+    startedAt?: SortOrder
+    completedAt?: SortOrderInput | SortOrder
+    user?: UserOrderByWithRelationInput
+    plan?: ReadingPlanOrderByWithRelationInput
+  }
+
+  export type UserReadingPlanWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    userId_planId?: UserReadingPlanUserIdPlanIdCompoundUniqueInput
+    AND?: UserReadingPlanWhereInput | UserReadingPlanWhereInput[]
+    OR?: UserReadingPlanWhereInput[]
+    NOT?: UserReadingPlanWhereInput | UserReadingPlanWhereInput[]
+    userId?: StringFilter<"UserReadingPlan"> | string
+    planId?: StringFilter<"UserReadingPlan"> | string
+    currentDay?: IntFilter<"UserReadingPlan"> | number
+    isCompleted?: BoolFilter<"UserReadingPlan"> | boolean
+    startedAt?: DateTimeFilter<"UserReadingPlan"> | Date | string
+    completedAt?: DateTimeNullableFilter<"UserReadingPlan"> | Date | string | null
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+    plan?: XOR<ReadingPlanScalarRelationFilter, ReadingPlanWhereInput>
+  }, "id" | "userId_planId">
+
+  export type UserReadingPlanOrderByWithAggregationInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    planId?: SortOrder
+    currentDay?: SortOrder
+    isCompleted?: SortOrder
+    startedAt?: SortOrder
+    completedAt?: SortOrderInput | SortOrder
+    _count?: UserReadingPlanCountOrderByAggregateInput
+    _avg?: UserReadingPlanAvgOrderByAggregateInput
+    _max?: UserReadingPlanMaxOrderByAggregateInput
+    _min?: UserReadingPlanMinOrderByAggregateInput
+    _sum?: UserReadingPlanSumOrderByAggregateInput
+  }
+
+  export type UserReadingPlanScalarWhereWithAggregatesInput = {
+    AND?: UserReadingPlanScalarWhereWithAggregatesInput | UserReadingPlanScalarWhereWithAggregatesInput[]
+    OR?: UserReadingPlanScalarWhereWithAggregatesInput[]
+    NOT?: UserReadingPlanScalarWhereWithAggregatesInput | UserReadingPlanScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"UserReadingPlan"> | string
+    userId?: StringWithAggregatesFilter<"UserReadingPlan"> | string
+    planId?: StringWithAggregatesFilter<"UserReadingPlan"> | string
+    currentDay?: IntWithAggregatesFilter<"UserReadingPlan"> | number
+    isCompleted?: BoolWithAggregatesFilter<"UserReadingPlan"> | boolean
+    startedAt?: DateTimeWithAggregatesFilter<"UserReadingPlan"> | Date | string
+    completedAt?: DateTimeNullableWithAggregatesFilter<"UserReadingPlan"> | Date | string | null
   }
 
   export type VerificationTokenWhereInput = {
@@ -16626,6 +21951,7 @@ export namespace Prisma {
     bookmarks?: BookmarkCreateNestedManyWithoutVerseInput
     highlights?: HighlightCreateNestedManyWithoutVerseInput
     notes?: NoteCreateNestedManyWithoutVerseInput
+    verseStatuses?: VerseStatusCreateNestedManyWithoutVerseInput
     book: BookCreateNestedOneWithoutVersesInput
     translation: TranslationCreateNestedOneWithoutVersesInput
   }
@@ -16641,6 +21967,7 @@ export namespace Prisma {
     bookmarks?: BookmarkUncheckedCreateNestedManyWithoutVerseInput
     highlights?: HighlightUncheckedCreateNestedManyWithoutVerseInput
     notes?: NoteUncheckedCreateNestedManyWithoutVerseInput
+    verseStatuses?: VerseStatusUncheckedCreateNestedManyWithoutVerseInput
   }
 
   export type VerseUpdateInput = {
@@ -16652,6 +21979,7 @@ export namespace Prisma {
     bookmarks?: BookmarkUpdateManyWithoutVerseNestedInput
     highlights?: HighlightUpdateManyWithoutVerseNestedInput
     notes?: NoteUpdateManyWithoutVerseNestedInput
+    verseStatuses?: VerseStatusUpdateManyWithoutVerseNestedInput
     book?: BookUpdateOneRequiredWithoutVersesNestedInput
     translation?: TranslationUpdateOneRequiredWithoutVersesNestedInput
   }
@@ -16667,6 +21995,7 @@ export namespace Prisma {
     bookmarks?: BookmarkUncheckedUpdateManyWithoutVerseNestedInput
     highlights?: HighlightUncheckedUpdateManyWithoutVerseNestedInput
     notes?: NoteUncheckedUpdateManyWithoutVerseNestedInput
+    verseStatuses?: VerseStatusUncheckedUpdateManyWithoutVerseNestedInput
   }
 
   export type VerseCreateManyInput = {
@@ -17111,12 +22440,15 @@ export namespace Prisma {
     lastReadOrder?: number
     lastReadTranslation?: string
     lastReadAt?: Date | string
+    autoProgress?: boolean
     accounts?: AccountCreateNestedManyWithoutUserInput
     bookmarks?: BookmarkCreateNestedManyWithoutUserInput
     highlights?: HighlightCreateNestedManyWithoutUserInput
     notes?: NoteCreateNestedManyWithoutUserInput
     posts?: PostCreateNestedManyWithoutCreatedByInput
     sessions?: SessionCreateNestedManyWithoutUserInput
+    verseStatuses?: VerseStatusCreateNestedManyWithoutUserInput
+    readingPlans?: UserReadingPlanCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateInput = {
@@ -17128,12 +22460,15 @@ export namespace Prisma {
     lastReadOrder?: number
     lastReadTranslation?: string
     lastReadAt?: Date | string
+    autoProgress?: boolean
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
     bookmarks?: BookmarkUncheckedCreateNestedManyWithoutUserInput
     highlights?: HighlightUncheckedCreateNestedManyWithoutUserInput
     notes?: NoteUncheckedCreateNestedManyWithoutUserInput
     posts?: PostUncheckedCreateNestedManyWithoutCreatedByInput
     sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
+    verseStatuses?: VerseStatusUncheckedCreateNestedManyWithoutUserInput
+    readingPlans?: UserReadingPlanUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserUpdateInput = {
@@ -17145,12 +22480,15 @@ export namespace Prisma {
     lastReadOrder?: IntFieldUpdateOperationsInput | number
     lastReadTranslation?: StringFieldUpdateOperationsInput | string
     lastReadAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    autoProgress?: BoolFieldUpdateOperationsInput | boolean
     accounts?: AccountUpdateManyWithoutUserNestedInput
     bookmarks?: BookmarkUpdateManyWithoutUserNestedInput
     highlights?: HighlightUpdateManyWithoutUserNestedInput
     notes?: NoteUpdateManyWithoutUserNestedInput
     posts?: PostUpdateManyWithoutCreatedByNestedInput
     sessions?: SessionUpdateManyWithoutUserNestedInput
+    verseStatuses?: VerseStatusUpdateManyWithoutUserNestedInput
+    readingPlans?: UserReadingPlanUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateInput = {
@@ -17162,12 +22500,15 @@ export namespace Prisma {
     lastReadOrder?: IntFieldUpdateOperationsInput | number
     lastReadTranslation?: StringFieldUpdateOperationsInput | string
     lastReadAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    autoProgress?: BoolFieldUpdateOperationsInput | boolean
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
     bookmarks?: BookmarkUncheckedUpdateManyWithoutUserNestedInput
     highlights?: HighlightUncheckedUpdateManyWithoutUserNestedInput
     notes?: NoteUncheckedUpdateManyWithoutUserNestedInput
     posts?: PostUncheckedUpdateManyWithoutCreatedByNestedInput
     sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
+    verseStatuses?: VerseStatusUncheckedUpdateManyWithoutUserNestedInput
+    readingPlans?: UserReadingPlanUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserCreateManyInput = {
@@ -17179,6 +22520,7 @@ export namespace Prisma {
     lastReadOrder?: number
     lastReadTranslation?: string
     lastReadAt?: Date | string
+    autoProgress?: boolean
   }
 
   export type UserUpdateManyMutationInput = {
@@ -17190,6 +22532,7 @@ export namespace Prisma {
     lastReadOrder?: IntFieldUpdateOperationsInput | number
     lastReadTranslation?: StringFieldUpdateOperationsInput | string
     lastReadAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    autoProgress?: BoolFieldUpdateOperationsInput | boolean
   }
 
   export type UserUncheckedUpdateManyInput = {
@@ -17201,6 +22544,276 @@ export namespace Prisma {
     lastReadOrder?: IntFieldUpdateOperationsInput | number
     lastReadTranslation?: StringFieldUpdateOperationsInput | string
     lastReadAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    autoProgress?: BoolFieldUpdateOperationsInput | boolean
+  }
+
+  export type VerseStatusCreateInput = {
+    id?: string
+    isRead?: boolean
+    readAt?: Date | string
+    user: UserCreateNestedOneWithoutVerseStatusesInput
+    verse: VerseCreateNestedOneWithoutVerseStatusesInput
+  }
+
+  export type VerseStatusUncheckedCreateInput = {
+    id?: string
+    userId: string
+    verseId: string
+    isRead?: boolean
+    readAt?: Date | string
+  }
+
+  export type VerseStatusUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    isRead?: BoolFieldUpdateOperationsInput | boolean
+    readAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    user?: UserUpdateOneRequiredWithoutVerseStatusesNestedInput
+    verse?: VerseUpdateOneRequiredWithoutVerseStatusesNestedInput
+  }
+
+  export type VerseStatusUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    verseId?: StringFieldUpdateOperationsInput | string
+    isRead?: BoolFieldUpdateOperationsInput | boolean
+    readAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type VerseStatusCreateManyInput = {
+    id?: string
+    userId: string
+    verseId: string
+    isRead?: boolean
+    readAt?: Date | string
+  }
+
+  export type VerseStatusUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    isRead?: BoolFieldUpdateOperationsInput | boolean
+    readAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type VerseStatusUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    verseId?: StringFieldUpdateOperationsInput | string
+    isRead?: BoolFieldUpdateOperationsInput | boolean
+    readAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ReadingPlanCreateInput = {
+    id?: string
+    slug: string
+    name: string
+    description?: string | null
+    totalDays: number
+    category?: string
+    isPublic?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    days?: ReadingPlanDayCreateNestedManyWithoutPlanInput
+    userPlans?: UserReadingPlanCreateNestedManyWithoutPlanInput
+  }
+
+  export type ReadingPlanUncheckedCreateInput = {
+    id?: string
+    slug: string
+    name: string
+    description?: string | null
+    totalDays: number
+    category?: string
+    isPublic?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    days?: ReadingPlanDayUncheckedCreateNestedManyWithoutPlanInput
+    userPlans?: UserReadingPlanUncheckedCreateNestedManyWithoutPlanInput
+  }
+
+  export type ReadingPlanUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    totalDays?: IntFieldUpdateOperationsInput | number
+    category?: StringFieldUpdateOperationsInput | string
+    isPublic?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    days?: ReadingPlanDayUpdateManyWithoutPlanNestedInput
+    userPlans?: UserReadingPlanUpdateManyWithoutPlanNestedInput
+  }
+
+  export type ReadingPlanUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    totalDays?: IntFieldUpdateOperationsInput | number
+    category?: StringFieldUpdateOperationsInput | string
+    isPublic?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    days?: ReadingPlanDayUncheckedUpdateManyWithoutPlanNestedInput
+    userPlans?: UserReadingPlanUncheckedUpdateManyWithoutPlanNestedInput
+  }
+
+  export type ReadingPlanCreateManyInput = {
+    id?: string
+    slug: string
+    name: string
+    description?: string | null
+    totalDays: number
+    category?: string
+    isPublic?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ReadingPlanUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    totalDays?: IntFieldUpdateOperationsInput | number
+    category?: StringFieldUpdateOperationsInput | string
+    isPublic?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ReadingPlanUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    totalDays?: IntFieldUpdateOperationsInput | number
+    category?: StringFieldUpdateOperationsInput | string
+    isPublic?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ReadingPlanDayCreateInput = {
+    id?: string
+    dayNumber: number
+    title?: string | null
+    references?: ReadingPlanDayCreatereferencesInput | string[]
+    plan: ReadingPlanCreateNestedOneWithoutDaysInput
+  }
+
+  export type ReadingPlanDayUncheckedCreateInput = {
+    id?: string
+    planId: string
+    dayNumber: number
+    title?: string | null
+    references?: ReadingPlanDayCreatereferencesInput | string[]
+  }
+
+  export type ReadingPlanDayUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    dayNumber?: IntFieldUpdateOperationsInput | number
+    title?: NullableStringFieldUpdateOperationsInput | string | null
+    references?: ReadingPlanDayUpdatereferencesInput | string[]
+    plan?: ReadingPlanUpdateOneRequiredWithoutDaysNestedInput
+  }
+
+  export type ReadingPlanDayUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    planId?: StringFieldUpdateOperationsInput | string
+    dayNumber?: IntFieldUpdateOperationsInput | number
+    title?: NullableStringFieldUpdateOperationsInput | string | null
+    references?: ReadingPlanDayUpdatereferencesInput | string[]
+  }
+
+  export type ReadingPlanDayCreateManyInput = {
+    id?: string
+    planId: string
+    dayNumber: number
+    title?: string | null
+    references?: ReadingPlanDayCreatereferencesInput | string[]
+  }
+
+  export type ReadingPlanDayUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    dayNumber?: IntFieldUpdateOperationsInput | number
+    title?: NullableStringFieldUpdateOperationsInput | string | null
+    references?: ReadingPlanDayUpdatereferencesInput | string[]
+  }
+
+  export type ReadingPlanDayUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    planId?: StringFieldUpdateOperationsInput | string
+    dayNumber?: IntFieldUpdateOperationsInput | number
+    title?: NullableStringFieldUpdateOperationsInput | string | null
+    references?: ReadingPlanDayUpdatereferencesInput | string[]
+  }
+
+  export type UserReadingPlanCreateInput = {
+    id?: string
+    currentDay?: number
+    isCompleted?: boolean
+    startedAt?: Date | string
+    completedAt?: Date | string | null
+    user: UserCreateNestedOneWithoutReadingPlansInput
+    plan: ReadingPlanCreateNestedOneWithoutUserPlansInput
+  }
+
+  export type UserReadingPlanUncheckedCreateInput = {
+    id?: string
+    userId: string
+    planId: string
+    currentDay?: number
+    isCompleted?: boolean
+    startedAt?: Date | string
+    completedAt?: Date | string | null
+  }
+
+  export type UserReadingPlanUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    currentDay?: IntFieldUpdateOperationsInput | number
+    isCompleted?: BoolFieldUpdateOperationsInput | boolean
+    startedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    user?: UserUpdateOneRequiredWithoutReadingPlansNestedInput
+    plan?: ReadingPlanUpdateOneRequiredWithoutUserPlansNestedInput
+  }
+
+  export type UserReadingPlanUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    planId?: StringFieldUpdateOperationsInput | string
+    currentDay?: IntFieldUpdateOperationsInput | number
+    isCompleted?: BoolFieldUpdateOperationsInput | boolean
+    startedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type UserReadingPlanCreateManyInput = {
+    id?: string
+    userId: string
+    planId: string
+    currentDay?: number
+    isCompleted?: boolean
+    startedAt?: Date | string
+    completedAt?: Date | string | null
+  }
+
+  export type UserReadingPlanUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    currentDay?: IntFieldUpdateOperationsInput | number
+    isCompleted?: BoolFieldUpdateOperationsInput | boolean
+    startedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type UserReadingPlanUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    planId?: StringFieldUpdateOperationsInput | string
+    currentDay?: IntFieldUpdateOperationsInput | number
+    isCompleted?: BoolFieldUpdateOperationsInput | boolean
+    startedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type VerificationTokenCreateInput = {
@@ -17481,6 +23094,12 @@ export namespace Prisma {
     none?: NoteWhereInput
   }
 
+  export type VerseStatusListRelationFilter = {
+    every?: VerseStatusWhereInput
+    some?: VerseStatusWhereInput
+    none?: VerseStatusWhereInput
+  }
+
   export type BookScalarRelationFilter = {
     is?: BookWhereInput
     isNot?: BookWhereInput
@@ -17500,6 +23119,10 @@ export namespace Prisma {
   }
 
   export type NoteOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type VerseStatusOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -17860,6 +23483,12 @@ export namespace Prisma {
     none?: SessionWhereInput
   }
 
+  export type UserReadingPlanListRelationFilter = {
+    every?: UserReadingPlanWhereInput
+    some?: UserReadingPlanWhereInput
+    none?: UserReadingPlanWhereInput
+  }
+
   export type AccountOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
@@ -17872,6 +23501,10 @@ export namespace Prisma {
     _count?: SortOrder
   }
 
+  export type UserReadingPlanOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
   export type UserCountOrderByAggregateInput = {
     id?: SortOrder
     name?: SortOrder
@@ -17881,6 +23514,7 @@ export namespace Prisma {
     lastReadOrder?: SortOrder
     lastReadTranslation?: SortOrder
     lastReadAt?: SortOrder
+    autoProgress?: SortOrder
   }
 
   export type UserAvgOrderByAggregateInput = {
@@ -17896,6 +23530,7 @@ export namespace Prisma {
     lastReadOrder?: SortOrder
     lastReadTranslation?: SortOrder
     lastReadAt?: SortOrder
+    autoProgress?: SortOrder
   }
 
   export type UserMinOrderByAggregateInput = {
@@ -17907,6 +23542,7 @@ export namespace Prisma {
     lastReadOrder?: SortOrder
     lastReadTranslation?: SortOrder
     lastReadAt?: SortOrder
+    autoProgress?: SortOrder
   }
 
   export type UserSumOrderByAggregateInput = {
@@ -17925,6 +23561,180 @@ export namespace Prisma {
     _count?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedDateTimeNullableFilter<$PrismaModel>
     _max?: NestedDateTimeNullableFilter<$PrismaModel>
+  }
+
+  export type VerseStatusUserIdVerseIdCompoundUniqueInput = {
+    userId: string
+    verseId: string
+  }
+
+  export type VerseStatusCountOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    verseId?: SortOrder
+    isRead?: SortOrder
+    readAt?: SortOrder
+  }
+
+  export type VerseStatusMaxOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    verseId?: SortOrder
+    isRead?: SortOrder
+    readAt?: SortOrder
+  }
+
+  export type VerseStatusMinOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    verseId?: SortOrder
+    isRead?: SortOrder
+    readAt?: SortOrder
+  }
+
+  export type ReadingPlanDayListRelationFilter = {
+    every?: ReadingPlanDayWhereInput
+    some?: ReadingPlanDayWhereInput
+    none?: ReadingPlanDayWhereInput
+  }
+
+  export type ReadingPlanDayOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type ReadingPlanCountOrderByAggregateInput = {
+    id?: SortOrder
+    slug?: SortOrder
+    name?: SortOrder
+    description?: SortOrder
+    totalDays?: SortOrder
+    category?: SortOrder
+    isPublic?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ReadingPlanAvgOrderByAggregateInput = {
+    totalDays?: SortOrder
+  }
+
+  export type ReadingPlanMaxOrderByAggregateInput = {
+    id?: SortOrder
+    slug?: SortOrder
+    name?: SortOrder
+    description?: SortOrder
+    totalDays?: SortOrder
+    category?: SortOrder
+    isPublic?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ReadingPlanMinOrderByAggregateInput = {
+    id?: SortOrder
+    slug?: SortOrder
+    name?: SortOrder
+    description?: SortOrder
+    totalDays?: SortOrder
+    category?: SortOrder
+    isPublic?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ReadingPlanSumOrderByAggregateInput = {
+    totalDays?: SortOrder
+  }
+
+  export type StringNullableListFilter<$PrismaModel = never> = {
+    equals?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    has?: string | StringFieldRefInput<$PrismaModel> | null
+    hasEvery?: string[] | ListStringFieldRefInput<$PrismaModel>
+    hasSome?: string[] | ListStringFieldRefInput<$PrismaModel>
+    isEmpty?: boolean
+  }
+
+  export type ReadingPlanScalarRelationFilter = {
+    is?: ReadingPlanWhereInput
+    isNot?: ReadingPlanWhereInput
+  }
+
+  export type ReadingPlanDayPlanIdDayNumberCompoundUniqueInput = {
+    planId: string
+    dayNumber: number
+  }
+
+  export type ReadingPlanDayCountOrderByAggregateInput = {
+    id?: SortOrder
+    planId?: SortOrder
+    dayNumber?: SortOrder
+    title?: SortOrder
+    references?: SortOrder
+  }
+
+  export type ReadingPlanDayAvgOrderByAggregateInput = {
+    dayNumber?: SortOrder
+  }
+
+  export type ReadingPlanDayMaxOrderByAggregateInput = {
+    id?: SortOrder
+    planId?: SortOrder
+    dayNumber?: SortOrder
+    title?: SortOrder
+  }
+
+  export type ReadingPlanDayMinOrderByAggregateInput = {
+    id?: SortOrder
+    planId?: SortOrder
+    dayNumber?: SortOrder
+    title?: SortOrder
+  }
+
+  export type ReadingPlanDaySumOrderByAggregateInput = {
+    dayNumber?: SortOrder
+  }
+
+  export type UserReadingPlanUserIdPlanIdCompoundUniqueInput = {
+    userId: string
+    planId: string
+  }
+
+  export type UserReadingPlanCountOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    planId?: SortOrder
+    currentDay?: SortOrder
+    isCompleted?: SortOrder
+    startedAt?: SortOrder
+    completedAt?: SortOrder
+  }
+
+  export type UserReadingPlanAvgOrderByAggregateInput = {
+    currentDay?: SortOrder
+  }
+
+  export type UserReadingPlanMaxOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    planId?: SortOrder
+    currentDay?: SortOrder
+    isCompleted?: SortOrder
+    startedAt?: SortOrder
+    completedAt?: SortOrder
+  }
+
+  export type UserReadingPlanMinOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    planId?: SortOrder
+    currentDay?: SortOrder
+    isCompleted?: SortOrder
+    startedAt?: SortOrder
+    completedAt?: SortOrder
+  }
+
+  export type UserReadingPlanSumOrderByAggregateInput = {
+    currentDay?: SortOrder
   }
 
   export type VerificationTokenIdentifierTokenCompoundUniqueInput = {
@@ -18089,6 +23899,13 @@ export namespace Prisma {
     connect?: NoteWhereUniqueInput | NoteWhereUniqueInput[]
   }
 
+  export type VerseStatusCreateNestedManyWithoutVerseInput = {
+    create?: XOR<VerseStatusCreateWithoutVerseInput, VerseStatusUncheckedCreateWithoutVerseInput> | VerseStatusCreateWithoutVerseInput[] | VerseStatusUncheckedCreateWithoutVerseInput[]
+    connectOrCreate?: VerseStatusCreateOrConnectWithoutVerseInput | VerseStatusCreateOrConnectWithoutVerseInput[]
+    createMany?: VerseStatusCreateManyVerseInputEnvelope
+    connect?: VerseStatusWhereUniqueInput | VerseStatusWhereUniqueInput[]
+  }
+
   export type BookCreateNestedOneWithoutVersesInput = {
     create?: XOR<BookCreateWithoutVersesInput, BookUncheckedCreateWithoutVersesInput>
     connectOrCreate?: BookCreateOrConnectWithoutVersesInput
@@ -18120,6 +23937,13 @@ export namespace Prisma {
     connectOrCreate?: NoteCreateOrConnectWithoutVerseInput | NoteCreateOrConnectWithoutVerseInput[]
     createMany?: NoteCreateManyVerseInputEnvelope
     connect?: NoteWhereUniqueInput | NoteWhereUniqueInput[]
+  }
+
+  export type VerseStatusUncheckedCreateNestedManyWithoutVerseInput = {
+    create?: XOR<VerseStatusCreateWithoutVerseInput, VerseStatusUncheckedCreateWithoutVerseInput> | VerseStatusCreateWithoutVerseInput[] | VerseStatusUncheckedCreateWithoutVerseInput[]
+    connectOrCreate?: VerseStatusCreateOrConnectWithoutVerseInput | VerseStatusCreateOrConnectWithoutVerseInput[]
+    createMany?: VerseStatusCreateManyVerseInputEnvelope
+    connect?: VerseStatusWhereUniqueInput | VerseStatusWhereUniqueInput[]
   }
 
   export type BookmarkUpdateManyWithoutVerseNestedInput = {
@@ -18162,6 +23986,20 @@ export namespace Prisma {
     update?: NoteUpdateWithWhereUniqueWithoutVerseInput | NoteUpdateWithWhereUniqueWithoutVerseInput[]
     updateMany?: NoteUpdateManyWithWhereWithoutVerseInput | NoteUpdateManyWithWhereWithoutVerseInput[]
     deleteMany?: NoteScalarWhereInput | NoteScalarWhereInput[]
+  }
+
+  export type VerseStatusUpdateManyWithoutVerseNestedInput = {
+    create?: XOR<VerseStatusCreateWithoutVerseInput, VerseStatusUncheckedCreateWithoutVerseInput> | VerseStatusCreateWithoutVerseInput[] | VerseStatusUncheckedCreateWithoutVerseInput[]
+    connectOrCreate?: VerseStatusCreateOrConnectWithoutVerseInput | VerseStatusCreateOrConnectWithoutVerseInput[]
+    upsert?: VerseStatusUpsertWithWhereUniqueWithoutVerseInput | VerseStatusUpsertWithWhereUniqueWithoutVerseInput[]
+    createMany?: VerseStatusCreateManyVerseInputEnvelope
+    set?: VerseStatusWhereUniqueInput | VerseStatusWhereUniqueInput[]
+    disconnect?: VerseStatusWhereUniqueInput | VerseStatusWhereUniqueInput[]
+    delete?: VerseStatusWhereUniqueInput | VerseStatusWhereUniqueInput[]
+    connect?: VerseStatusWhereUniqueInput | VerseStatusWhereUniqueInput[]
+    update?: VerseStatusUpdateWithWhereUniqueWithoutVerseInput | VerseStatusUpdateWithWhereUniqueWithoutVerseInput[]
+    updateMany?: VerseStatusUpdateManyWithWhereWithoutVerseInput | VerseStatusUpdateManyWithWhereWithoutVerseInput[]
+    deleteMany?: VerseStatusScalarWhereInput | VerseStatusScalarWhereInput[]
   }
 
   export type BookUpdateOneRequiredWithoutVersesNestedInput = {
@@ -18220,6 +24058,20 @@ export namespace Prisma {
     update?: NoteUpdateWithWhereUniqueWithoutVerseInput | NoteUpdateWithWhereUniqueWithoutVerseInput[]
     updateMany?: NoteUpdateManyWithWhereWithoutVerseInput | NoteUpdateManyWithWhereWithoutVerseInput[]
     deleteMany?: NoteScalarWhereInput | NoteScalarWhereInput[]
+  }
+
+  export type VerseStatusUncheckedUpdateManyWithoutVerseNestedInput = {
+    create?: XOR<VerseStatusCreateWithoutVerseInput, VerseStatusUncheckedCreateWithoutVerseInput> | VerseStatusCreateWithoutVerseInput[] | VerseStatusUncheckedCreateWithoutVerseInput[]
+    connectOrCreate?: VerseStatusCreateOrConnectWithoutVerseInput | VerseStatusCreateOrConnectWithoutVerseInput[]
+    upsert?: VerseStatusUpsertWithWhereUniqueWithoutVerseInput | VerseStatusUpsertWithWhereUniqueWithoutVerseInput[]
+    createMany?: VerseStatusCreateManyVerseInputEnvelope
+    set?: VerseStatusWhereUniqueInput | VerseStatusWhereUniqueInput[]
+    disconnect?: VerseStatusWhereUniqueInput | VerseStatusWhereUniqueInput[]
+    delete?: VerseStatusWhereUniqueInput | VerseStatusWhereUniqueInput[]
+    connect?: VerseStatusWhereUniqueInput | VerseStatusWhereUniqueInput[]
+    update?: VerseStatusUpdateWithWhereUniqueWithoutVerseInput | VerseStatusUpdateWithWhereUniqueWithoutVerseInput[]
+    updateMany?: VerseStatusUpdateManyWithWhereWithoutVerseInput | VerseStatusUpdateManyWithWhereWithoutVerseInput[]
+    deleteMany?: VerseStatusScalarWhereInput | VerseStatusScalarWhereInput[]
   }
 
   export type UserCreateNestedOneWithoutBookmarksInput = {
@@ -18388,6 +24240,20 @@ export namespace Prisma {
     connect?: SessionWhereUniqueInput | SessionWhereUniqueInput[]
   }
 
+  export type VerseStatusCreateNestedManyWithoutUserInput = {
+    create?: XOR<VerseStatusCreateWithoutUserInput, VerseStatusUncheckedCreateWithoutUserInput> | VerseStatusCreateWithoutUserInput[] | VerseStatusUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: VerseStatusCreateOrConnectWithoutUserInput | VerseStatusCreateOrConnectWithoutUserInput[]
+    createMany?: VerseStatusCreateManyUserInputEnvelope
+    connect?: VerseStatusWhereUniqueInput | VerseStatusWhereUniqueInput[]
+  }
+
+  export type UserReadingPlanCreateNestedManyWithoutUserInput = {
+    create?: XOR<UserReadingPlanCreateWithoutUserInput, UserReadingPlanUncheckedCreateWithoutUserInput> | UserReadingPlanCreateWithoutUserInput[] | UserReadingPlanUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: UserReadingPlanCreateOrConnectWithoutUserInput | UserReadingPlanCreateOrConnectWithoutUserInput[]
+    createMany?: UserReadingPlanCreateManyUserInputEnvelope
+    connect?: UserReadingPlanWhereUniqueInput | UserReadingPlanWhereUniqueInput[]
+  }
+
   export type AccountUncheckedCreateNestedManyWithoutUserInput = {
     create?: XOR<AccountCreateWithoutUserInput, AccountUncheckedCreateWithoutUserInput> | AccountCreateWithoutUserInput[] | AccountUncheckedCreateWithoutUserInput[]
     connectOrCreate?: AccountCreateOrConnectWithoutUserInput | AccountCreateOrConnectWithoutUserInput[]
@@ -18428,6 +24294,20 @@ export namespace Prisma {
     connectOrCreate?: SessionCreateOrConnectWithoutUserInput | SessionCreateOrConnectWithoutUserInput[]
     createMany?: SessionCreateManyUserInputEnvelope
     connect?: SessionWhereUniqueInput | SessionWhereUniqueInput[]
+  }
+
+  export type VerseStatusUncheckedCreateNestedManyWithoutUserInput = {
+    create?: XOR<VerseStatusCreateWithoutUserInput, VerseStatusUncheckedCreateWithoutUserInput> | VerseStatusCreateWithoutUserInput[] | VerseStatusUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: VerseStatusCreateOrConnectWithoutUserInput | VerseStatusCreateOrConnectWithoutUserInput[]
+    createMany?: VerseStatusCreateManyUserInputEnvelope
+    connect?: VerseStatusWhereUniqueInput | VerseStatusWhereUniqueInput[]
+  }
+
+  export type UserReadingPlanUncheckedCreateNestedManyWithoutUserInput = {
+    create?: XOR<UserReadingPlanCreateWithoutUserInput, UserReadingPlanUncheckedCreateWithoutUserInput> | UserReadingPlanCreateWithoutUserInput[] | UserReadingPlanUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: UserReadingPlanCreateOrConnectWithoutUserInput | UserReadingPlanCreateOrConnectWithoutUserInput[]
+    createMany?: UserReadingPlanCreateManyUserInputEnvelope
+    connect?: UserReadingPlanWhereUniqueInput | UserReadingPlanWhereUniqueInput[]
   }
 
   export type NullableDateTimeFieldUpdateOperationsInput = {
@@ -18518,6 +24398,34 @@ export namespace Prisma {
     deleteMany?: SessionScalarWhereInput | SessionScalarWhereInput[]
   }
 
+  export type VerseStatusUpdateManyWithoutUserNestedInput = {
+    create?: XOR<VerseStatusCreateWithoutUserInput, VerseStatusUncheckedCreateWithoutUserInput> | VerseStatusCreateWithoutUserInput[] | VerseStatusUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: VerseStatusCreateOrConnectWithoutUserInput | VerseStatusCreateOrConnectWithoutUserInput[]
+    upsert?: VerseStatusUpsertWithWhereUniqueWithoutUserInput | VerseStatusUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: VerseStatusCreateManyUserInputEnvelope
+    set?: VerseStatusWhereUniqueInput | VerseStatusWhereUniqueInput[]
+    disconnect?: VerseStatusWhereUniqueInput | VerseStatusWhereUniqueInput[]
+    delete?: VerseStatusWhereUniqueInput | VerseStatusWhereUniqueInput[]
+    connect?: VerseStatusWhereUniqueInput | VerseStatusWhereUniqueInput[]
+    update?: VerseStatusUpdateWithWhereUniqueWithoutUserInput | VerseStatusUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: VerseStatusUpdateManyWithWhereWithoutUserInput | VerseStatusUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: VerseStatusScalarWhereInput | VerseStatusScalarWhereInput[]
+  }
+
+  export type UserReadingPlanUpdateManyWithoutUserNestedInput = {
+    create?: XOR<UserReadingPlanCreateWithoutUserInput, UserReadingPlanUncheckedCreateWithoutUserInput> | UserReadingPlanCreateWithoutUserInput[] | UserReadingPlanUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: UserReadingPlanCreateOrConnectWithoutUserInput | UserReadingPlanCreateOrConnectWithoutUserInput[]
+    upsert?: UserReadingPlanUpsertWithWhereUniqueWithoutUserInput | UserReadingPlanUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: UserReadingPlanCreateManyUserInputEnvelope
+    set?: UserReadingPlanWhereUniqueInput | UserReadingPlanWhereUniqueInput[]
+    disconnect?: UserReadingPlanWhereUniqueInput | UserReadingPlanWhereUniqueInput[]
+    delete?: UserReadingPlanWhereUniqueInput | UserReadingPlanWhereUniqueInput[]
+    connect?: UserReadingPlanWhereUniqueInput | UserReadingPlanWhereUniqueInput[]
+    update?: UserReadingPlanUpdateWithWhereUniqueWithoutUserInput | UserReadingPlanUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: UserReadingPlanUpdateManyWithWhereWithoutUserInput | UserReadingPlanUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: UserReadingPlanScalarWhereInput | UserReadingPlanScalarWhereInput[]
+  }
+
   export type AccountUncheckedUpdateManyWithoutUserNestedInput = {
     create?: XOR<AccountCreateWithoutUserInput, AccountUncheckedCreateWithoutUserInput> | AccountCreateWithoutUserInput[] | AccountUncheckedCreateWithoutUserInput[]
     connectOrCreate?: AccountCreateOrConnectWithoutUserInput | AccountCreateOrConnectWithoutUserInput[]
@@ -18600,6 +24508,197 @@ export namespace Prisma {
     update?: SessionUpdateWithWhereUniqueWithoutUserInput | SessionUpdateWithWhereUniqueWithoutUserInput[]
     updateMany?: SessionUpdateManyWithWhereWithoutUserInput | SessionUpdateManyWithWhereWithoutUserInput[]
     deleteMany?: SessionScalarWhereInput | SessionScalarWhereInput[]
+  }
+
+  export type VerseStatusUncheckedUpdateManyWithoutUserNestedInput = {
+    create?: XOR<VerseStatusCreateWithoutUserInput, VerseStatusUncheckedCreateWithoutUserInput> | VerseStatusCreateWithoutUserInput[] | VerseStatusUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: VerseStatusCreateOrConnectWithoutUserInput | VerseStatusCreateOrConnectWithoutUserInput[]
+    upsert?: VerseStatusUpsertWithWhereUniqueWithoutUserInput | VerseStatusUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: VerseStatusCreateManyUserInputEnvelope
+    set?: VerseStatusWhereUniqueInput | VerseStatusWhereUniqueInput[]
+    disconnect?: VerseStatusWhereUniqueInput | VerseStatusWhereUniqueInput[]
+    delete?: VerseStatusWhereUniqueInput | VerseStatusWhereUniqueInput[]
+    connect?: VerseStatusWhereUniqueInput | VerseStatusWhereUniqueInput[]
+    update?: VerseStatusUpdateWithWhereUniqueWithoutUserInput | VerseStatusUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: VerseStatusUpdateManyWithWhereWithoutUserInput | VerseStatusUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: VerseStatusScalarWhereInput | VerseStatusScalarWhereInput[]
+  }
+
+  export type UserReadingPlanUncheckedUpdateManyWithoutUserNestedInput = {
+    create?: XOR<UserReadingPlanCreateWithoutUserInput, UserReadingPlanUncheckedCreateWithoutUserInput> | UserReadingPlanCreateWithoutUserInput[] | UserReadingPlanUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: UserReadingPlanCreateOrConnectWithoutUserInput | UserReadingPlanCreateOrConnectWithoutUserInput[]
+    upsert?: UserReadingPlanUpsertWithWhereUniqueWithoutUserInput | UserReadingPlanUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: UserReadingPlanCreateManyUserInputEnvelope
+    set?: UserReadingPlanWhereUniqueInput | UserReadingPlanWhereUniqueInput[]
+    disconnect?: UserReadingPlanWhereUniqueInput | UserReadingPlanWhereUniqueInput[]
+    delete?: UserReadingPlanWhereUniqueInput | UserReadingPlanWhereUniqueInput[]
+    connect?: UserReadingPlanWhereUniqueInput | UserReadingPlanWhereUniqueInput[]
+    update?: UserReadingPlanUpdateWithWhereUniqueWithoutUserInput | UserReadingPlanUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: UserReadingPlanUpdateManyWithWhereWithoutUserInput | UserReadingPlanUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: UserReadingPlanScalarWhereInput | UserReadingPlanScalarWhereInput[]
+  }
+
+  export type UserCreateNestedOneWithoutVerseStatusesInput = {
+    create?: XOR<UserCreateWithoutVerseStatusesInput, UserUncheckedCreateWithoutVerseStatusesInput>
+    connectOrCreate?: UserCreateOrConnectWithoutVerseStatusesInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type VerseCreateNestedOneWithoutVerseStatusesInput = {
+    create?: XOR<VerseCreateWithoutVerseStatusesInput, VerseUncheckedCreateWithoutVerseStatusesInput>
+    connectOrCreate?: VerseCreateOrConnectWithoutVerseStatusesInput
+    connect?: VerseWhereUniqueInput
+  }
+
+  export type UserUpdateOneRequiredWithoutVerseStatusesNestedInput = {
+    create?: XOR<UserCreateWithoutVerseStatusesInput, UserUncheckedCreateWithoutVerseStatusesInput>
+    connectOrCreate?: UserCreateOrConnectWithoutVerseStatusesInput
+    upsert?: UserUpsertWithoutVerseStatusesInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutVerseStatusesInput, UserUpdateWithoutVerseStatusesInput>, UserUncheckedUpdateWithoutVerseStatusesInput>
+  }
+
+  export type VerseUpdateOneRequiredWithoutVerseStatusesNestedInput = {
+    create?: XOR<VerseCreateWithoutVerseStatusesInput, VerseUncheckedCreateWithoutVerseStatusesInput>
+    connectOrCreate?: VerseCreateOrConnectWithoutVerseStatusesInput
+    upsert?: VerseUpsertWithoutVerseStatusesInput
+    connect?: VerseWhereUniqueInput
+    update?: XOR<XOR<VerseUpdateToOneWithWhereWithoutVerseStatusesInput, VerseUpdateWithoutVerseStatusesInput>, VerseUncheckedUpdateWithoutVerseStatusesInput>
+  }
+
+  export type ReadingPlanDayCreateNestedManyWithoutPlanInput = {
+    create?: XOR<ReadingPlanDayCreateWithoutPlanInput, ReadingPlanDayUncheckedCreateWithoutPlanInput> | ReadingPlanDayCreateWithoutPlanInput[] | ReadingPlanDayUncheckedCreateWithoutPlanInput[]
+    connectOrCreate?: ReadingPlanDayCreateOrConnectWithoutPlanInput | ReadingPlanDayCreateOrConnectWithoutPlanInput[]
+    createMany?: ReadingPlanDayCreateManyPlanInputEnvelope
+    connect?: ReadingPlanDayWhereUniqueInput | ReadingPlanDayWhereUniqueInput[]
+  }
+
+  export type UserReadingPlanCreateNestedManyWithoutPlanInput = {
+    create?: XOR<UserReadingPlanCreateWithoutPlanInput, UserReadingPlanUncheckedCreateWithoutPlanInput> | UserReadingPlanCreateWithoutPlanInput[] | UserReadingPlanUncheckedCreateWithoutPlanInput[]
+    connectOrCreate?: UserReadingPlanCreateOrConnectWithoutPlanInput | UserReadingPlanCreateOrConnectWithoutPlanInput[]
+    createMany?: UserReadingPlanCreateManyPlanInputEnvelope
+    connect?: UserReadingPlanWhereUniqueInput | UserReadingPlanWhereUniqueInput[]
+  }
+
+  export type ReadingPlanDayUncheckedCreateNestedManyWithoutPlanInput = {
+    create?: XOR<ReadingPlanDayCreateWithoutPlanInput, ReadingPlanDayUncheckedCreateWithoutPlanInput> | ReadingPlanDayCreateWithoutPlanInput[] | ReadingPlanDayUncheckedCreateWithoutPlanInput[]
+    connectOrCreate?: ReadingPlanDayCreateOrConnectWithoutPlanInput | ReadingPlanDayCreateOrConnectWithoutPlanInput[]
+    createMany?: ReadingPlanDayCreateManyPlanInputEnvelope
+    connect?: ReadingPlanDayWhereUniqueInput | ReadingPlanDayWhereUniqueInput[]
+  }
+
+  export type UserReadingPlanUncheckedCreateNestedManyWithoutPlanInput = {
+    create?: XOR<UserReadingPlanCreateWithoutPlanInput, UserReadingPlanUncheckedCreateWithoutPlanInput> | UserReadingPlanCreateWithoutPlanInput[] | UserReadingPlanUncheckedCreateWithoutPlanInput[]
+    connectOrCreate?: UserReadingPlanCreateOrConnectWithoutPlanInput | UserReadingPlanCreateOrConnectWithoutPlanInput[]
+    createMany?: UserReadingPlanCreateManyPlanInputEnvelope
+    connect?: UserReadingPlanWhereUniqueInput | UserReadingPlanWhereUniqueInput[]
+  }
+
+  export type ReadingPlanDayUpdateManyWithoutPlanNestedInput = {
+    create?: XOR<ReadingPlanDayCreateWithoutPlanInput, ReadingPlanDayUncheckedCreateWithoutPlanInput> | ReadingPlanDayCreateWithoutPlanInput[] | ReadingPlanDayUncheckedCreateWithoutPlanInput[]
+    connectOrCreate?: ReadingPlanDayCreateOrConnectWithoutPlanInput | ReadingPlanDayCreateOrConnectWithoutPlanInput[]
+    upsert?: ReadingPlanDayUpsertWithWhereUniqueWithoutPlanInput | ReadingPlanDayUpsertWithWhereUniqueWithoutPlanInput[]
+    createMany?: ReadingPlanDayCreateManyPlanInputEnvelope
+    set?: ReadingPlanDayWhereUniqueInput | ReadingPlanDayWhereUniqueInput[]
+    disconnect?: ReadingPlanDayWhereUniqueInput | ReadingPlanDayWhereUniqueInput[]
+    delete?: ReadingPlanDayWhereUniqueInput | ReadingPlanDayWhereUniqueInput[]
+    connect?: ReadingPlanDayWhereUniqueInput | ReadingPlanDayWhereUniqueInput[]
+    update?: ReadingPlanDayUpdateWithWhereUniqueWithoutPlanInput | ReadingPlanDayUpdateWithWhereUniqueWithoutPlanInput[]
+    updateMany?: ReadingPlanDayUpdateManyWithWhereWithoutPlanInput | ReadingPlanDayUpdateManyWithWhereWithoutPlanInput[]
+    deleteMany?: ReadingPlanDayScalarWhereInput | ReadingPlanDayScalarWhereInput[]
+  }
+
+  export type UserReadingPlanUpdateManyWithoutPlanNestedInput = {
+    create?: XOR<UserReadingPlanCreateWithoutPlanInput, UserReadingPlanUncheckedCreateWithoutPlanInput> | UserReadingPlanCreateWithoutPlanInput[] | UserReadingPlanUncheckedCreateWithoutPlanInput[]
+    connectOrCreate?: UserReadingPlanCreateOrConnectWithoutPlanInput | UserReadingPlanCreateOrConnectWithoutPlanInput[]
+    upsert?: UserReadingPlanUpsertWithWhereUniqueWithoutPlanInput | UserReadingPlanUpsertWithWhereUniqueWithoutPlanInput[]
+    createMany?: UserReadingPlanCreateManyPlanInputEnvelope
+    set?: UserReadingPlanWhereUniqueInput | UserReadingPlanWhereUniqueInput[]
+    disconnect?: UserReadingPlanWhereUniqueInput | UserReadingPlanWhereUniqueInput[]
+    delete?: UserReadingPlanWhereUniqueInput | UserReadingPlanWhereUniqueInput[]
+    connect?: UserReadingPlanWhereUniqueInput | UserReadingPlanWhereUniqueInput[]
+    update?: UserReadingPlanUpdateWithWhereUniqueWithoutPlanInput | UserReadingPlanUpdateWithWhereUniqueWithoutPlanInput[]
+    updateMany?: UserReadingPlanUpdateManyWithWhereWithoutPlanInput | UserReadingPlanUpdateManyWithWhereWithoutPlanInput[]
+    deleteMany?: UserReadingPlanScalarWhereInput | UserReadingPlanScalarWhereInput[]
+  }
+
+  export type ReadingPlanDayUncheckedUpdateManyWithoutPlanNestedInput = {
+    create?: XOR<ReadingPlanDayCreateWithoutPlanInput, ReadingPlanDayUncheckedCreateWithoutPlanInput> | ReadingPlanDayCreateWithoutPlanInput[] | ReadingPlanDayUncheckedCreateWithoutPlanInput[]
+    connectOrCreate?: ReadingPlanDayCreateOrConnectWithoutPlanInput | ReadingPlanDayCreateOrConnectWithoutPlanInput[]
+    upsert?: ReadingPlanDayUpsertWithWhereUniqueWithoutPlanInput | ReadingPlanDayUpsertWithWhereUniqueWithoutPlanInput[]
+    createMany?: ReadingPlanDayCreateManyPlanInputEnvelope
+    set?: ReadingPlanDayWhereUniqueInput | ReadingPlanDayWhereUniqueInput[]
+    disconnect?: ReadingPlanDayWhereUniqueInput | ReadingPlanDayWhereUniqueInput[]
+    delete?: ReadingPlanDayWhereUniqueInput | ReadingPlanDayWhereUniqueInput[]
+    connect?: ReadingPlanDayWhereUniqueInput | ReadingPlanDayWhereUniqueInput[]
+    update?: ReadingPlanDayUpdateWithWhereUniqueWithoutPlanInput | ReadingPlanDayUpdateWithWhereUniqueWithoutPlanInput[]
+    updateMany?: ReadingPlanDayUpdateManyWithWhereWithoutPlanInput | ReadingPlanDayUpdateManyWithWhereWithoutPlanInput[]
+    deleteMany?: ReadingPlanDayScalarWhereInput | ReadingPlanDayScalarWhereInput[]
+  }
+
+  export type UserReadingPlanUncheckedUpdateManyWithoutPlanNestedInput = {
+    create?: XOR<UserReadingPlanCreateWithoutPlanInput, UserReadingPlanUncheckedCreateWithoutPlanInput> | UserReadingPlanCreateWithoutPlanInput[] | UserReadingPlanUncheckedCreateWithoutPlanInput[]
+    connectOrCreate?: UserReadingPlanCreateOrConnectWithoutPlanInput | UserReadingPlanCreateOrConnectWithoutPlanInput[]
+    upsert?: UserReadingPlanUpsertWithWhereUniqueWithoutPlanInput | UserReadingPlanUpsertWithWhereUniqueWithoutPlanInput[]
+    createMany?: UserReadingPlanCreateManyPlanInputEnvelope
+    set?: UserReadingPlanWhereUniqueInput | UserReadingPlanWhereUniqueInput[]
+    disconnect?: UserReadingPlanWhereUniqueInput | UserReadingPlanWhereUniqueInput[]
+    delete?: UserReadingPlanWhereUniqueInput | UserReadingPlanWhereUniqueInput[]
+    connect?: UserReadingPlanWhereUniqueInput | UserReadingPlanWhereUniqueInput[]
+    update?: UserReadingPlanUpdateWithWhereUniqueWithoutPlanInput | UserReadingPlanUpdateWithWhereUniqueWithoutPlanInput[]
+    updateMany?: UserReadingPlanUpdateManyWithWhereWithoutPlanInput | UserReadingPlanUpdateManyWithWhereWithoutPlanInput[]
+    deleteMany?: UserReadingPlanScalarWhereInput | UserReadingPlanScalarWhereInput[]
+  }
+
+  export type ReadingPlanDayCreatereferencesInput = {
+    set: string[]
+  }
+
+  export type ReadingPlanCreateNestedOneWithoutDaysInput = {
+    create?: XOR<ReadingPlanCreateWithoutDaysInput, ReadingPlanUncheckedCreateWithoutDaysInput>
+    connectOrCreate?: ReadingPlanCreateOrConnectWithoutDaysInput
+    connect?: ReadingPlanWhereUniqueInput
+  }
+
+  export type ReadingPlanDayUpdatereferencesInput = {
+    set?: string[]
+    push?: string | string[]
+  }
+
+  export type ReadingPlanUpdateOneRequiredWithoutDaysNestedInput = {
+    create?: XOR<ReadingPlanCreateWithoutDaysInput, ReadingPlanUncheckedCreateWithoutDaysInput>
+    connectOrCreate?: ReadingPlanCreateOrConnectWithoutDaysInput
+    upsert?: ReadingPlanUpsertWithoutDaysInput
+    connect?: ReadingPlanWhereUniqueInput
+    update?: XOR<XOR<ReadingPlanUpdateToOneWithWhereWithoutDaysInput, ReadingPlanUpdateWithoutDaysInput>, ReadingPlanUncheckedUpdateWithoutDaysInput>
+  }
+
+  export type UserCreateNestedOneWithoutReadingPlansInput = {
+    create?: XOR<UserCreateWithoutReadingPlansInput, UserUncheckedCreateWithoutReadingPlansInput>
+    connectOrCreate?: UserCreateOrConnectWithoutReadingPlansInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type ReadingPlanCreateNestedOneWithoutUserPlansInput = {
+    create?: XOR<ReadingPlanCreateWithoutUserPlansInput, ReadingPlanUncheckedCreateWithoutUserPlansInput>
+    connectOrCreate?: ReadingPlanCreateOrConnectWithoutUserPlansInput
+    connect?: ReadingPlanWhereUniqueInput
+  }
+
+  export type UserUpdateOneRequiredWithoutReadingPlansNestedInput = {
+    create?: XOR<UserCreateWithoutReadingPlansInput, UserUncheckedCreateWithoutReadingPlansInput>
+    connectOrCreate?: UserCreateOrConnectWithoutReadingPlansInput
+    upsert?: UserUpsertWithoutReadingPlansInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutReadingPlansInput, UserUpdateWithoutReadingPlansInput>, UserUncheckedUpdateWithoutReadingPlansInput>
+  }
+
+  export type ReadingPlanUpdateOneRequiredWithoutUserPlansNestedInput = {
+    create?: XOR<ReadingPlanCreateWithoutUserPlansInput, ReadingPlanUncheckedCreateWithoutUserPlansInput>
+    connectOrCreate?: ReadingPlanCreateOrConnectWithoutUserPlansInput
+    upsert?: ReadingPlanUpsertWithoutUserPlansInput
+    connect?: ReadingPlanWhereUniqueInput
+    update?: XOR<XOR<ReadingPlanUpdateToOneWithWhereWithoutUserPlansInput, ReadingPlanUpdateWithoutUserPlansInput>, ReadingPlanUncheckedUpdateWithoutUserPlansInput>
   }
 
   export type NestedIntFilter<$PrismaModel = never> = {
@@ -18812,11 +24911,14 @@ export namespace Prisma {
     lastReadOrder?: number
     lastReadTranslation?: string
     lastReadAt?: Date | string
+    autoProgress?: boolean
     accounts?: AccountCreateNestedManyWithoutUserInput
     bookmarks?: BookmarkCreateNestedManyWithoutUserInput
     highlights?: HighlightCreateNestedManyWithoutUserInput
     notes?: NoteCreateNestedManyWithoutUserInput
     sessions?: SessionCreateNestedManyWithoutUserInput
+    verseStatuses?: VerseStatusCreateNestedManyWithoutUserInput
+    readingPlans?: UserReadingPlanCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutPostsInput = {
@@ -18828,11 +24930,14 @@ export namespace Prisma {
     lastReadOrder?: number
     lastReadTranslation?: string
     lastReadAt?: Date | string
+    autoProgress?: boolean
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
     bookmarks?: BookmarkUncheckedCreateNestedManyWithoutUserInput
     highlights?: HighlightUncheckedCreateNestedManyWithoutUserInput
     notes?: NoteUncheckedCreateNestedManyWithoutUserInput
     sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
+    verseStatuses?: VerseStatusUncheckedCreateNestedManyWithoutUserInput
+    readingPlans?: UserReadingPlanUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutPostsInput = {
@@ -18860,11 +24965,14 @@ export namespace Prisma {
     lastReadOrder?: IntFieldUpdateOperationsInput | number
     lastReadTranslation?: StringFieldUpdateOperationsInput | string
     lastReadAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    autoProgress?: BoolFieldUpdateOperationsInput | boolean
     accounts?: AccountUpdateManyWithoutUserNestedInput
     bookmarks?: BookmarkUpdateManyWithoutUserNestedInput
     highlights?: HighlightUpdateManyWithoutUserNestedInput
     notes?: NoteUpdateManyWithoutUserNestedInput
     sessions?: SessionUpdateManyWithoutUserNestedInput
+    verseStatuses?: VerseStatusUpdateManyWithoutUserNestedInput
+    readingPlans?: UserReadingPlanUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutPostsInput = {
@@ -18876,11 +24984,14 @@ export namespace Prisma {
     lastReadOrder?: IntFieldUpdateOperationsInput | number
     lastReadTranslation?: StringFieldUpdateOperationsInput | string
     lastReadAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    autoProgress?: BoolFieldUpdateOperationsInput | boolean
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
     bookmarks?: BookmarkUncheckedUpdateManyWithoutUserNestedInput
     highlights?: HighlightUncheckedUpdateManyWithoutUserNestedInput
     notes?: NoteUncheckedUpdateManyWithoutUserNestedInput
     sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
+    verseStatuses?: VerseStatusUncheckedUpdateManyWithoutUserNestedInput
+    readingPlans?: UserReadingPlanUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type VerseCreateWithoutTranslationInput = {
@@ -18892,6 +25003,7 @@ export namespace Prisma {
     bookmarks?: BookmarkCreateNestedManyWithoutVerseInput
     highlights?: HighlightCreateNestedManyWithoutVerseInput
     notes?: NoteCreateNestedManyWithoutVerseInput
+    verseStatuses?: VerseStatusCreateNestedManyWithoutVerseInput
     book: BookCreateNestedOneWithoutVersesInput
   }
 
@@ -18905,6 +25017,7 @@ export namespace Prisma {
     bookmarks?: BookmarkUncheckedCreateNestedManyWithoutVerseInput
     highlights?: HighlightUncheckedCreateNestedManyWithoutVerseInput
     notes?: NoteUncheckedCreateNestedManyWithoutVerseInput
+    verseStatuses?: VerseStatusUncheckedCreateNestedManyWithoutVerseInput
   }
 
   export type VerseCreateOrConnectWithoutTranslationInput = {
@@ -18955,6 +25068,7 @@ export namespace Prisma {
     bookmarks?: BookmarkCreateNestedManyWithoutVerseInput
     highlights?: HighlightCreateNestedManyWithoutVerseInput
     notes?: NoteCreateNestedManyWithoutVerseInput
+    verseStatuses?: VerseStatusCreateNestedManyWithoutVerseInput
     translation: TranslationCreateNestedOneWithoutVersesInput
   }
 
@@ -18968,6 +25082,7 @@ export namespace Prisma {
     bookmarks?: BookmarkUncheckedCreateNestedManyWithoutVerseInput
     highlights?: HighlightUncheckedCreateNestedManyWithoutVerseInput
     notes?: NoteUncheckedCreateNestedManyWithoutVerseInput
+    verseStatuses?: VerseStatusUncheckedCreateNestedManyWithoutVerseInput
   }
 
   export type VerseCreateOrConnectWithoutBookInput = {
@@ -19065,6 +25180,30 @@ export namespace Prisma {
 
   export type NoteCreateManyVerseInputEnvelope = {
     data: NoteCreateManyVerseInput | NoteCreateManyVerseInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type VerseStatusCreateWithoutVerseInput = {
+    id?: string
+    isRead?: boolean
+    readAt?: Date | string
+    user: UserCreateNestedOneWithoutVerseStatusesInput
+  }
+
+  export type VerseStatusUncheckedCreateWithoutVerseInput = {
+    id?: string
+    userId: string
+    isRead?: boolean
+    readAt?: Date | string
+  }
+
+  export type VerseStatusCreateOrConnectWithoutVerseInput = {
+    where: VerseStatusWhereUniqueInput
+    create: XOR<VerseStatusCreateWithoutVerseInput, VerseStatusUncheckedCreateWithoutVerseInput>
+  }
+
+  export type VerseStatusCreateManyVerseInputEnvelope = {
+    data: VerseStatusCreateManyVerseInput | VerseStatusCreateManyVerseInput[]
     skipDuplicates?: boolean
   }
 
@@ -19201,6 +25340,33 @@ export namespace Prisma {
     updatedAt?: DateTimeFilter<"Note"> | Date | string
   }
 
+  export type VerseStatusUpsertWithWhereUniqueWithoutVerseInput = {
+    where: VerseStatusWhereUniqueInput
+    update: XOR<VerseStatusUpdateWithoutVerseInput, VerseStatusUncheckedUpdateWithoutVerseInput>
+    create: XOR<VerseStatusCreateWithoutVerseInput, VerseStatusUncheckedCreateWithoutVerseInput>
+  }
+
+  export type VerseStatusUpdateWithWhereUniqueWithoutVerseInput = {
+    where: VerseStatusWhereUniqueInput
+    data: XOR<VerseStatusUpdateWithoutVerseInput, VerseStatusUncheckedUpdateWithoutVerseInput>
+  }
+
+  export type VerseStatusUpdateManyWithWhereWithoutVerseInput = {
+    where: VerseStatusScalarWhereInput
+    data: XOR<VerseStatusUpdateManyMutationInput, VerseStatusUncheckedUpdateManyWithoutVerseInput>
+  }
+
+  export type VerseStatusScalarWhereInput = {
+    AND?: VerseStatusScalarWhereInput | VerseStatusScalarWhereInput[]
+    OR?: VerseStatusScalarWhereInput[]
+    NOT?: VerseStatusScalarWhereInput | VerseStatusScalarWhereInput[]
+    id?: StringFilter<"VerseStatus"> | string
+    userId?: StringFilter<"VerseStatus"> | string
+    verseId?: StringFilter<"VerseStatus"> | string
+    isRead?: BoolFilter<"VerseStatus"> | boolean
+    readAt?: DateTimeFilter<"VerseStatus"> | Date | string
+  }
+
   export type BookUpsertWithoutVersesInput = {
     update: XOR<BookUpdateWithoutVersesInput, BookUncheckedUpdateWithoutVersesInput>
     create: XOR<BookCreateWithoutVersesInput, BookUncheckedCreateWithoutVersesInput>
@@ -19274,11 +25440,14 @@ export namespace Prisma {
     lastReadOrder?: number
     lastReadTranslation?: string
     lastReadAt?: Date | string
+    autoProgress?: boolean
     accounts?: AccountCreateNestedManyWithoutUserInput
     highlights?: HighlightCreateNestedManyWithoutUserInput
     notes?: NoteCreateNestedManyWithoutUserInput
     posts?: PostCreateNestedManyWithoutCreatedByInput
     sessions?: SessionCreateNestedManyWithoutUserInput
+    verseStatuses?: VerseStatusCreateNestedManyWithoutUserInput
+    readingPlans?: UserReadingPlanCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutBookmarksInput = {
@@ -19290,11 +25459,14 @@ export namespace Prisma {
     lastReadOrder?: number
     lastReadTranslation?: string
     lastReadAt?: Date | string
+    autoProgress?: boolean
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
     highlights?: HighlightUncheckedCreateNestedManyWithoutUserInput
     notes?: NoteUncheckedCreateNestedManyWithoutUserInput
     posts?: PostUncheckedCreateNestedManyWithoutCreatedByInput
     sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
+    verseStatuses?: VerseStatusUncheckedCreateNestedManyWithoutUserInput
+    readingPlans?: UserReadingPlanUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutBookmarksInput = {
@@ -19310,6 +25482,7 @@ export namespace Prisma {
     globalOrder: number
     highlights?: HighlightCreateNestedManyWithoutVerseInput
     notes?: NoteCreateNestedManyWithoutVerseInput
+    verseStatuses?: VerseStatusCreateNestedManyWithoutVerseInput
     book: BookCreateNestedOneWithoutVersesInput
     translation: TranslationCreateNestedOneWithoutVersesInput
   }
@@ -19324,6 +25497,7 @@ export namespace Prisma {
     globalOrder: number
     highlights?: HighlightUncheckedCreateNestedManyWithoutVerseInput
     notes?: NoteUncheckedCreateNestedManyWithoutVerseInput
+    verseStatuses?: VerseStatusUncheckedCreateNestedManyWithoutVerseInput
   }
 
   export type VerseCreateOrConnectWithoutBookmarksInput = {
@@ -19351,11 +25525,14 @@ export namespace Prisma {
     lastReadOrder?: IntFieldUpdateOperationsInput | number
     lastReadTranslation?: StringFieldUpdateOperationsInput | string
     lastReadAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    autoProgress?: BoolFieldUpdateOperationsInput | boolean
     accounts?: AccountUpdateManyWithoutUserNestedInput
     highlights?: HighlightUpdateManyWithoutUserNestedInput
     notes?: NoteUpdateManyWithoutUserNestedInput
     posts?: PostUpdateManyWithoutCreatedByNestedInput
     sessions?: SessionUpdateManyWithoutUserNestedInput
+    verseStatuses?: VerseStatusUpdateManyWithoutUserNestedInput
+    readingPlans?: UserReadingPlanUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutBookmarksInput = {
@@ -19367,11 +25544,14 @@ export namespace Prisma {
     lastReadOrder?: IntFieldUpdateOperationsInput | number
     lastReadTranslation?: StringFieldUpdateOperationsInput | string
     lastReadAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    autoProgress?: BoolFieldUpdateOperationsInput | boolean
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
     highlights?: HighlightUncheckedUpdateManyWithoutUserNestedInput
     notes?: NoteUncheckedUpdateManyWithoutUserNestedInput
     posts?: PostUncheckedUpdateManyWithoutCreatedByNestedInput
     sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
+    verseStatuses?: VerseStatusUncheckedUpdateManyWithoutUserNestedInput
+    readingPlans?: UserReadingPlanUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type VerseUpsertWithoutBookmarksInput = {
@@ -19393,6 +25573,7 @@ export namespace Prisma {
     globalOrder?: IntFieldUpdateOperationsInput | number
     highlights?: HighlightUpdateManyWithoutVerseNestedInput
     notes?: NoteUpdateManyWithoutVerseNestedInput
+    verseStatuses?: VerseStatusUpdateManyWithoutVerseNestedInput
     book?: BookUpdateOneRequiredWithoutVersesNestedInput
     translation?: TranslationUpdateOneRequiredWithoutVersesNestedInput
   }
@@ -19407,6 +25588,7 @@ export namespace Prisma {
     globalOrder?: IntFieldUpdateOperationsInput | number
     highlights?: HighlightUncheckedUpdateManyWithoutVerseNestedInput
     notes?: NoteUncheckedUpdateManyWithoutVerseNestedInput
+    verseStatuses?: VerseStatusUncheckedUpdateManyWithoutVerseNestedInput
   }
 
   export type UserCreateWithoutHighlightsInput = {
@@ -19418,11 +25600,14 @@ export namespace Prisma {
     lastReadOrder?: number
     lastReadTranslation?: string
     lastReadAt?: Date | string
+    autoProgress?: boolean
     accounts?: AccountCreateNestedManyWithoutUserInput
     bookmarks?: BookmarkCreateNestedManyWithoutUserInput
     notes?: NoteCreateNestedManyWithoutUserInput
     posts?: PostCreateNestedManyWithoutCreatedByInput
     sessions?: SessionCreateNestedManyWithoutUserInput
+    verseStatuses?: VerseStatusCreateNestedManyWithoutUserInput
+    readingPlans?: UserReadingPlanCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutHighlightsInput = {
@@ -19434,11 +25619,14 @@ export namespace Prisma {
     lastReadOrder?: number
     lastReadTranslation?: string
     lastReadAt?: Date | string
+    autoProgress?: boolean
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
     bookmarks?: BookmarkUncheckedCreateNestedManyWithoutUserInput
     notes?: NoteUncheckedCreateNestedManyWithoutUserInput
     posts?: PostUncheckedCreateNestedManyWithoutCreatedByInput
     sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
+    verseStatuses?: VerseStatusUncheckedCreateNestedManyWithoutUserInput
+    readingPlans?: UserReadingPlanUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutHighlightsInput = {
@@ -19454,6 +25642,7 @@ export namespace Prisma {
     globalOrder: number
     bookmarks?: BookmarkCreateNestedManyWithoutVerseInput
     notes?: NoteCreateNestedManyWithoutVerseInput
+    verseStatuses?: VerseStatusCreateNestedManyWithoutVerseInput
     book: BookCreateNestedOneWithoutVersesInput
     translation: TranslationCreateNestedOneWithoutVersesInput
   }
@@ -19468,6 +25657,7 @@ export namespace Prisma {
     globalOrder: number
     bookmarks?: BookmarkUncheckedCreateNestedManyWithoutVerseInput
     notes?: NoteUncheckedCreateNestedManyWithoutVerseInput
+    verseStatuses?: VerseStatusUncheckedCreateNestedManyWithoutVerseInput
   }
 
   export type VerseCreateOrConnectWithoutHighlightsInput = {
@@ -19495,11 +25685,14 @@ export namespace Prisma {
     lastReadOrder?: IntFieldUpdateOperationsInput | number
     lastReadTranslation?: StringFieldUpdateOperationsInput | string
     lastReadAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    autoProgress?: BoolFieldUpdateOperationsInput | boolean
     accounts?: AccountUpdateManyWithoutUserNestedInput
     bookmarks?: BookmarkUpdateManyWithoutUserNestedInput
     notes?: NoteUpdateManyWithoutUserNestedInput
     posts?: PostUpdateManyWithoutCreatedByNestedInput
     sessions?: SessionUpdateManyWithoutUserNestedInput
+    verseStatuses?: VerseStatusUpdateManyWithoutUserNestedInput
+    readingPlans?: UserReadingPlanUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutHighlightsInput = {
@@ -19511,11 +25704,14 @@ export namespace Prisma {
     lastReadOrder?: IntFieldUpdateOperationsInput | number
     lastReadTranslation?: StringFieldUpdateOperationsInput | string
     lastReadAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    autoProgress?: BoolFieldUpdateOperationsInput | boolean
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
     bookmarks?: BookmarkUncheckedUpdateManyWithoutUserNestedInput
     notes?: NoteUncheckedUpdateManyWithoutUserNestedInput
     posts?: PostUncheckedUpdateManyWithoutCreatedByNestedInput
     sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
+    verseStatuses?: VerseStatusUncheckedUpdateManyWithoutUserNestedInput
+    readingPlans?: UserReadingPlanUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type VerseUpsertWithoutHighlightsInput = {
@@ -19537,6 +25733,7 @@ export namespace Prisma {
     globalOrder?: IntFieldUpdateOperationsInput | number
     bookmarks?: BookmarkUpdateManyWithoutVerseNestedInput
     notes?: NoteUpdateManyWithoutVerseNestedInput
+    verseStatuses?: VerseStatusUpdateManyWithoutVerseNestedInput
     book?: BookUpdateOneRequiredWithoutVersesNestedInput
     translation?: TranslationUpdateOneRequiredWithoutVersesNestedInput
   }
@@ -19551,6 +25748,7 @@ export namespace Prisma {
     globalOrder?: IntFieldUpdateOperationsInput | number
     bookmarks?: BookmarkUncheckedUpdateManyWithoutVerseNestedInput
     notes?: NoteUncheckedUpdateManyWithoutVerseNestedInput
+    verseStatuses?: VerseStatusUncheckedUpdateManyWithoutVerseNestedInput
   }
 
   export type UserCreateWithoutNotesInput = {
@@ -19562,11 +25760,14 @@ export namespace Prisma {
     lastReadOrder?: number
     lastReadTranslation?: string
     lastReadAt?: Date | string
+    autoProgress?: boolean
     accounts?: AccountCreateNestedManyWithoutUserInput
     bookmarks?: BookmarkCreateNestedManyWithoutUserInput
     highlights?: HighlightCreateNestedManyWithoutUserInput
     posts?: PostCreateNestedManyWithoutCreatedByInput
     sessions?: SessionCreateNestedManyWithoutUserInput
+    verseStatuses?: VerseStatusCreateNestedManyWithoutUserInput
+    readingPlans?: UserReadingPlanCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutNotesInput = {
@@ -19578,11 +25779,14 @@ export namespace Prisma {
     lastReadOrder?: number
     lastReadTranslation?: string
     lastReadAt?: Date | string
+    autoProgress?: boolean
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
     bookmarks?: BookmarkUncheckedCreateNestedManyWithoutUserInput
     highlights?: HighlightUncheckedCreateNestedManyWithoutUserInput
     posts?: PostUncheckedCreateNestedManyWithoutCreatedByInput
     sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
+    verseStatuses?: VerseStatusUncheckedCreateNestedManyWithoutUserInput
+    readingPlans?: UserReadingPlanUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutNotesInput = {
@@ -19598,6 +25802,7 @@ export namespace Prisma {
     globalOrder: number
     bookmarks?: BookmarkCreateNestedManyWithoutVerseInput
     highlights?: HighlightCreateNestedManyWithoutVerseInput
+    verseStatuses?: VerseStatusCreateNestedManyWithoutVerseInput
     book: BookCreateNestedOneWithoutVersesInput
     translation: TranslationCreateNestedOneWithoutVersesInput
   }
@@ -19612,6 +25817,7 @@ export namespace Prisma {
     globalOrder: number
     bookmarks?: BookmarkUncheckedCreateNestedManyWithoutVerseInput
     highlights?: HighlightUncheckedCreateNestedManyWithoutVerseInput
+    verseStatuses?: VerseStatusUncheckedCreateNestedManyWithoutVerseInput
   }
 
   export type VerseCreateOrConnectWithoutNotesInput = {
@@ -19639,11 +25845,14 @@ export namespace Prisma {
     lastReadOrder?: IntFieldUpdateOperationsInput | number
     lastReadTranslation?: StringFieldUpdateOperationsInput | string
     lastReadAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    autoProgress?: BoolFieldUpdateOperationsInput | boolean
     accounts?: AccountUpdateManyWithoutUserNestedInput
     bookmarks?: BookmarkUpdateManyWithoutUserNestedInput
     highlights?: HighlightUpdateManyWithoutUserNestedInput
     posts?: PostUpdateManyWithoutCreatedByNestedInput
     sessions?: SessionUpdateManyWithoutUserNestedInput
+    verseStatuses?: VerseStatusUpdateManyWithoutUserNestedInput
+    readingPlans?: UserReadingPlanUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutNotesInput = {
@@ -19655,11 +25864,14 @@ export namespace Prisma {
     lastReadOrder?: IntFieldUpdateOperationsInput | number
     lastReadTranslation?: StringFieldUpdateOperationsInput | string
     lastReadAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    autoProgress?: BoolFieldUpdateOperationsInput | boolean
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
     bookmarks?: BookmarkUncheckedUpdateManyWithoutUserNestedInput
     highlights?: HighlightUncheckedUpdateManyWithoutUserNestedInput
     posts?: PostUncheckedUpdateManyWithoutCreatedByNestedInput
     sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
+    verseStatuses?: VerseStatusUncheckedUpdateManyWithoutUserNestedInput
+    readingPlans?: UserReadingPlanUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type VerseUpsertWithoutNotesInput = {
@@ -19681,6 +25893,7 @@ export namespace Prisma {
     globalOrder?: IntFieldUpdateOperationsInput | number
     bookmarks?: BookmarkUpdateManyWithoutVerseNestedInput
     highlights?: HighlightUpdateManyWithoutVerseNestedInput
+    verseStatuses?: VerseStatusUpdateManyWithoutVerseNestedInput
     book?: BookUpdateOneRequiredWithoutVersesNestedInput
     translation?: TranslationUpdateOneRequiredWithoutVersesNestedInput
   }
@@ -19695,6 +25908,7 @@ export namespace Prisma {
     globalOrder?: IntFieldUpdateOperationsInput | number
     bookmarks?: BookmarkUncheckedUpdateManyWithoutVerseNestedInput
     highlights?: HighlightUncheckedUpdateManyWithoutVerseNestedInput
+    verseStatuses?: VerseStatusUncheckedUpdateManyWithoutVerseNestedInput
   }
 
   export type UserCreateWithoutAccountsInput = {
@@ -19706,11 +25920,14 @@ export namespace Prisma {
     lastReadOrder?: number
     lastReadTranslation?: string
     lastReadAt?: Date | string
+    autoProgress?: boolean
     bookmarks?: BookmarkCreateNestedManyWithoutUserInput
     highlights?: HighlightCreateNestedManyWithoutUserInput
     notes?: NoteCreateNestedManyWithoutUserInput
     posts?: PostCreateNestedManyWithoutCreatedByInput
     sessions?: SessionCreateNestedManyWithoutUserInput
+    verseStatuses?: VerseStatusCreateNestedManyWithoutUserInput
+    readingPlans?: UserReadingPlanCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutAccountsInput = {
@@ -19722,11 +25939,14 @@ export namespace Prisma {
     lastReadOrder?: number
     lastReadTranslation?: string
     lastReadAt?: Date | string
+    autoProgress?: boolean
     bookmarks?: BookmarkUncheckedCreateNestedManyWithoutUserInput
     highlights?: HighlightUncheckedCreateNestedManyWithoutUserInput
     notes?: NoteUncheckedCreateNestedManyWithoutUserInput
     posts?: PostUncheckedCreateNestedManyWithoutCreatedByInput
     sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
+    verseStatuses?: VerseStatusUncheckedCreateNestedManyWithoutUserInput
+    readingPlans?: UserReadingPlanUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutAccountsInput = {
@@ -19754,11 +25974,14 @@ export namespace Prisma {
     lastReadOrder?: IntFieldUpdateOperationsInput | number
     lastReadTranslation?: StringFieldUpdateOperationsInput | string
     lastReadAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    autoProgress?: BoolFieldUpdateOperationsInput | boolean
     bookmarks?: BookmarkUpdateManyWithoutUserNestedInput
     highlights?: HighlightUpdateManyWithoutUserNestedInput
     notes?: NoteUpdateManyWithoutUserNestedInput
     posts?: PostUpdateManyWithoutCreatedByNestedInput
     sessions?: SessionUpdateManyWithoutUserNestedInput
+    verseStatuses?: VerseStatusUpdateManyWithoutUserNestedInput
+    readingPlans?: UserReadingPlanUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutAccountsInput = {
@@ -19770,11 +25993,14 @@ export namespace Prisma {
     lastReadOrder?: IntFieldUpdateOperationsInput | number
     lastReadTranslation?: StringFieldUpdateOperationsInput | string
     lastReadAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    autoProgress?: BoolFieldUpdateOperationsInput | boolean
     bookmarks?: BookmarkUncheckedUpdateManyWithoutUserNestedInput
     highlights?: HighlightUncheckedUpdateManyWithoutUserNestedInput
     notes?: NoteUncheckedUpdateManyWithoutUserNestedInput
     posts?: PostUncheckedUpdateManyWithoutCreatedByNestedInput
     sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
+    verseStatuses?: VerseStatusUncheckedUpdateManyWithoutUserNestedInput
+    readingPlans?: UserReadingPlanUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserCreateWithoutSessionsInput = {
@@ -19786,11 +26012,14 @@ export namespace Prisma {
     lastReadOrder?: number
     lastReadTranslation?: string
     lastReadAt?: Date | string
+    autoProgress?: boolean
     accounts?: AccountCreateNestedManyWithoutUserInput
     bookmarks?: BookmarkCreateNestedManyWithoutUserInput
     highlights?: HighlightCreateNestedManyWithoutUserInput
     notes?: NoteCreateNestedManyWithoutUserInput
     posts?: PostCreateNestedManyWithoutCreatedByInput
+    verseStatuses?: VerseStatusCreateNestedManyWithoutUserInput
+    readingPlans?: UserReadingPlanCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateWithoutSessionsInput = {
@@ -19802,11 +26031,14 @@ export namespace Prisma {
     lastReadOrder?: number
     lastReadTranslation?: string
     lastReadAt?: Date | string
+    autoProgress?: boolean
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
     bookmarks?: BookmarkUncheckedCreateNestedManyWithoutUserInput
     highlights?: HighlightUncheckedCreateNestedManyWithoutUserInput
     notes?: NoteUncheckedCreateNestedManyWithoutUserInput
     posts?: PostUncheckedCreateNestedManyWithoutCreatedByInput
+    verseStatuses?: VerseStatusUncheckedCreateNestedManyWithoutUserInput
+    readingPlans?: UserReadingPlanUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserCreateOrConnectWithoutSessionsInput = {
@@ -19834,11 +26066,14 @@ export namespace Prisma {
     lastReadOrder?: IntFieldUpdateOperationsInput | number
     lastReadTranslation?: StringFieldUpdateOperationsInput | string
     lastReadAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    autoProgress?: BoolFieldUpdateOperationsInput | boolean
     accounts?: AccountUpdateManyWithoutUserNestedInput
     bookmarks?: BookmarkUpdateManyWithoutUserNestedInput
     highlights?: HighlightUpdateManyWithoutUserNestedInput
     notes?: NoteUpdateManyWithoutUserNestedInput
     posts?: PostUpdateManyWithoutCreatedByNestedInput
+    verseStatuses?: VerseStatusUpdateManyWithoutUserNestedInput
+    readingPlans?: UserReadingPlanUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateWithoutSessionsInput = {
@@ -19850,11 +26085,14 @@ export namespace Prisma {
     lastReadOrder?: IntFieldUpdateOperationsInput | number
     lastReadTranslation?: StringFieldUpdateOperationsInput | string
     lastReadAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    autoProgress?: BoolFieldUpdateOperationsInput | boolean
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
     bookmarks?: BookmarkUncheckedUpdateManyWithoutUserNestedInput
     highlights?: HighlightUncheckedUpdateManyWithoutUserNestedInput
     notes?: NoteUncheckedUpdateManyWithoutUserNestedInput
     posts?: PostUncheckedUpdateManyWithoutCreatedByNestedInput
+    verseStatuses?: VerseStatusUncheckedUpdateManyWithoutUserNestedInput
+    readingPlans?: UserReadingPlanUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type AccountCreateWithoutUserInput = {
@@ -20014,6 +26252,58 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type VerseStatusCreateWithoutUserInput = {
+    id?: string
+    isRead?: boolean
+    readAt?: Date | string
+    verse: VerseCreateNestedOneWithoutVerseStatusesInput
+  }
+
+  export type VerseStatusUncheckedCreateWithoutUserInput = {
+    id?: string
+    verseId: string
+    isRead?: boolean
+    readAt?: Date | string
+  }
+
+  export type VerseStatusCreateOrConnectWithoutUserInput = {
+    where: VerseStatusWhereUniqueInput
+    create: XOR<VerseStatusCreateWithoutUserInput, VerseStatusUncheckedCreateWithoutUserInput>
+  }
+
+  export type VerseStatusCreateManyUserInputEnvelope = {
+    data: VerseStatusCreateManyUserInput | VerseStatusCreateManyUserInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type UserReadingPlanCreateWithoutUserInput = {
+    id?: string
+    currentDay?: number
+    isCompleted?: boolean
+    startedAt?: Date | string
+    completedAt?: Date | string | null
+    plan: ReadingPlanCreateNestedOneWithoutUserPlansInput
+  }
+
+  export type UserReadingPlanUncheckedCreateWithoutUserInput = {
+    id?: string
+    planId: string
+    currentDay?: number
+    isCompleted?: boolean
+    startedAt?: Date | string
+    completedAt?: Date | string | null
+  }
+
+  export type UserReadingPlanCreateOrConnectWithoutUserInput = {
+    where: UserReadingPlanWhereUniqueInput
+    create: XOR<UserReadingPlanCreateWithoutUserInput, UserReadingPlanUncheckedCreateWithoutUserInput>
+  }
+
+  export type UserReadingPlanCreateManyUserInputEnvelope = {
+    data: UserReadingPlanCreateManyUserInput | UserReadingPlanCreateManyUserInput[]
+    skipDuplicates?: boolean
+  }
+
   export type AccountUpsertWithWhereUniqueWithoutUserInput = {
     where: AccountWhereUniqueInput
     update: XOR<AccountUpdateWithoutUserInput, AccountUncheckedUpdateWithoutUserInput>
@@ -20150,6 +26440,534 @@ export namespace Prisma {
     expires?: DateTimeFilter<"Session"> | Date | string
   }
 
+  export type VerseStatusUpsertWithWhereUniqueWithoutUserInput = {
+    where: VerseStatusWhereUniqueInput
+    update: XOR<VerseStatusUpdateWithoutUserInput, VerseStatusUncheckedUpdateWithoutUserInput>
+    create: XOR<VerseStatusCreateWithoutUserInput, VerseStatusUncheckedCreateWithoutUserInput>
+  }
+
+  export type VerseStatusUpdateWithWhereUniqueWithoutUserInput = {
+    where: VerseStatusWhereUniqueInput
+    data: XOR<VerseStatusUpdateWithoutUserInput, VerseStatusUncheckedUpdateWithoutUserInput>
+  }
+
+  export type VerseStatusUpdateManyWithWhereWithoutUserInput = {
+    where: VerseStatusScalarWhereInput
+    data: XOR<VerseStatusUpdateManyMutationInput, VerseStatusUncheckedUpdateManyWithoutUserInput>
+  }
+
+  export type UserReadingPlanUpsertWithWhereUniqueWithoutUserInput = {
+    where: UserReadingPlanWhereUniqueInput
+    update: XOR<UserReadingPlanUpdateWithoutUserInput, UserReadingPlanUncheckedUpdateWithoutUserInput>
+    create: XOR<UserReadingPlanCreateWithoutUserInput, UserReadingPlanUncheckedCreateWithoutUserInput>
+  }
+
+  export type UserReadingPlanUpdateWithWhereUniqueWithoutUserInput = {
+    where: UserReadingPlanWhereUniqueInput
+    data: XOR<UserReadingPlanUpdateWithoutUserInput, UserReadingPlanUncheckedUpdateWithoutUserInput>
+  }
+
+  export type UserReadingPlanUpdateManyWithWhereWithoutUserInput = {
+    where: UserReadingPlanScalarWhereInput
+    data: XOR<UserReadingPlanUpdateManyMutationInput, UserReadingPlanUncheckedUpdateManyWithoutUserInput>
+  }
+
+  export type UserReadingPlanScalarWhereInput = {
+    AND?: UserReadingPlanScalarWhereInput | UserReadingPlanScalarWhereInput[]
+    OR?: UserReadingPlanScalarWhereInput[]
+    NOT?: UserReadingPlanScalarWhereInput | UserReadingPlanScalarWhereInput[]
+    id?: StringFilter<"UserReadingPlan"> | string
+    userId?: StringFilter<"UserReadingPlan"> | string
+    planId?: StringFilter<"UserReadingPlan"> | string
+    currentDay?: IntFilter<"UserReadingPlan"> | number
+    isCompleted?: BoolFilter<"UserReadingPlan"> | boolean
+    startedAt?: DateTimeFilter<"UserReadingPlan"> | Date | string
+    completedAt?: DateTimeNullableFilter<"UserReadingPlan"> | Date | string | null
+  }
+
+  export type UserCreateWithoutVerseStatusesInput = {
+    id?: string
+    name?: string | null
+    email?: string | null
+    emailVerified?: Date | string | null
+    image?: string | null
+    lastReadOrder?: number
+    lastReadTranslation?: string
+    lastReadAt?: Date | string
+    autoProgress?: boolean
+    accounts?: AccountCreateNestedManyWithoutUserInput
+    bookmarks?: BookmarkCreateNestedManyWithoutUserInput
+    highlights?: HighlightCreateNestedManyWithoutUserInput
+    notes?: NoteCreateNestedManyWithoutUserInput
+    posts?: PostCreateNestedManyWithoutCreatedByInput
+    sessions?: SessionCreateNestedManyWithoutUserInput
+    readingPlans?: UserReadingPlanCreateNestedManyWithoutUserInput
+  }
+
+  export type UserUncheckedCreateWithoutVerseStatusesInput = {
+    id?: string
+    name?: string | null
+    email?: string | null
+    emailVerified?: Date | string | null
+    image?: string | null
+    lastReadOrder?: number
+    lastReadTranslation?: string
+    lastReadAt?: Date | string
+    autoProgress?: boolean
+    accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
+    bookmarks?: BookmarkUncheckedCreateNestedManyWithoutUserInput
+    highlights?: HighlightUncheckedCreateNestedManyWithoutUserInput
+    notes?: NoteUncheckedCreateNestedManyWithoutUserInput
+    posts?: PostUncheckedCreateNestedManyWithoutCreatedByInput
+    sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
+    readingPlans?: UserReadingPlanUncheckedCreateNestedManyWithoutUserInput
+  }
+
+  export type UserCreateOrConnectWithoutVerseStatusesInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutVerseStatusesInput, UserUncheckedCreateWithoutVerseStatusesInput>
+  }
+
+  export type VerseCreateWithoutVerseStatusesInput = {
+    id?: string
+    chapter: number
+    verse: number
+    text: string
+    globalOrder: number
+    bookmarks?: BookmarkCreateNestedManyWithoutVerseInput
+    highlights?: HighlightCreateNestedManyWithoutVerseInput
+    notes?: NoteCreateNestedManyWithoutVerseInput
+    book: BookCreateNestedOneWithoutVersesInput
+    translation: TranslationCreateNestedOneWithoutVersesInput
+  }
+
+  export type VerseUncheckedCreateWithoutVerseStatusesInput = {
+    id?: string
+    translationId: string
+    bookId: number
+    chapter: number
+    verse: number
+    text: string
+    globalOrder: number
+    bookmarks?: BookmarkUncheckedCreateNestedManyWithoutVerseInput
+    highlights?: HighlightUncheckedCreateNestedManyWithoutVerseInput
+    notes?: NoteUncheckedCreateNestedManyWithoutVerseInput
+  }
+
+  export type VerseCreateOrConnectWithoutVerseStatusesInput = {
+    where: VerseWhereUniqueInput
+    create: XOR<VerseCreateWithoutVerseStatusesInput, VerseUncheckedCreateWithoutVerseStatusesInput>
+  }
+
+  export type UserUpsertWithoutVerseStatusesInput = {
+    update: XOR<UserUpdateWithoutVerseStatusesInput, UserUncheckedUpdateWithoutVerseStatusesInput>
+    create: XOR<UserCreateWithoutVerseStatusesInput, UserUncheckedCreateWithoutVerseStatusesInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutVerseStatusesInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutVerseStatusesInput, UserUncheckedUpdateWithoutVerseStatusesInput>
+  }
+
+  export type UserUpdateWithoutVerseStatusesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    emailVerified?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    image?: NullableStringFieldUpdateOperationsInput | string | null
+    lastReadOrder?: IntFieldUpdateOperationsInput | number
+    lastReadTranslation?: StringFieldUpdateOperationsInput | string
+    lastReadAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    autoProgress?: BoolFieldUpdateOperationsInput | boolean
+    accounts?: AccountUpdateManyWithoutUserNestedInput
+    bookmarks?: BookmarkUpdateManyWithoutUserNestedInput
+    highlights?: HighlightUpdateManyWithoutUserNestedInput
+    notes?: NoteUpdateManyWithoutUserNestedInput
+    posts?: PostUpdateManyWithoutCreatedByNestedInput
+    sessions?: SessionUpdateManyWithoutUserNestedInput
+    readingPlans?: UserReadingPlanUpdateManyWithoutUserNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutVerseStatusesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    emailVerified?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    image?: NullableStringFieldUpdateOperationsInput | string | null
+    lastReadOrder?: IntFieldUpdateOperationsInput | number
+    lastReadTranslation?: StringFieldUpdateOperationsInput | string
+    lastReadAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    autoProgress?: BoolFieldUpdateOperationsInput | boolean
+    accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
+    bookmarks?: BookmarkUncheckedUpdateManyWithoutUserNestedInput
+    highlights?: HighlightUncheckedUpdateManyWithoutUserNestedInput
+    notes?: NoteUncheckedUpdateManyWithoutUserNestedInput
+    posts?: PostUncheckedUpdateManyWithoutCreatedByNestedInput
+    sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
+    readingPlans?: UserReadingPlanUncheckedUpdateManyWithoutUserNestedInput
+  }
+
+  export type VerseUpsertWithoutVerseStatusesInput = {
+    update: XOR<VerseUpdateWithoutVerseStatusesInput, VerseUncheckedUpdateWithoutVerseStatusesInput>
+    create: XOR<VerseCreateWithoutVerseStatusesInput, VerseUncheckedCreateWithoutVerseStatusesInput>
+    where?: VerseWhereInput
+  }
+
+  export type VerseUpdateToOneWithWhereWithoutVerseStatusesInput = {
+    where?: VerseWhereInput
+    data: XOR<VerseUpdateWithoutVerseStatusesInput, VerseUncheckedUpdateWithoutVerseStatusesInput>
+  }
+
+  export type VerseUpdateWithoutVerseStatusesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    chapter?: IntFieldUpdateOperationsInput | number
+    verse?: IntFieldUpdateOperationsInput | number
+    text?: StringFieldUpdateOperationsInput | string
+    globalOrder?: IntFieldUpdateOperationsInput | number
+    bookmarks?: BookmarkUpdateManyWithoutVerseNestedInput
+    highlights?: HighlightUpdateManyWithoutVerseNestedInput
+    notes?: NoteUpdateManyWithoutVerseNestedInput
+    book?: BookUpdateOneRequiredWithoutVersesNestedInput
+    translation?: TranslationUpdateOneRequiredWithoutVersesNestedInput
+  }
+
+  export type VerseUncheckedUpdateWithoutVerseStatusesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    translationId?: StringFieldUpdateOperationsInput | string
+    bookId?: IntFieldUpdateOperationsInput | number
+    chapter?: IntFieldUpdateOperationsInput | number
+    verse?: IntFieldUpdateOperationsInput | number
+    text?: StringFieldUpdateOperationsInput | string
+    globalOrder?: IntFieldUpdateOperationsInput | number
+    bookmarks?: BookmarkUncheckedUpdateManyWithoutVerseNestedInput
+    highlights?: HighlightUncheckedUpdateManyWithoutVerseNestedInput
+    notes?: NoteUncheckedUpdateManyWithoutVerseNestedInput
+  }
+
+  export type ReadingPlanDayCreateWithoutPlanInput = {
+    id?: string
+    dayNumber: number
+    title?: string | null
+    references?: ReadingPlanDayCreatereferencesInput | string[]
+  }
+
+  export type ReadingPlanDayUncheckedCreateWithoutPlanInput = {
+    id?: string
+    dayNumber: number
+    title?: string | null
+    references?: ReadingPlanDayCreatereferencesInput | string[]
+  }
+
+  export type ReadingPlanDayCreateOrConnectWithoutPlanInput = {
+    where: ReadingPlanDayWhereUniqueInput
+    create: XOR<ReadingPlanDayCreateWithoutPlanInput, ReadingPlanDayUncheckedCreateWithoutPlanInput>
+  }
+
+  export type ReadingPlanDayCreateManyPlanInputEnvelope = {
+    data: ReadingPlanDayCreateManyPlanInput | ReadingPlanDayCreateManyPlanInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type UserReadingPlanCreateWithoutPlanInput = {
+    id?: string
+    currentDay?: number
+    isCompleted?: boolean
+    startedAt?: Date | string
+    completedAt?: Date | string | null
+    user: UserCreateNestedOneWithoutReadingPlansInput
+  }
+
+  export type UserReadingPlanUncheckedCreateWithoutPlanInput = {
+    id?: string
+    userId: string
+    currentDay?: number
+    isCompleted?: boolean
+    startedAt?: Date | string
+    completedAt?: Date | string | null
+  }
+
+  export type UserReadingPlanCreateOrConnectWithoutPlanInput = {
+    where: UserReadingPlanWhereUniqueInput
+    create: XOR<UserReadingPlanCreateWithoutPlanInput, UserReadingPlanUncheckedCreateWithoutPlanInput>
+  }
+
+  export type UserReadingPlanCreateManyPlanInputEnvelope = {
+    data: UserReadingPlanCreateManyPlanInput | UserReadingPlanCreateManyPlanInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type ReadingPlanDayUpsertWithWhereUniqueWithoutPlanInput = {
+    where: ReadingPlanDayWhereUniqueInput
+    update: XOR<ReadingPlanDayUpdateWithoutPlanInput, ReadingPlanDayUncheckedUpdateWithoutPlanInput>
+    create: XOR<ReadingPlanDayCreateWithoutPlanInput, ReadingPlanDayUncheckedCreateWithoutPlanInput>
+  }
+
+  export type ReadingPlanDayUpdateWithWhereUniqueWithoutPlanInput = {
+    where: ReadingPlanDayWhereUniqueInput
+    data: XOR<ReadingPlanDayUpdateWithoutPlanInput, ReadingPlanDayUncheckedUpdateWithoutPlanInput>
+  }
+
+  export type ReadingPlanDayUpdateManyWithWhereWithoutPlanInput = {
+    where: ReadingPlanDayScalarWhereInput
+    data: XOR<ReadingPlanDayUpdateManyMutationInput, ReadingPlanDayUncheckedUpdateManyWithoutPlanInput>
+  }
+
+  export type ReadingPlanDayScalarWhereInput = {
+    AND?: ReadingPlanDayScalarWhereInput | ReadingPlanDayScalarWhereInput[]
+    OR?: ReadingPlanDayScalarWhereInput[]
+    NOT?: ReadingPlanDayScalarWhereInput | ReadingPlanDayScalarWhereInput[]
+    id?: StringFilter<"ReadingPlanDay"> | string
+    planId?: StringFilter<"ReadingPlanDay"> | string
+    dayNumber?: IntFilter<"ReadingPlanDay"> | number
+    title?: StringNullableFilter<"ReadingPlanDay"> | string | null
+    references?: StringNullableListFilter<"ReadingPlanDay">
+  }
+
+  export type UserReadingPlanUpsertWithWhereUniqueWithoutPlanInput = {
+    where: UserReadingPlanWhereUniqueInput
+    update: XOR<UserReadingPlanUpdateWithoutPlanInput, UserReadingPlanUncheckedUpdateWithoutPlanInput>
+    create: XOR<UserReadingPlanCreateWithoutPlanInput, UserReadingPlanUncheckedCreateWithoutPlanInput>
+  }
+
+  export type UserReadingPlanUpdateWithWhereUniqueWithoutPlanInput = {
+    where: UserReadingPlanWhereUniqueInput
+    data: XOR<UserReadingPlanUpdateWithoutPlanInput, UserReadingPlanUncheckedUpdateWithoutPlanInput>
+  }
+
+  export type UserReadingPlanUpdateManyWithWhereWithoutPlanInput = {
+    where: UserReadingPlanScalarWhereInput
+    data: XOR<UserReadingPlanUpdateManyMutationInput, UserReadingPlanUncheckedUpdateManyWithoutPlanInput>
+  }
+
+  export type ReadingPlanCreateWithoutDaysInput = {
+    id?: string
+    slug: string
+    name: string
+    description?: string | null
+    totalDays: number
+    category?: string
+    isPublic?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    userPlans?: UserReadingPlanCreateNestedManyWithoutPlanInput
+  }
+
+  export type ReadingPlanUncheckedCreateWithoutDaysInput = {
+    id?: string
+    slug: string
+    name: string
+    description?: string | null
+    totalDays: number
+    category?: string
+    isPublic?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    userPlans?: UserReadingPlanUncheckedCreateNestedManyWithoutPlanInput
+  }
+
+  export type ReadingPlanCreateOrConnectWithoutDaysInput = {
+    where: ReadingPlanWhereUniqueInput
+    create: XOR<ReadingPlanCreateWithoutDaysInput, ReadingPlanUncheckedCreateWithoutDaysInput>
+  }
+
+  export type ReadingPlanUpsertWithoutDaysInput = {
+    update: XOR<ReadingPlanUpdateWithoutDaysInput, ReadingPlanUncheckedUpdateWithoutDaysInput>
+    create: XOR<ReadingPlanCreateWithoutDaysInput, ReadingPlanUncheckedCreateWithoutDaysInput>
+    where?: ReadingPlanWhereInput
+  }
+
+  export type ReadingPlanUpdateToOneWithWhereWithoutDaysInput = {
+    where?: ReadingPlanWhereInput
+    data: XOR<ReadingPlanUpdateWithoutDaysInput, ReadingPlanUncheckedUpdateWithoutDaysInput>
+  }
+
+  export type ReadingPlanUpdateWithoutDaysInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    totalDays?: IntFieldUpdateOperationsInput | number
+    category?: StringFieldUpdateOperationsInput | string
+    isPublic?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    userPlans?: UserReadingPlanUpdateManyWithoutPlanNestedInput
+  }
+
+  export type ReadingPlanUncheckedUpdateWithoutDaysInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    totalDays?: IntFieldUpdateOperationsInput | number
+    category?: StringFieldUpdateOperationsInput | string
+    isPublic?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    userPlans?: UserReadingPlanUncheckedUpdateManyWithoutPlanNestedInput
+  }
+
+  export type UserCreateWithoutReadingPlansInput = {
+    id?: string
+    name?: string | null
+    email?: string | null
+    emailVerified?: Date | string | null
+    image?: string | null
+    lastReadOrder?: number
+    lastReadTranslation?: string
+    lastReadAt?: Date | string
+    autoProgress?: boolean
+    accounts?: AccountCreateNestedManyWithoutUserInput
+    bookmarks?: BookmarkCreateNestedManyWithoutUserInput
+    highlights?: HighlightCreateNestedManyWithoutUserInput
+    notes?: NoteCreateNestedManyWithoutUserInput
+    posts?: PostCreateNestedManyWithoutCreatedByInput
+    sessions?: SessionCreateNestedManyWithoutUserInput
+    verseStatuses?: VerseStatusCreateNestedManyWithoutUserInput
+  }
+
+  export type UserUncheckedCreateWithoutReadingPlansInput = {
+    id?: string
+    name?: string | null
+    email?: string | null
+    emailVerified?: Date | string | null
+    image?: string | null
+    lastReadOrder?: number
+    lastReadTranslation?: string
+    lastReadAt?: Date | string
+    autoProgress?: boolean
+    accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
+    bookmarks?: BookmarkUncheckedCreateNestedManyWithoutUserInput
+    highlights?: HighlightUncheckedCreateNestedManyWithoutUserInput
+    notes?: NoteUncheckedCreateNestedManyWithoutUserInput
+    posts?: PostUncheckedCreateNestedManyWithoutCreatedByInput
+    sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
+    verseStatuses?: VerseStatusUncheckedCreateNestedManyWithoutUserInput
+  }
+
+  export type UserCreateOrConnectWithoutReadingPlansInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutReadingPlansInput, UserUncheckedCreateWithoutReadingPlansInput>
+  }
+
+  export type ReadingPlanCreateWithoutUserPlansInput = {
+    id?: string
+    slug: string
+    name: string
+    description?: string | null
+    totalDays: number
+    category?: string
+    isPublic?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    days?: ReadingPlanDayCreateNestedManyWithoutPlanInput
+  }
+
+  export type ReadingPlanUncheckedCreateWithoutUserPlansInput = {
+    id?: string
+    slug: string
+    name: string
+    description?: string | null
+    totalDays: number
+    category?: string
+    isPublic?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    days?: ReadingPlanDayUncheckedCreateNestedManyWithoutPlanInput
+  }
+
+  export type ReadingPlanCreateOrConnectWithoutUserPlansInput = {
+    where: ReadingPlanWhereUniqueInput
+    create: XOR<ReadingPlanCreateWithoutUserPlansInput, ReadingPlanUncheckedCreateWithoutUserPlansInput>
+  }
+
+  export type UserUpsertWithoutReadingPlansInput = {
+    update: XOR<UserUpdateWithoutReadingPlansInput, UserUncheckedUpdateWithoutReadingPlansInput>
+    create: XOR<UserCreateWithoutReadingPlansInput, UserUncheckedCreateWithoutReadingPlansInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutReadingPlansInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutReadingPlansInput, UserUncheckedUpdateWithoutReadingPlansInput>
+  }
+
+  export type UserUpdateWithoutReadingPlansInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    emailVerified?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    image?: NullableStringFieldUpdateOperationsInput | string | null
+    lastReadOrder?: IntFieldUpdateOperationsInput | number
+    lastReadTranslation?: StringFieldUpdateOperationsInput | string
+    lastReadAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    autoProgress?: BoolFieldUpdateOperationsInput | boolean
+    accounts?: AccountUpdateManyWithoutUserNestedInput
+    bookmarks?: BookmarkUpdateManyWithoutUserNestedInput
+    highlights?: HighlightUpdateManyWithoutUserNestedInput
+    notes?: NoteUpdateManyWithoutUserNestedInput
+    posts?: PostUpdateManyWithoutCreatedByNestedInput
+    sessions?: SessionUpdateManyWithoutUserNestedInput
+    verseStatuses?: VerseStatusUpdateManyWithoutUserNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutReadingPlansInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    emailVerified?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    image?: NullableStringFieldUpdateOperationsInput | string | null
+    lastReadOrder?: IntFieldUpdateOperationsInput | number
+    lastReadTranslation?: StringFieldUpdateOperationsInput | string
+    lastReadAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    autoProgress?: BoolFieldUpdateOperationsInput | boolean
+    accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
+    bookmarks?: BookmarkUncheckedUpdateManyWithoutUserNestedInput
+    highlights?: HighlightUncheckedUpdateManyWithoutUserNestedInput
+    notes?: NoteUncheckedUpdateManyWithoutUserNestedInput
+    posts?: PostUncheckedUpdateManyWithoutCreatedByNestedInput
+    sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
+    verseStatuses?: VerseStatusUncheckedUpdateManyWithoutUserNestedInput
+  }
+
+  export type ReadingPlanUpsertWithoutUserPlansInput = {
+    update: XOR<ReadingPlanUpdateWithoutUserPlansInput, ReadingPlanUncheckedUpdateWithoutUserPlansInput>
+    create: XOR<ReadingPlanCreateWithoutUserPlansInput, ReadingPlanUncheckedCreateWithoutUserPlansInput>
+    where?: ReadingPlanWhereInput
+  }
+
+  export type ReadingPlanUpdateToOneWithWhereWithoutUserPlansInput = {
+    where?: ReadingPlanWhereInput
+    data: XOR<ReadingPlanUpdateWithoutUserPlansInput, ReadingPlanUncheckedUpdateWithoutUserPlansInput>
+  }
+
+  export type ReadingPlanUpdateWithoutUserPlansInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    totalDays?: IntFieldUpdateOperationsInput | number
+    category?: StringFieldUpdateOperationsInput | string
+    isPublic?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    days?: ReadingPlanDayUpdateManyWithoutPlanNestedInput
+  }
+
+  export type ReadingPlanUncheckedUpdateWithoutUserPlansInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    slug?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    description?: NullableStringFieldUpdateOperationsInput | string | null
+    totalDays?: IntFieldUpdateOperationsInput | number
+    category?: StringFieldUpdateOperationsInput | string
+    isPublic?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    days?: ReadingPlanDayUncheckedUpdateManyWithoutPlanNestedInput
+  }
+
   export type VerseCreateManyTranslationInput = {
     id?: string
     bookId: number
@@ -20168,6 +26986,7 @@ export namespace Prisma {
     bookmarks?: BookmarkUpdateManyWithoutVerseNestedInput
     highlights?: HighlightUpdateManyWithoutVerseNestedInput
     notes?: NoteUpdateManyWithoutVerseNestedInput
+    verseStatuses?: VerseStatusUpdateManyWithoutVerseNestedInput
     book?: BookUpdateOneRequiredWithoutVersesNestedInput
   }
 
@@ -20181,6 +27000,7 @@ export namespace Prisma {
     bookmarks?: BookmarkUncheckedUpdateManyWithoutVerseNestedInput
     highlights?: HighlightUncheckedUpdateManyWithoutVerseNestedInput
     notes?: NoteUncheckedUpdateManyWithoutVerseNestedInput
+    verseStatuses?: VerseStatusUncheckedUpdateManyWithoutVerseNestedInput
   }
 
   export type VerseUncheckedUpdateManyWithoutTranslationInput = {
@@ -20210,6 +27030,7 @@ export namespace Prisma {
     bookmarks?: BookmarkUpdateManyWithoutVerseNestedInput
     highlights?: HighlightUpdateManyWithoutVerseNestedInput
     notes?: NoteUpdateManyWithoutVerseNestedInput
+    verseStatuses?: VerseStatusUpdateManyWithoutVerseNestedInput
     translation?: TranslationUpdateOneRequiredWithoutVersesNestedInput
   }
 
@@ -20223,6 +27044,7 @@ export namespace Prisma {
     bookmarks?: BookmarkUncheckedUpdateManyWithoutVerseNestedInput
     highlights?: HighlightUncheckedUpdateManyWithoutVerseNestedInput
     notes?: NoteUncheckedUpdateManyWithoutVerseNestedInput
+    verseStatuses?: VerseStatusUncheckedUpdateManyWithoutVerseNestedInput
   }
 
   export type VerseUncheckedUpdateManyWithoutBookInput = {
@@ -20253,6 +27075,13 @@ export namespace Prisma {
     content: string
     createdAt?: Date | string
     updatedAt?: Date | string
+  }
+
+  export type VerseStatusCreateManyVerseInput = {
+    id?: string
+    userId: string
+    isRead?: boolean
+    readAt?: Date | string
   }
 
   export type BookmarkUpdateWithoutVerseInput = {
@@ -20318,6 +27147,27 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type VerseStatusUpdateWithoutVerseInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    isRead?: BoolFieldUpdateOperationsInput | boolean
+    readAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    user?: UserUpdateOneRequiredWithoutVerseStatusesNestedInput
+  }
+
+  export type VerseStatusUncheckedUpdateWithoutVerseInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    isRead?: BoolFieldUpdateOperationsInput | boolean
+    readAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type VerseStatusUncheckedUpdateManyWithoutVerseInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    isRead?: BoolFieldUpdateOperationsInput | boolean
+    readAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type AccountCreateManyUserInput = {
     id?: string
     type: string
@@ -20365,6 +27215,22 @@ export namespace Prisma {
     id?: string
     sessionToken: string
     expires: Date | string
+  }
+
+  export type VerseStatusCreateManyUserInput = {
+    id?: string
+    verseId: string
+    isRead?: boolean
+    readAt?: Date | string
+  }
+
+  export type UserReadingPlanCreateManyUserInput = {
+    id?: string
+    planId: string
+    currentDay?: number
+    isCompleted?: boolean
+    startedAt?: Date | string
+    completedAt?: Date | string | null
   }
 
   export type AccountUpdateWithoutUserInput = {
@@ -20511,6 +27377,118 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     sessionToken?: StringFieldUpdateOperationsInput | string
     expires?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type VerseStatusUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    isRead?: BoolFieldUpdateOperationsInput | boolean
+    readAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    verse?: VerseUpdateOneRequiredWithoutVerseStatusesNestedInput
+  }
+
+  export type VerseStatusUncheckedUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    verseId?: StringFieldUpdateOperationsInput | string
+    isRead?: BoolFieldUpdateOperationsInput | boolean
+    readAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type VerseStatusUncheckedUpdateManyWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    verseId?: StringFieldUpdateOperationsInput | string
+    isRead?: BoolFieldUpdateOperationsInput | boolean
+    readAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type UserReadingPlanUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    currentDay?: IntFieldUpdateOperationsInput | number
+    isCompleted?: BoolFieldUpdateOperationsInput | boolean
+    startedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    plan?: ReadingPlanUpdateOneRequiredWithoutUserPlansNestedInput
+  }
+
+  export type UserReadingPlanUncheckedUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    planId?: StringFieldUpdateOperationsInput | string
+    currentDay?: IntFieldUpdateOperationsInput | number
+    isCompleted?: BoolFieldUpdateOperationsInput | boolean
+    startedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type UserReadingPlanUncheckedUpdateManyWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    planId?: StringFieldUpdateOperationsInput | string
+    currentDay?: IntFieldUpdateOperationsInput | number
+    isCompleted?: BoolFieldUpdateOperationsInput | boolean
+    startedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type ReadingPlanDayCreateManyPlanInput = {
+    id?: string
+    dayNumber: number
+    title?: string | null
+    references?: ReadingPlanDayCreatereferencesInput | string[]
+  }
+
+  export type UserReadingPlanCreateManyPlanInput = {
+    id?: string
+    userId: string
+    currentDay?: number
+    isCompleted?: boolean
+    startedAt?: Date | string
+    completedAt?: Date | string | null
+  }
+
+  export type ReadingPlanDayUpdateWithoutPlanInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    dayNumber?: IntFieldUpdateOperationsInput | number
+    title?: NullableStringFieldUpdateOperationsInput | string | null
+    references?: ReadingPlanDayUpdatereferencesInput | string[]
+  }
+
+  export type ReadingPlanDayUncheckedUpdateWithoutPlanInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    dayNumber?: IntFieldUpdateOperationsInput | number
+    title?: NullableStringFieldUpdateOperationsInput | string | null
+    references?: ReadingPlanDayUpdatereferencesInput | string[]
+  }
+
+  export type ReadingPlanDayUncheckedUpdateManyWithoutPlanInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    dayNumber?: IntFieldUpdateOperationsInput | number
+    title?: NullableStringFieldUpdateOperationsInput | string | null
+    references?: ReadingPlanDayUpdatereferencesInput | string[]
+  }
+
+  export type UserReadingPlanUpdateWithoutPlanInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    currentDay?: IntFieldUpdateOperationsInput | number
+    isCompleted?: BoolFieldUpdateOperationsInput | boolean
+    startedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    user?: UserUpdateOneRequiredWithoutReadingPlansNestedInput
+  }
+
+  export type UserReadingPlanUncheckedUpdateWithoutPlanInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    currentDay?: IntFieldUpdateOperationsInput | number
+    isCompleted?: BoolFieldUpdateOperationsInput | boolean
+    startedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type UserReadingPlanUncheckedUpdateManyWithoutPlanInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    currentDay?: IntFieldUpdateOperationsInput | number
+    isCompleted?: BoolFieldUpdateOperationsInput | boolean
+    startedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
 

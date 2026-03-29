@@ -14,7 +14,8 @@ import {
   MoreHorizontal,
   Volume2,
   Lock,
-  Trash2
+  Trash2,
+  CheckCircle2
 } from "lucide-react";
 import { db } from "~/lib/db";
 import { useLiveQuery } from "dexie-react-hooks";
@@ -75,9 +76,16 @@ export function VerseOverlay({ verseId, bookId, bookName, bookSlug, chapter, ver
     }
   });
 
+  const toggleVerseStatusCloud = api.user.toggleVerseStatus.useMutation({
+    onSuccess: () => {
+      utils.user.getSyncData.invalidate();
+    }
+  });
+
   const bookmark = useLiveQuery(() => db.bookmarks.where("[userId+verseId]").equals([currentUserId, verseId]).first(), [currentUserId, verseId]);
   const highlight = useLiveQuery(() => db.highlights.where("[userId+verseId]").equals([currentUserId, verseId]).first(), [currentUserId, verseId]);
   const note = useLiveQuery(() => db.notes.where("[userId+verseId]").equals([currentUserId, verseId]).first(), [currentUserId, verseId]);
+  const verseStatus = useLiveQuery(() => db.verseStatuses.where("[userId+verseId]").equals([currentUserId, verseId]).first(), [currentUserId, verseId]);
 
   const { data: parallels, isLoading: isComparing } = api.bible.getVerseInAllTranslations.useQuery(
     { bookSlug, chapter, verse },
@@ -104,6 +112,34 @@ export function VerseOverlay({ verseId, bookId, bookName, bookSlug, chapter, ver
       });
       toast.success("Verse bookmarked");
     }
+  };
+
+  const toggleRead = async () => {
+    const isRead = !!verseStatus?.isRead;
+    if (verseStatus) {
+      await db.verseStatuses.update(verseStatus.id!, { 
+        isRead: !isRead, 
+        readAt: Date.now() 
+      });
+    } else {
+      await db.verseStatuses.add({
+        userId: currentUserId,
+        verseId,
+        globalOrder,
+        translationSlug,
+        isRead: true,
+        readAt: Date.now()
+      });
+    }
+    
+    if (session) {
+      toggleVerseStatusCloud.mutate({
+        globalOrder,
+        translationSlug,
+        isRead: !isRead
+      });
+    }
+    toast.success(!isRead ? "Marked as read" : "Marked as unread");
   };
 
   const toggleHighlight = async (color: string = "yellow") => {
@@ -141,7 +177,6 @@ export function VerseOverlay({ verseId, bookId, bookName, bookSlug, chapter, ver
         createdAt: Date.now(), 
         updatedAt: Date.now() 
       });
-      // The background syncer in ProgressSyncer will pick up new notes
       toast.success("Reflection saved");
     }
     setIsEditingNote(false);
@@ -268,6 +303,16 @@ export function VerseOverlay({ verseId, bookId, bookName, bookSlug, chapter, ver
         </div>
 
         {/* ACTIONS */}
+        <button 
+          onClick={toggleRead}
+          className={cn(
+            "p-2.5 rounded-full transition-all active:scale-90 relative", 
+            verseStatus?.isRead ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20" : "hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400"
+          )}
+        >
+          <CheckCircle2 className="h-4 w-4" />
+        </button>
+
         <button 
           onClick={() => toggleHighlight()}
           className={cn(

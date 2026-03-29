@@ -227,7 +227,46 @@ exports.Prisma.UserScalarFieldEnum = {
   image: 'image',
   lastReadOrder: 'lastReadOrder',
   lastReadTranslation: 'lastReadTranslation',
-  lastReadAt: 'lastReadAt'
+  lastReadAt: 'lastReadAt',
+  autoProgress: 'autoProgress'
+};
+
+exports.Prisma.VerseStatusScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  verseId: 'verseId',
+  isRead: 'isRead',
+  readAt: 'readAt'
+};
+
+exports.Prisma.ReadingPlanScalarFieldEnum = {
+  id: 'id',
+  slug: 'slug',
+  name: 'name',
+  description: 'description',
+  totalDays: 'totalDays',
+  category: 'category',
+  isPublic: 'isPublic',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.ReadingPlanDayScalarFieldEnum = {
+  id: 'id',
+  planId: 'planId',
+  dayNumber: 'dayNumber',
+  title: 'title',
+  references: 'references'
+};
+
+exports.Prisma.UserReadingPlanScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  planId: 'planId',
+  currentDay: 'currentDay',
+  isCompleted: 'isCompleted',
+  startedAt: 'startedAt',
+  completedAt: 'completedAt'
 };
 
 exports.Prisma.VerificationTokenScalarFieldEnum = {
@@ -264,6 +303,10 @@ exports.Prisma.ModelName = {
   Account: 'Account',
   Session: 'Session',
   User: 'User',
+  VerseStatus: 'VerseStatus',
+  ReadingPlan: 'ReadingPlan',
+  ReadingPlanDay: 'ReadingPlanDay',
+  UserReadingPlan: 'UserReadingPlan',
   VerificationToken: 'VerificationToken'
 };
 

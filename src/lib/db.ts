@@ -50,20 +50,65 @@ export interface LocalNote {
   updatedAt: number;
 }
 
+export interface LocalVerseStatus {
+  id?: number;
+  userId: string;
+  verseId: string;
+  globalOrder: number;
+  translationSlug: string;
+  isRead: boolean;
+  readAt: number;
+}
+
+export interface LocalReadingPlan {
+  id: string;
+  slug: string;
+  name: string;
+  description?: string;
+  totalDays: number;
+  category: string;
+}
+
+export interface LocalReadingPlanDay {
+  id: string;
+  planId: string;
+  dayNumber: number;
+  title?: string;
+  references: string[];
+}
+
+export interface LocalUserReadingPlan {
+  id?: number;
+  userId: string;
+  planId: string;
+  currentDay: number;
+  isCompleted: boolean;
+  startedAt: number;
+  completedAt?: number;
+}
+
 export class VerbumDominiDB extends Dexie {
   verses!: Table<LocalVerse>;
   bookmarks!: Table<LocalBookmark>;
   highlights!: Table<LocalHighlight>;
   notes!: Table<LocalNote>;
+  verseStatuses!: Table<LocalVerseStatus>;
+  readingPlans!: Table<LocalReadingPlan>;
+  readingPlanDays!: Table<LocalReadingPlanDay>;
+  userReadingPlans!: Table<LocalUserReadingPlan>;
 
   constructor() {
     super("VerbumDominiDB");
-    // Version 4: Data Separation by userId
-    this.version(4).stores({
+    // Version 6: Adding globalOrder to verseStatuses
+    this.version(6).stores({
       verses: "id, globalOrder, translationId, [translationId+globalOrder]",
       bookmarks: "++id, userId, verseId, translationSlug, [userId+verseId], [userId+translationSlug+globalOrder]",
       highlights: "++id, userId, verseId, [userId+verseId], [userId+translationSlug+globalOrder]",
       notes: "++id, userId, verseId, [userId+verseId], [userId+translationSlug+globalOrder]",
+      verseStatuses: "++id, userId, verseId, [userId+verseId], [userId+translationSlug+globalOrder]",
+      readingPlans: "id, slug, category",
+      readingPlanDays: "id, planId, [planId+dayNumber]",
+      userReadingPlans: "++id, userId, planId, [userId+planId]"
     });
   }
 }

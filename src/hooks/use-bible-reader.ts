@@ -23,6 +23,7 @@ export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>
   const liturgicalReadings = useReaderStore((state) => state.liturgicalReadings);
   
   const fontSize = useReaderStore((state) => state.fontSize);
+  const currentOrderStore = useReaderStore((state) => state.currentOrder);
   const setCurrentOrderStore = useReaderStore((state) => state.setCurrentOrder);
   const setTotalVerseCount = useReaderStore((state) => state.setTotalVerseCount);
 
@@ -161,14 +162,26 @@ export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>
 
   // 5. Initial Scroll
   useEffect(() => {
-    if (!initialScrollDone.current && liturgicalReadings.length > 0 && isWorkerReady && rowCount > 0) {
-      const firstReading = liturgicalReadings.find(r => r.type === "First Reading");
-      if (firstReading && firstReading.orders.length > 0) {
-        workerRef.current?.postMessage({ type: "FIND_ORDER", payload: { order: firstReading.orders[0] } });
+    if (!initialScrollDone.current && isWorkerReady && rowCount > 0) {
+      // 1. Prioritize Persisted Position (if not at the very beginning)
+      if (currentOrderStore > 1) {
+        console.log("[READER] Initial scroll to persisted position:", currentOrderStore);
+        workerRef.current?.postMessage({ type: "FIND_ORDER", payload: { order: currentOrderStore } });
         initialScrollDone.current = true;
+        return;
+      }
+
+      // 2. Fallback to Daily Reading
+      if (liturgicalReadings.length > 0) {
+        const firstReading = liturgicalReadings.find(r => r.type === "First Reading");
+        if (firstReading && firstReading.orders.length > 0) {
+          console.log("[READER] Initial scroll to daily reading");
+          workerRef.current?.postMessage({ type: "FIND_ORDER", payload: { order: firstReading.orders[0] } });
+          initialScrollDone.current = true;
+        }
       }
     }
-  }, [liturgicalReadings, isWorkerReady, rowCount]);
+  }, [liturgicalReadings, isWorkerReady, rowCount, currentOrderStore]);
 
   // 6. Navigation
   useEffect(() => {
@@ -230,7 +243,10 @@ export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>
       }
     }
     
-    if (state.currentOrder !== currentGlobalOrder) setCurrentOrderStore(currentGlobalOrder);
+    if (state.currentOrder !== currentGlobalOrder) {
+      console.log("[READER] Order update:", currentGlobalOrder);
+      setCurrentOrderStore(currentGlobalOrder);
+    }
 
     // Sync Book/Chapter based on the same precise row
     if (topVisibleItem) {

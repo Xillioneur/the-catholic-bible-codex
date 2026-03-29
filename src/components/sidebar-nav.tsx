@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { api } from "~/trpc/react";
 import { 
   Search, 
@@ -28,7 +28,9 @@ import {
   History,
   BookText,
   Highlighter,
-  MessageSquare
+  MessageSquare,
+  Play,
+  CheckCircle2
 } from "lucide-react";
 import { useReaderStore } from "~/hooks/use-reader-store";
 import { cn } from "~/lib/utils";
@@ -42,17 +44,19 @@ import { useSession, signIn, signOut } from "next-auth/react";
 
 export function SidebarNav() {
   const { data: session } = useSession();
-  const { data: books = [] } = api.bible.getBooks.useQuery();
-  const { data: translations = [] } = api.bible.getTranslations.useQuery();
-  const { info } = useLiturgical();
-  const { jumpToOrder, unlockAudio } = useVoiceover();
+  const utils = api.useUtils();
   
+  // 1. STATE
   const [activeTab, setActiveTab] = useState<"library" | "daily" | "study" | "sanctuary" | null>(null);
-  const [studyFilter, setStudyFilter] = useState<"notes" | "highlights" | "bookmarks">("notes");
+  const [studyFilter, setStudyFilter] = useState<"notes" | "highlights" | "bookmarks" | "plans">("notes");
+  const [selectedPlanSlug, setSelectedPlanSlug] = useState<string | null>(null);
   const [showFullLiturgical, setShowFullLiturgical] = useState(false);
   const [librarySelectedBook, setLibrarySelectedBook] = useState<any | null>(null);
   const [librarySearch, setLibrarySearch] = useState("");
+  const [editingNoteId, setEditingNoteId] = useState<string | number | null>(null);
+  const [editingNoteContent, setEditingNoteContent] = useState("");
 
+  // 2. STORE
   const isCollapsed = useReaderStore((state) => state.isSidebarCollapsed);
   const toggleSidebar = useReaderStore((state) => state.toggleSidebar);
   const translationSlug = useReaderStore((state) => state.translationSlug);
@@ -63,27 +67,66 @@ export function SidebarNav() {
   const setIsSearchOpen = useReaderStore((state) => state.setIsSearchOpen);
   const liturgicalReadings = useReaderStore((state) => state.liturgicalReadings);
   const setIsNavigatorVisible = useReaderStore((state) => state.setIsNavigatorVisible);
-  
   const isVoiceoverPlaying = useReaderStore((state) => state.isVoiceoverPlaying);
   const setIsVoiceoverPlaying = useReaderStore((state) => state.setIsVoiceoverPlaying);
   const isVoiceoverActive = useReaderStore((state) => state.isVoiceoverActive);
   const setIsActive = useReaderStore((state) => state.setIsVoiceoverActive);
   const isVoiceoverMinimized = useReaderStore((state) => state.isVoiceoverMinimized);
   const setIsVoiceoverMinimized = useReaderStore((state) => state.setIsVoiceoverMinimized);
-  
   const fontSize = useReaderStore((state) => state.fontSize);
   const setFontSize = useReaderStore((state) => state.setFontSize);
+  const autoProgress = useReaderStore((state) => state.autoProgress);
+  const setAutoProgress = useReaderStore((state) => state.setAutoProgress);
 
   const currentUserId = session?.user?.id ?? "guest";
+
+  // 3. QUERIES & LOCAL DATA
+  const { data: books = [] } = api.bible.getBooks.useQuery();
+  const { data: translations = [] } = api.bible.getTranslations.useQuery();
+  const { info } = useLiturgical();
+  const { jumpToOrder, unlockAudio } = useVoiceover();
+
+  const { data: allPlans = [] } = api.readingPlan.getPlans.useQuery();
+  const { data: userPlans = [] } = api.readingPlan.getUserPlans.useQuery(undefined, {
+    enabled: !!session
+  });
+
+  const { data: planDetails, isLoading: isLoadingPlan } = api.readingPlan.getPlanDetails.useQuery(
+    { slug: selectedPlanSlug ?? "", translationSlug },
+    { enabled: !!selectedPlanSlug }
+  );
 
   const bookmarks = useLiveQuery(() => db.bookmarks.where("userId").equals(currentUserId).reverse().limit(10).toArray(), [currentUserId]) ?? [];
   const localNotesRaw = useLiveQuery(() => db.notes.where("userId").equals(currentUserId).reverse().toArray(), [currentUserId]) ?? [];
   const localHighlightsRaw = useLiveQuery(() => db.highlights.where("userId").equals(currentUserId).reverse().toArray(), [currentUserId]) ?? [];
-  const utils = api.useUtils();
+  const localVerseStatuses = useLiveQuery(() => db.verseStatuses.where("userId").equals(currentUserId).toArray(), [currentUserId]) ?? [];
+  const localUserPlans = useLiveQuery(() => db.userReadingPlans.where("userId").equals(currentUserId).toArray(), [currentUserId]) ?? [];
 
-  const [editingNoteId, setEditingNoteId] = useState<string | number | null>(null);
-  const [editingNoteContent, setEditingNoteContent] = useState("");
+  // 4. MEMOS & HELPERS
+  const readOrdersSet = useMemo(() => {
+    return new Set(localVerseStatuses.filter(s => s.isRead && s.translationSlug === translationSlug).map(s => s.globalOrder));
+  }, [localVerseStatuses, translationSlug]);
 
+  const isDayCompleted = useCallback((orders: number[]) => {
+    if (!orders || orders.length === 0) return false;
+    return orders.every(order => readOrdersSet.has(order));
+  }, [readOrdersSet]);
+
+  const categories = useMemo(() => {
+    const cats = ["Pentateuch", "History", "Wisdom", "Prophets", "Gospels", "Acts", "Epistles", "Revelation"];
+    const filtered = books.filter(b => 
+      b.name.toLowerCase().includes(librarySearch.toLowerCase()) || 
+      b.abbreviation.toLowerCase().includes(librarySearch.toLowerCase())
+    );
+    return cats.map(c => ({
+      name: c,
+      books: filtered.filter(b => b.category === c).sort((a, b) => a.order - b.order)
+    })).filter(c => c.books.length > 0);
+  }, [books, librarySearch]);
+
+  const currentBook = useMemo(() => books?.find(b => b.id === currentBookId), [books, currentBookId]);
+
+  // 5. MUTATIONS
   const updateNoteCloud = api.user.updateNote.useMutation({
     onSuccess: () => {
       utils.user.getSyncData.invalidate();
@@ -111,6 +154,78 @@ export function SidebarNav() {
     }
   });
 
+  const startPlan = api.readingPlan.startPlan.useMutation({
+    onSuccess: () => utils.readingPlan.getUserPlans.invalidate()
+  });
+
+  const updatePlanProgress = api.readingPlan.updateProgress.useMutation({
+    onSuccess: () => utils.readingPlan.getUserPlans.invalidate()
+  });
+
+  const deleteUserPlan = api.readingPlan.deleteUserPlan.useMutation({
+    onSuccess: () => {
+      utils.readingPlan.getUserPlans.invalidate();
+      setSelectedPlanSlug(null);
+      toast.success("Journey removed from your Sanctuary");
+    }
+  });
+
+  // 6. EFFECTS
+  // Auto-scroll to current day in roadmap
+  useEffect(() => {
+    if (selectedPlanSlug && planDetails && !isLoadingPlan) {
+      const timer = setTimeout(() => {
+        const el = document.getElementById("current-journey-day");
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [selectedPlanSlug, planDetails, isLoadingPlan]);
+
+  // Auto-advance reading plans
+  useEffect(() => {
+    if (!planDetails || !readOrdersSet.size) return;
+    
+    const activePlans = session ? userPlans : localUserPlans;
+    const currentPlan = activePlans.find((up: any) => up.planId === planDetails.id);
+    if (!currentPlan || currentPlan.isCompleted) return;
+
+    const dayData = planDetails.days.find((d: any) => d.dayNumber === currentPlan.currentDay);
+    if (!dayData || !dayData.orders || dayData.orders.length === 0) return;
+
+    if (isDayCompleted(dayData.orders)) {
+      const nextDay = currentPlan.currentDay + 1;
+      const isFinished = nextDay > planDetails.totalDays;
+      
+      console.log(`[JOURNEY] Day ${currentPlan.currentDay} completed. Advancing...`);
+
+      if (session) {
+        updatePlanProgress.mutate({
+          planId: planDetails.id,
+          currentDay: isFinished ? currentPlan.currentDay : nextDay,
+          isCompleted: isFinished
+        });
+      } else {
+        if (currentPlan.id) {
+          void db.userReadingPlans.update(currentPlan.id, {
+            currentDay: isFinished ? currentPlan.currentDay : nextDay,
+            isCompleted: isFinished,
+            completedAt: isFinished ? Date.now() : undefined
+          });
+        }
+      }
+      
+      if (isFinished) {
+        toast.success(`Journey Complete: ${planDetails.name}!`);
+      } else {
+        toast.success(`Journey Advanced: Day ${nextDay}`);
+      }
+    }
+  }, [readOrdersSet, planDetails, userPlans, localUserPlans, session, isDayCompleted, updatePlanProgress]);
+
+  // 7. HANDLERS
   const handleUpdateNote = async (note: any, content: string) => {
     try {
       await db.notes.update(note.id as number, { content, updatedAt: Date.now() });
@@ -163,7 +278,6 @@ export function SidebarNav() {
     }
   };
 
-  // For Guests and Users: Join local notes/highlights with verse info from Dexie
   const localNotes = useLiveQuery(async () => {
     const notesWithVerses = await Promise.all(
       localNotesRaw.map(async (n) => {
@@ -184,11 +298,6 @@ export function SidebarNav() {
     return highlightsWithVerses.filter(h => !!h.verse);
   }, [localHighlightsRaw]) ?? [];
 
-  // Keep the query for cloud sync, but UI uses local data
-  const { isLoading: isLoadingJournal } = api.user.getJournal.useQuery(undefined, {
-    enabled: activeTab === "study" && !!session
-  });
-
   const handleBookSelect = useCallback(async (bookSlug: string, chapter: number = 1) => {
     setActiveTab(null);
     setLibrarySelectedBook(null);
@@ -201,18 +310,6 @@ export function SidebarNav() {
     { bookSlug: librarySelectedBook?.slug ?? "", translationSlug },
     { enabled: !!librarySelectedBook }
   );
-
-  const categories = useMemo(() => {
-    const cats = ["Pentateuch", "History", "Wisdom", "Prophets", "Gospels", "Acts", "Epistles", "Revelation"];
-    const filtered = books.filter(b => 
-      b.name.toLowerCase().includes(librarySearch.toLowerCase()) || 
-      b.abbreviation.toLowerCase().includes(librarySearch.toLowerCase())
-    );
-    return cats.map(c => ({
-      name: c,
-      books: filtered.filter(b => b.category === c).sort((a, b) => a.order - b.order)
-    })).filter(c => c.books.length > 0);
-  }, [books, librarySearch]);
 
   const handleSelectReading = (type: string) => {
     const reading = liturgicalReadings.find(r => r.type === type);
@@ -241,7 +338,18 @@ export function SidebarNav() {
     }
   }, [liturgicalReadings, jumpToOrder, unlockAudio]);
 
-  const currentBook = useMemo(() => books?.find(b => b.id === currentBookId), [books, currentBookId]);
+  const handleContinuePlan = async (up: any) => {
+    // If up is a userPlan from TRPC, it has up.plan.slug
+    // If up is a localUserPlan from Dexie, it only has planId
+    const plan = up.plan ?? allPlans.find((p: any) => p.id === up.planId);
+    const planSlug = plan?.slug;
+    
+    if (planSlug) {
+      setSelectedPlanSlug(planSlug);
+      return;
+    }
+    toast.error("Could not load journey details");
+  };
 
   return (
     <>
@@ -501,36 +609,46 @@ export function SidebarNav() {
 
             {activeTab === "study" && (
               <div className="mt-4 space-y-4 animate-in fade-in duration-300">
-                <div className="flex bg-zinc-100/50 dark:bg-zinc-800/50 p-0.5 rounded-full border border-zinc-200/20">
+                <div className="grid grid-cols-4 bg-zinc-100/50 dark:bg-zinc-800/50 p-0.5 rounded-full border border-zinc-200/20">
                   <button 
                     onClick={() => setStudyFilter("notes")} 
                     className={cn(
-                      "flex-1 py-1.5 rounded-full text-[8px] font-black uppercase transition-all flex items-center justify-center gap-1.5", 
+                      "py-1.5 rounded-full text-[7px] font-black uppercase transition-all flex flex-col items-center justify-center gap-0.5", 
                       studyFilter === "notes" ? "bg-white dark:bg-zinc-700 text-primary shadow-sm" : "text-zinc-400"
                     )}
                   >
-                    <MessageSquare className="h-3 w-3" />
-                    Reflections
+                    <MessageSquare className="h-2.5 w-2.5" />
+                    Notes
                   </button>
                   <button 
                     onClick={() => setStudyFilter("highlights")} 
                     className={cn(
-                      "flex-1 py-1.5 rounded-full text-[8px] font-black uppercase transition-all flex items-center justify-center gap-1.5", 
+                      "py-1.5 rounded-full text-[7px] font-black uppercase transition-all flex flex-col items-center justify-center gap-0.5", 
                       studyFilter === "highlights" ? "bg-white dark:bg-zinc-700 text-primary shadow-sm" : "text-zinc-400"
                     )}
                   >
-                    <Highlighter className="h-3 w-3" />
-                    Illuminations
+                    <Highlighter className="h-2.5 w-2.5" />
+                    Highs
                   </button>
                   <button 
                     onClick={() => setStudyFilter("bookmarks")} 
                     className={cn(
-                      "flex-1 py-1.5 rounded-full text-[8px] font-black uppercase transition-all flex items-center justify-center gap-1.5", 
+                      "py-1.5 rounded-full text-[7px] font-black uppercase transition-all flex flex-col items-center justify-center gap-0.5", 
                       studyFilter === "bookmarks" ? "bg-white dark:bg-zinc-700 text-primary shadow-sm" : "text-zinc-400"
                     )}
                   >
-                    <Bookmark className="h-3 w-3" />
+                    <Bookmark className="h-2.5 w-2.5" />
                     Saved
+                  </button>
+                  <button 
+                    onClick={() => setStudyFilter("plans")} 
+                    className={cn(
+                      "py-1.5 rounded-full text-[7px] font-black uppercase transition-all flex flex-col items-center justify-center gap-0.5", 
+                      studyFilter === "plans" ? "bg-white dark:bg-zinc-700 text-primary shadow-sm" : "text-zinc-400"
+                    )}
+                  >
+                    <Calendar className="h-2.5 w-2.5" />
+                    Plans
                   </button>
                 </div>
 
@@ -696,6 +814,216 @@ export function SidebarNav() {
                   </div>
                 )}
 
+                {studyFilter === "plans" && (
+                  <div className="space-y-6 animate-in fade-in duration-500">
+                    {selectedPlanSlug ? (
+                      /* JOURNEY DETAIL VIEW */
+                      <div className="space-y-6">
+                        <button 
+                          onClick={() => setSelectedPlanSlug(null)}
+                          className="flex items-center gap-2 text-zinc-400 hover:text-primary transition-all group px-1"
+                        >
+                          <ChevronLeft className="h-4 w-4" />
+                          <span className="text-[10px] font-black uppercase tracking-widest">Back to Journeys</span>
+                        </button>
+
+                        {isLoadingPlan ? (
+                          <div className="flex justify-center py-20"><Loader2 className="h-6 w-6 text-primary/20 animate-spin" /></div>
+                        ) : planDetails ? (
+                          <div className="space-y-6">
+                            <div className="px-1 space-y-4">
+                              <div className="flex items-start justify-between gap-4">
+                                <div className="space-y-2 flex-1">
+                                  <h3 className="text-lg font-serif font-bold italic text-zinc-900 dark:text-zinc-100">{planDetails.name}</h3>
+                                  <p className="text-[10px] font-medium text-zinc-500 leading-relaxed">{planDetails.description}</p>
+                                </div>
+                                <button 
+                                  onClick={() => {
+                                    if (confirm("Are you sure you want to remove this journey and reset your progress?")) {
+                                      if (session) {
+                                        deleteUserPlan.mutate({ planId: planDetails.id });
+                                      } else {
+                                        const localPlan = localUserPlans.find((up: any) => up.planId === planDetails.id);
+                                        if (localPlan?.id) {
+                                          void db.userReadingPlans.delete(localPlan.id);
+                                          setSelectedPlanSlug(null);
+                                          toast.success("Journey removed locally");
+                                        }
+                                      }
+                                    }
+                                  }}
+                                  className="p-2 rounded-full hover:bg-red-50 text-zinc-300 hover:text-red-500 transition-colors shrink-0"
+                                  title="Remove Journey"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </button>
+                              </div>
+
+                              <button 
+                                onClick={() => {
+                                  const firstUnfinished = planDetails.days.find((d: any) => !isDayCompleted(d.orders));
+                                  const targetDay = firstUnfinished || planDetails.days[planDetails.days.length - 1];
+                                  if (targetDay?.orders?.length > 0) {
+                                    setScrollToOrder(targetDay.orders[0]);
+                                    setActiveTab(null);
+                                    toast.success(`Resuming: Day ${targetDay.dayNumber}`);
+                                  }
+                                }}
+                                className="w-full py-3 rounded-2xl bg-primary text-white text-[9px] font-black uppercase tracking-[0.2em] shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2"
+                              >
+                                <Play className="h-3.5 w-3.5 fill-current" />
+                                Resume Journey
+                              </button>
+                            </div>
+
+                            <div className="space-y-3">
+                              {planDetails.days.map((day: any) => {
+                                const isCompleted = isDayCompleted(day.orders);
+                                const currentPlanProgress = (session ? userPlans : localUserPlans).find((up: any) => up.planId === planDetails.id);
+                                const isCurrent = currentPlanProgress?.currentDay === day.dayNumber;
+                                
+                                return (
+                                  <button 
+                                    key={day.id}
+                                    id={isCurrent ? "current-journey-day" : undefined}
+                                    onClick={() => {
+                                      if (day.orders.length > 0) {
+                                        setScrollToOrder(day.orders[0]);
+                                        setActiveTab(null);
+                                        toast.success(`Journey: Day ${day.dayNumber}`);
+                                      }
+                                    }}
+                                    className={cn(
+                                      "w-full flex items-center gap-4 p-4 rounded-[1.5rem] border transition-all text-left group",
+                                      isCompleted 
+                                        ? "bg-emerald-50/50 dark:bg-emerald-950/10 border-emerald-100 dark:border-emerald-900/30" 
+                                        : isCurrent
+                                          ? "bg-primary/5 border-primary/20 ring-1 ring-primary/10"
+                                          : "bg-white dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 hover:border-primary/20"
+                                    )}
+                                  >
+                                    <div className={cn(
+                                      "h-10 w-10 rounded-full flex items-center justify-center shrink-0 border-2 transition-all",
+                                      isCompleted 
+                                        ? "bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-500/20" 
+                                        : isCurrent
+                                          ? "bg-primary border-primary text-white shadow-lg shadow-primary/20"
+                                          : "bg-zinc-50 dark:bg-zinc-800 border-zinc-100 dark:border-zinc-800 text-zinc-400 group-hover:border-primary/20"
+                                    )}>
+                                      {isCompleted ? <CheckCircle2 className="h-5 w-5" /> : <span className="text-[11px] font-black">{day.dayNumber}</span>}
+                                    </div>
+                                    <div className="flex flex-col gap-0.5 overflow-hidden">
+                                      <span className={cn(
+                                        "text-[10px] font-black uppercase tracking-tight truncate",
+                                        isCompleted ? "text-emerald-600 dark:text-emerald-400" : isCurrent ? "text-primary" : "text-zinc-900 dark:text-zinc-100"
+                                      )}>
+                                        {day.title || `Day ${day.dayNumber}`}
+                                      </span>
+                                      <span className="text-[9px] font-serif italic text-zinc-500 truncate">
+                                        {day.references.join(", ")}
+                                      </span>
+                                    </div>
+                                    {isCurrent && !isCompleted && (
+                                      <div className="ml-auto">
+                                        <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                                      </div>
+                                    )}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="py-20 text-center text-zinc-400">Journey not found</div>
+                        )}
+                      </div>
+                    ) : (
+                      /* LIST VIEW */
+                      <div className="space-y-6">
+                        {/* User's Active Plans */}
+                        <div className="space-y-3">
+                          <span className="text-[8px] font-black uppercase tracking-[0.3em] text-zinc-300 ml-2">Active Journeys</span>
+                          {(session ? userPlans : localUserPlans).length === 0 ? (
+                            <div className="p-8 text-center rounded-[2rem] border border-dashed border-zinc-200 dark:border-zinc-800">
+                              <p className="text-[10px] font-medium text-zinc-400">No active plans. Start a new journey below.</p>
+                            </div>
+                          ) : (
+                            (session ? userPlans : localUserPlans).map((up: any) => {
+                              const plan = session ? up.plan : allPlans.find((p: any) => p.id === up.planId);
+                              if (!plan) return null;
+                              const progress = Math.round((up.currentDay / plan.totalDays) * 100);
+                              
+                              return (
+                                <div key={up.id} className="p-4 rounded-[2rem] bg-primary/5 border border-primary/10 space-y-3">
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex flex-col">
+                                      <span className="text-[10px] font-black text-primary uppercase tracking-tight">{plan.name}</span>
+                                      <span className="text-[8px] font-medium text-zinc-500">Day {up.currentDay} of {plan.totalDays}</span>
+                                    </div>
+                                    <div className="h-8 w-8 rounded-full bg-white dark:bg-zinc-900 shadow-sm flex items-center justify-center text-[9px] font-black text-primary">
+                                      {progress}%
+                                    </div>
+                                  </div>
+                                  <div className="h-1.5 w-full bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+                                    <div className="h-full bg-primary transition-all" style={{ width: `${progress}%` }} />
+                                  </div>
+                                  <button 
+                                    onClick={() => handleContinuePlan(up)}
+                                    className="w-full py-2 rounded-xl bg-primary text-white text-[8px] font-black uppercase tracking-widest shadow-lg shadow-primary/10"
+                                  >
+                                    Continue Journey
+                                  </button>
+                                </div>
+                              );
+                            })
+                          )}
+                        </div>
+
+                        {/* Available Plans */}
+                        <div className="space-y-3">
+                          <span className="text-[8px] font-black uppercase tracking-[0.3em] text-zinc-300 ml-2">Discover Plans</span>
+                          {allPlans.length === 0 ? (
+                            <div className="p-8 text-center rounded-[2rem] border border-dashed border-zinc-200 dark:border-zinc-800">
+                              <p className="text-[10px] font-medium text-zinc-400">No journeys found on the Sanctuary server.</p>
+                            </div>
+                          ) : (
+                            <div className="grid gap-3">
+                              {allPlans.filter(p => !(session ? userPlans : localUserPlans).some((up: any) => up.planId === p.id)).map(plan => (
+                                <div key={plan.id} className="p-4 rounded-[2rem] bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 hover:border-primary/20 transition-all group text-left">
+                                  <h4 className="text-[11px] font-black text-zinc-900 dark:text-zinc-100 uppercase tracking-tight mb-1">{plan.name}</h4>
+                                  <p className="text-[10px] font-serif italic text-zinc-500 mb-4 leading-relaxed line-clamp-2">{plan.description}</p>
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-[8px] font-black text-zinc-400 uppercase tracking-widest">{plan.totalDays} Days • {plan.category}</span>
+                                    <button 
+                                      onClick={async () => {
+                                        if (session) {
+                                          startPlan.mutate({ planId: plan.id });
+                                        } else {
+                                          await db.userReadingPlans.add({
+                                            userId: currentUserId,
+                                            planId: plan.id,
+                                            currentDay: 1,
+                                            isCompleted: false,
+                                            startedAt: Date.now()
+                                          });
+                                          toast.success("Plan started locally");
+                                        }
+                                      }}
+                                      className="px-4 py-1.5 rounded-full bg-zinc-50 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 text-[8px] font-black uppercase tracking-widest group-hover:bg-primary group-hover:text-white transition-all"
+                                    >
+                                      Start
+                                    </button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {!session && (
                   <div className="px-6 py-6 mt-4 bg-primary/5 rounded-[2.5rem] border border-primary/10 text-center space-y-3">
                     <History className="h-5 w-5 text-primary mx-auto opacity-40" />
@@ -772,12 +1100,35 @@ export function SidebarNav() {
                 )}
 
                 {/* Typography Settings (Moved here) */}
-                <div className="space-y-3 px-1">
-                  <span className="text-[9px] font-black uppercase tracking-widest text-zinc-400 block">Appearance</span>
-                  <div className="p-4 rounded-[2rem] bg-zinc-50 dark:bg-zinc-800/30 flex items-center justify-between border border-zinc-100/50 dark:border-zinc-800/50">
-                    <button onClick={() => setFontSize(fontSize - 1)} className="h-8 w-8 flex items-center justify-center rounded-xl bg-white dark:bg-zinc-700 shadow-sm text-zinc-600"><Minus className="h-3 w-3" /></button>
-                    <span className="text-lg font-black tabular-nums text-zinc-900 dark:text-zinc-100">{fontSize}</span>
-                    <button onClick={() => setFontSize(fontSize + 1)} className="h-8 w-8 flex items-center justify-center rounded-xl bg-white dark:bg-zinc-700 shadow-sm text-zinc-600"><Plus className="h-3 w-3" /></button>
+                <div className="space-y-6 px-1">
+                  <div className="space-y-3">
+                    <span className="text-[9px] font-black uppercase tracking-widest text-zinc-400 block ml-2">Presence Tracking</span>
+                    <button 
+                      onClick={() => setAutoProgress(!autoProgress)}
+                      className="w-full p-4 rounded-[2rem] bg-zinc-50 dark:bg-zinc-800/30 border border-zinc-100/50 dark:border-zinc-800/50 flex items-center justify-between group transition-all hover:border-primary/20"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={cn("h-8 w-8 rounded-xl flex items-center justify-center transition-colors", autoProgress ? "bg-primary/10 text-primary" : "bg-zinc-100 text-zinc-400")}>
+                          <History className="h-4 w-4" />
+                        </div>
+                        <div className="flex flex-col items-start">
+                          <span className="text-[10px] font-bold text-zinc-900 dark:text-zinc-100">Automatic Sync</span>
+                          <span className="text-[8px] font-medium text-zinc-500">Save reading position as you scroll</span>
+                        </div>
+                      </div>
+                      <div className={cn("w-10 h-5 rounded-full transition-all flex items-center px-1", autoProgress ? "bg-primary" : "bg-zinc-200 dark:bg-zinc-700")}>
+                        <div className={cn("h-3 w-3 rounded-full bg-white transition-all shadow-sm", autoProgress ? "translate-x-5" : "translate-x-0")} />
+                      </div>
+                    </button>
+                  </div>
+
+                  <div className="space-y-3">
+                    <span className="text-[9px] font-black uppercase tracking-widest text-zinc-400 block ml-2">Appearance</span>
+                    <div className="p-4 rounded-[2rem] bg-zinc-50 dark:bg-zinc-800/30 flex items-center justify-between border border-zinc-100/50 dark:border-zinc-800/50">
+                      <button onClick={() => setFontSize(fontSize - 1)} className="h-8 w-8 flex items-center justify-center rounded-xl bg-white dark:bg-zinc-700 shadow-sm text-zinc-600 hover:text-primary transition-colors"><Minus className="h-3 w-3" /></button>
+                      <span className="text-lg font-black tabular-nums text-zinc-900 dark:text-zinc-100">{fontSize}</span>
+                      <button onClick={() => setFontSize(fontSize + 1)} className="h-8 w-8 flex items-center justify-center rounded-xl bg-white dark:bg-zinc-700 shadow-sm text-zinc-600 hover:text-primary transition-colors"><Plus className="h-3 w-3" /></button>
+                    </div>
                   </div>
                 </div>
 

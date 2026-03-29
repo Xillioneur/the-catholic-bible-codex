@@ -21,6 +21,10 @@ export function BibleReader() {
 
   const bookmarks = useLiveQuery(() => db.bookmarks.where("userId").equals(currentUserId).toArray(), [currentUserId]) ?? [];
   const highlights = useLiveQuery(() => db.highlights.where("userId").equals(currentUserId).toArray(), [currentUserId]) ?? [];
+  const readVerseIds = useLiveQuery(async () => {
+    const statuses = await db.verseStatuses.where("userId").equals(currentUserId).toArray();
+    return new Set(statuses.filter(s => s.isRead).map(s => s.verseId));
+  }, [currentUserId]) ?? new Set<string>();
   const liturgicalReadings = useReaderStore((state) => state.liturgicalReadings);
   const searchHighlight = useReaderStore((state) => state.searchHighlight);
   const voiceoverCurrentOrder = useReaderStore((state) => state.voiceoverCurrentOrder);
@@ -65,6 +69,7 @@ export function BibleReader() {
                           verse={v}
                           hasBookmark={bookmarks.some(b => b.verseId === v.id)}
                           hasHighlight={highlights.some(h => h.verseId === v.id)}
+                          isRead={readVerseIds.has(v.id)}
                           isLiturgical={liturgicalReadings.some(r => r.orders.includes(v.globalOrder))}
                           isSearchTarget={searchHighlight?.targetOrder === v.globalOrder}
                           isVoiceoverActive={voiceoverCurrentOrder === v.globalOrder}
@@ -101,6 +106,7 @@ const InlineVerse = memo(({
   verse, 
   hasBookmark, 
   hasHighlight, 
+  isRead,
   isLiturgical, 
   isSearchTarget, 
   isVoiceoverActive,
@@ -109,6 +115,7 @@ const InlineVerse = memo(({
   verse: any, 
   hasBookmark: boolean, 
   hasHighlight: boolean, 
+  isRead: boolean,
   isLiturgical: boolean, 
   isSearchTarget: boolean, 
   isVoiceoverActive: boolean,
@@ -123,6 +130,7 @@ const InlineVerse = memo(({
       className={cn(
         "inline cursor-pointer transition-all duration-300 rounded px-1 -mx-0.5 hover:bg-zinc-100 dark:hover:bg-zinc-800 font-serif relative",
         hasHighlight && "bg-yellow-400/10 border-b border-yellow-400/30",
+        isRead && !hasHighlight && "opacity-60",
         isLiturgical && "text-primary font-semibold bg-primary/[0.03] dark:bg-primary/[0.08]",
         isSearchTarget && "ring-2 ring-primary/20 bg-primary/5 rounded-md",
         isVoiceoverActive && "bg-primary/10 ring-1 ring-primary/30"
@@ -134,6 +142,7 @@ const InlineVerse = memo(({
         hasBookmark 
           ? "bg-primary text-white shadow-[0_2px_8px_-2px_rgba(var(--primary-rgb),0.4)] opacity-100 scale-110" 
           : "text-zinc-400 opacity-60",
+        isRead && !hasBookmark && "text-emerald-500 opacity-100",
         isVoiceoverActive && "bg-primary text-white"
       )}>
         {verse.verse}

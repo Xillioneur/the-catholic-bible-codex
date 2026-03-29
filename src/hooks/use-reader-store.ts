@@ -58,6 +58,8 @@ interface ReaderState {
   // Advanced Settings
   fontSize: number;
   setFontSize: (size: number) => void;
+  autoProgress: boolean;
+  setAutoProgress: (enabled: boolean) => void;
   theme: "sanctuary" | "traditional" | "midnight";
   setTheme: (theme: "sanctuary" | "traditional" | "midnight") => void;
 
@@ -126,6 +128,8 @@ export const useReaderStore = create<ReaderState>()(
 
       fontSize: 18,
       setFontSize: (size) => set({ fontSize: size }),
+      autoProgress: true,
+      setAutoProgress: (enabled) => set({ autoProgress: enabled }),
       theme: "sanctuary",
       setTheme: (theme) => set({ theme }),
 
@@ -169,6 +173,7 @@ export const useReaderStore = create<ReaderState>()(
         translationSlug: state.translationSlug,
         currentOrder: state.currentOrder,
         fontSize: state.fontSize,
+        autoProgress: state.autoProgress,
         theme: state.theme,
         isSidebarCollapsed: state.isSidebarCollapsed,
       }),

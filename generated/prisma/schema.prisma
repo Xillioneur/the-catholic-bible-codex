@@ -43,7 +43,7 @@ model Book {
 }
 
 model Verse {
-  id            String      @id @default(cuid())
+  id            String        @id @default(cuid())
   translationId String
   bookId        Int
   chapter       Int
@@ -53,8 +53,9 @@ model Verse {
   bookmarks     Bookmark[]
   highlights    Highlight[]
   notes         Note[]
-  book          Book        @relation(fields: [bookId], references: [id])
-  translation   Translation @relation(fields: [translationId], references: [id])
+  verseStatuses VerseStatus[]
+  book          Book          @relation(fields: [bookId], references: [id])
+  translation   Translation   @relation(fields: [translationId], references: [id])
 
   @@unique([translationId, bookId, chapter, verse])
   @@index([translationId, globalOrder])
@@ -139,20 +140,75 @@ model Session {
 }
 
 model User {
-  id                  String      @id @default(cuid())
+  id                  String            @id @default(cuid())
   name                String?
-  email               String?     @unique
+  email               String?           @unique
   emailVerified       DateTime?
   image               String?
-  lastReadOrder       Int         @default(1)
-  lastReadTranslation String      @default("drb")
-  lastReadAt          DateTime    @default(now())
+  lastReadOrder       Int               @default(1)
+  lastReadTranslation String            @default("drb")
+  lastReadAt          DateTime          @default(now())
+  autoProgress        Boolean           @default(true)
   accounts            Account[]
   bookmarks           Bookmark[]
   highlights          Highlight[]
   notes               Note[]
   posts               Post[]
   sessions            Session[]
+  verseStatuses       VerseStatus[]
+  readingPlans        UserReadingPlan[]
+}
+
+model VerseStatus {
+  id      String   @id @default(cuid())
+  userId  String
+  verseId String
+  isRead  Boolean  @default(false)
+  readAt  DateTime @default(now())
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  verse   Verse    @relation(fields: [verseId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, verseId])
+  @@index([userId])
+}
+
+model ReadingPlan {
+  id          String            @id @default(cuid())
+  slug        String            @unique
+  name        String
+  description String?
+  totalDays   Int
+  category    String            @default("canonical")
+  isPublic    Boolean           @default(true)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  days        ReadingPlanDay[]
+  userPlans   UserReadingPlan[]
+}
+
+model ReadingPlanDay {
+  id         String      @id @default(cuid())
+  planId     String
+  dayNumber  Int
+  title      String?
+  references String[] // e.g. ["Genesis 1", "Psalms 1"]
+  plan       ReadingPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  @@unique([planId, dayNumber])
+}
+
+model UserReadingPlan {
+  id          String      @id @default(cuid())
+  userId      String
+  planId      String
+  currentDay  Int         @default(1)
+  isCompleted Boolean     @default(false)
+  startedAt   DateTime    @default(now())
+  completedAt DateTime?
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan        ReadingPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, planId])
 }
 
 model VerificationToken {

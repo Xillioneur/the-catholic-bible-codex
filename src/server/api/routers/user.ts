@@ -146,7 +146,7 @@ export const userRouter = createTRPCRouter({
 
   getSyncData: protectedProcedure.query(async ({ ctx }) => {
     const userId = ctx.session.user.id;
-    const [notes, highlights, bookmarks] = await Promise.all([
+    const [notes, highlights, bookmarks, verseStatuses] = await Promise.all([
       ctx.db.note.findMany({ 
         where: { userId },
         include: { verse: { include: { translation: true } } }
@@ -166,9 +166,67 @@ export const userRouter = createTRPCRouter({
           } 
         } 
       }),
+      ctx.db.verseStatus.findMany({
+        where: { userId, isRead: true },
+        include: { verse: { include: { translation: true } } }
+      })
     ]);
-    return { notes, highlights, bookmarks };
+    return { notes, highlights, bookmarks, verseStatuses };
   }),
+
+  syncVerseStatuses: protectedProcedure
+    .input(z.array(z.object({
+      globalOrder: z.number(),
+      translationSlug: z.string(),
+      isRead: z.boolean(),
+      readAt: z.number(),
+    })))
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+      
+      for (const s of input) {
+        const verse = await ctx.db.verse.findFirst({
+          where: { 
+            globalOrder: s.globalOrder,
+            translation: { slug: s.translationSlug }
+          }
+        });
+        
+        if (!verse) continue;
+
+        await ctx.db.verseStatus.upsert({
+          where: { userId_verseId: { userId, verseId: verse.id } },
+          update: { isRead: s.isRead, readAt: new Date(s.readAt) },
+          create: { userId, verseId: verse.id, isRead: s.isRead, readAt: new Date(s.readAt) }
+        });
+      }
+      return { success: true };
+    }),
+
+  toggleVerseStatus: protectedProcedure
+    .input(z.object({
+      globalOrder: z.number(),
+      translationSlug: z.string(),
+      isRead: z.boolean(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+      const verse = await ctx.db.verse.findFirst({
+        where: { 
+          globalOrder: input.globalOrder,
+          translation: { slug: input.translationSlug }
+        }
+      });
+      
+      if (!verse) return { success: false };
+
+      await ctx.db.verseStatus.upsert({
+        where: { userId_verseId: { userId, verseId: verse.id } },
+        update: { isRead: input.isRead, readAt: new Date() },
+        create: { userId, verseId: verse.id, isRead: input.isRead, readAt: new Date() }
+      });
+      return { success: true };
+    }),
 
   deleteNote: protectedProcedure
     .input(z.object({
