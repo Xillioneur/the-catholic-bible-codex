@@ -51,6 +51,16 @@ interface ReaderState {
   } | null;
   setSearchHighlight: (highlight: { query: string; targetOrder: number | null } | null) => void;
 
+  // Journey Guide
+  journeyGuide: {
+    planId: string;
+    planName: string;
+    dayNumber: number;
+    orders: number[];
+    references: string[];
+  } | null;
+  setJourneyGuide: (guide: { planId: string; planName: string; dayNumber: number; orders: number[]; references: string[] } | null) => void;
+
   // Sidebar UI
   isSidebarCollapsed: boolean;
   toggleSidebar: () => void;
@@ -122,6 +132,9 @@ export const useReaderStore = create<ReaderState>()(
       setIsSearchOpen: (open) => set({ isSearchOpen: open }),
       searchHighlight: null,
       setSearchHighlight: (highlight) => set({ searchHighlight: highlight }),
+
+      journeyGuide: null,
+      setJourneyGuide: (guide) => set({ journeyGuide: guide }),
 
       isSidebarCollapsed: false,
       toggleSidebar: () => set((state) => ({ isSidebarCollapsed: !state.isSidebarCollapsed })),

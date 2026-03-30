@@ -4,11 +4,15 @@ import { BibleReader } from "~/components/bible-reader";
 import { SidebarNav } from "~/components/sidebar-nav";
 import { SearchDialog } from "~/components/search-dialog";
 import { LiturgicalNavigator } from "~/components/liturgical-navigator";
+import { JourneyGuide } from "~/components/journey-guide";
 import { VoiceoverPlayer } from "~/components/voiceover-player";
 import { VoiceoverManager } from "~/components/voiceover-manager";
 import { SyncStatus } from "./sync-status";
+import { useReaderStore } from "~/hooks/use-reader-store";
 
 export function ReaderLayout() {
+  const currentOrder = useReaderStore((state) => state.currentOrder);
+
   return (
     <main className="flex h-screen bg-background overflow-hidden relative">
       {/* The Floating Sidebar - Truly floating now */}
@@ -23,6 +27,7 @@ export function ReaderLayout() {
 
       <SearchDialog />
       <LiturgicalNavigator />
+      <JourneyGuide currentOrder={currentOrder} />
       <VoiceoverPlayer />
       <VoiceoverManager />
       <SyncStatus />
