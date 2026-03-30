@@ -18260,10 +18260,12 @@ export namespace Prisma {
 
   export type UserReadingPlanAvgAggregateOutputType = {
     currentDay: number | null
+    completedDays: number | null
   }
 
   export type UserReadingPlanSumAggregateOutputType = {
     currentDay: number | null
+    completedDays: number[]
   }
 
   export type UserReadingPlanMinAggregateOutputType = {
@@ -18291,6 +18293,7 @@ export namespace Prisma {
     userId: number
     planId: number
     currentDay: number
+    completedDays: number
     isCompleted: number
     startedAt: number
     completedAt: number
@@ -18300,10 +18303,12 @@ export namespace Prisma {
 
   export type UserReadingPlanAvgAggregateInputType = {
     currentDay?: true
+    completedDays?: true
   }
 
   export type UserReadingPlanSumAggregateInputType = {
     currentDay?: true
+    completedDays?: true
   }
 
   export type UserReadingPlanMinAggregateInputType = {
@@ -18331,6 +18336,7 @@ export namespace Prisma {
     userId?: true
     planId?: true
     currentDay?: true
+    completedDays?: true
     isCompleted?: true
     startedAt?: true
     completedAt?: true
@@ -18428,6 +18434,7 @@ export namespace Prisma {
     userId: string
     planId: string
     currentDay: number
+    completedDays: number[]
     isCompleted: boolean
     startedAt: Date
     completedAt: Date | null
@@ -18457,6 +18464,7 @@ export namespace Prisma {
     userId?: boolean
     planId?: boolean
     currentDay?: boolean
+    completedDays?: boolean
     isCompleted?: boolean
     startedAt?: boolean
     completedAt?: boolean
@@ -18469,6 +18477,7 @@ export namespace Prisma {
     userId?: boolean
     planId?: boolean
     currentDay?: boolean
+    completedDays?: boolean
     isCompleted?: boolean
     startedAt?: boolean
     completedAt?: boolean
@@ -18481,6 +18490,7 @@ export namespace Prisma {
     userId?: boolean
     planId?: boolean
     currentDay?: boolean
+    completedDays?: boolean
     isCompleted?: boolean
     startedAt?: boolean
     completedAt?: boolean
@@ -18493,12 +18503,13 @@ export namespace Prisma {
     userId?: boolean
     planId?: boolean
     currentDay?: boolean
+    completedDays?: boolean
     isCompleted?: boolean
     startedAt?: boolean
     completedAt?: boolean
   }
 
-  export type UserReadingPlanOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "planId" | "currentDay" | "isCompleted" | "startedAt" | "completedAt", ExtArgs["result"]["userReadingPlan"]>
+  export type UserReadingPlanOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "planId" | "currentDay" | "completedDays" | "isCompleted" | "startedAt" | "completedAt", ExtArgs["result"]["userReadingPlan"]>
   export type UserReadingPlanInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     user?: boolean | UserDefaultArgs<ExtArgs>
     plan?: boolean | ReadingPlanDefaultArgs<ExtArgs>
@@ -18523,6 +18534,7 @@ export namespace Prisma {
       userId: string
       planId: string
       currentDay: number
+      completedDays: number[]
       isCompleted: boolean
       startedAt: Date
       completedAt: Date | null
@@ -18955,6 +18967,7 @@ export namespace Prisma {
     readonly userId: FieldRef<"UserReadingPlan", 'String'>
     readonly planId: FieldRef<"UserReadingPlan", 'String'>
     readonly currentDay: FieldRef<"UserReadingPlan", 'Int'>
+    readonly completedDays: FieldRef<"UserReadingPlan", 'Int[]'>
     readonly isCompleted: FieldRef<"UserReadingPlan", 'Boolean'>
     readonly startedAt: FieldRef<"UserReadingPlan", 'DateTime'>
     readonly completedAt: FieldRef<"UserReadingPlan", 'DateTime'>
@@ -20540,6 +20553,7 @@ export namespace Prisma {
     userId: 'userId',
     planId: 'planId',
     currentDay: 'currentDay',
+    completedDays: 'completedDays',
     isCompleted: 'isCompleted',
     startedAt: 'startedAt',
     completedAt: 'completedAt'
@@ -21629,6 +21643,7 @@ export namespace Prisma {
     userId?: StringFilter<"UserReadingPlan"> | string
     planId?: StringFilter<"UserReadingPlan"> | string
     currentDay?: IntFilter<"UserReadingPlan"> | number
+    completedDays?: IntNullableListFilter<"UserReadingPlan">
     isCompleted?: BoolFilter<"UserReadingPlan"> | boolean
     startedAt?: DateTimeFilter<"UserReadingPlan"> | Date | string
     completedAt?: DateTimeNullableFilter<"UserReadingPlan"> | Date | string | null
@@ -21641,6 +21656,7 @@ export namespace Prisma {
     userId?: SortOrder
     planId?: SortOrder
     currentDay?: SortOrder
+    completedDays?: SortOrder
     isCompleted?: SortOrder
     startedAt?: SortOrder
     completedAt?: SortOrderInput | SortOrder
@@ -21657,6 +21673,7 @@ export namespace Prisma {
     userId?: StringFilter<"UserReadingPlan"> | string
     planId?: StringFilter<"UserReadingPlan"> | string
     currentDay?: IntFilter<"UserReadingPlan"> | number
+    completedDays?: IntNullableListFilter<"UserReadingPlan">
     isCompleted?: BoolFilter<"UserReadingPlan"> | boolean
     startedAt?: DateTimeFilter<"UserReadingPlan"> | Date | string
     completedAt?: DateTimeNullableFilter<"UserReadingPlan"> | Date | string | null
@@ -21669,6 +21686,7 @@ export namespace Prisma {
     userId?: SortOrder
     planId?: SortOrder
     currentDay?: SortOrder
+    completedDays?: SortOrder
     isCompleted?: SortOrder
     startedAt?: SortOrder
     completedAt?: SortOrderInput | SortOrder
@@ -21687,6 +21705,7 @@ export namespace Prisma {
     userId?: StringWithAggregatesFilter<"UserReadingPlan"> | string
     planId?: StringWithAggregatesFilter<"UserReadingPlan"> | string
     currentDay?: IntWithAggregatesFilter<"UserReadingPlan"> | number
+    completedDays?: IntNullableListFilter<"UserReadingPlan">
     isCompleted?: BoolWithAggregatesFilter<"UserReadingPlan"> | boolean
     startedAt?: DateTimeWithAggregatesFilter<"UserReadingPlan"> | Date | string
     completedAt?: DateTimeNullableWithAggregatesFilter<"UserReadingPlan"> | Date | string | null
@@ -22751,6 +22770,7 @@ export namespace Prisma {
   export type UserReadingPlanCreateInput = {
     id?: string
     currentDay?: number
+    completedDays?: UserReadingPlanCreatecompletedDaysInput | number[]
     isCompleted?: boolean
     startedAt?: Date | string
     completedAt?: Date | string | null
@@ -22763,6 +22783,7 @@ export namespace Prisma {
     userId: string
     planId: string
     currentDay?: number
+    completedDays?: UserReadingPlanCreatecompletedDaysInput | number[]
     isCompleted?: boolean
     startedAt?: Date | string
     completedAt?: Date | string | null
@@ -22771,6 +22792,7 @@ export namespace Prisma {
   export type UserReadingPlanUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     currentDay?: IntFieldUpdateOperationsInput | number
+    completedDays?: UserReadingPlanUpdatecompletedDaysInput | number[]
     isCompleted?: BoolFieldUpdateOperationsInput | boolean
     startedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -22783,6 +22805,7 @@ export namespace Prisma {
     userId?: StringFieldUpdateOperationsInput | string
     planId?: StringFieldUpdateOperationsInput | string
     currentDay?: IntFieldUpdateOperationsInput | number
+    completedDays?: UserReadingPlanUpdatecompletedDaysInput | number[]
     isCompleted?: BoolFieldUpdateOperationsInput | boolean
     startedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -22793,6 +22816,7 @@ export namespace Prisma {
     userId: string
     planId: string
     currentDay?: number
+    completedDays?: UserReadingPlanCreatecompletedDaysInput | number[]
     isCompleted?: boolean
     startedAt?: Date | string
     completedAt?: Date | string | null
@@ -22801,6 +22825,7 @@ export namespace Prisma {
   export type UserReadingPlanUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
     currentDay?: IntFieldUpdateOperationsInput | number
+    completedDays?: UserReadingPlanUpdatecompletedDaysInput | number[]
     isCompleted?: BoolFieldUpdateOperationsInput | boolean
     startedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -22811,6 +22836,7 @@ export namespace Prisma {
     userId?: StringFieldUpdateOperationsInput | string
     planId?: StringFieldUpdateOperationsInput | string
     currentDay?: IntFieldUpdateOperationsInput | number
+    completedDays?: UserReadingPlanUpdatecompletedDaysInput | number[]
     isCompleted?: BoolFieldUpdateOperationsInput | boolean
     startedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -23694,6 +23720,14 @@ export namespace Prisma {
     dayNumber?: SortOrder
   }
 
+  export type IntNullableListFilter<$PrismaModel = never> = {
+    equals?: number[] | ListIntFieldRefInput<$PrismaModel> | null
+    has?: number | IntFieldRefInput<$PrismaModel> | null
+    hasEvery?: number[] | ListIntFieldRefInput<$PrismaModel>
+    hasSome?: number[] | ListIntFieldRefInput<$PrismaModel>
+    isEmpty?: boolean
+  }
+
   export type UserReadingPlanUserIdPlanIdCompoundUniqueInput = {
     userId: string
     planId: string
@@ -23704,6 +23738,7 @@ export namespace Prisma {
     userId?: SortOrder
     planId?: SortOrder
     currentDay?: SortOrder
+    completedDays?: SortOrder
     isCompleted?: SortOrder
     startedAt?: SortOrder
     completedAt?: SortOrder
@@ -23711,6 +23746,7 @@ export namespace Prisma {
 
   export type UserReadingPlanAvgOrderByAggregateInput = {
     currentDay?: SortOrder
+    completedDays?: SortOrder
   }
 
   export type UserReadingPlanMaxOrderByAggregateInput = {
@@ -23735,6 +23771,7 @@ export namespace Prisma {
 
   export type UserReadingPlanSumOrderByAggregateInput = {
     currentDay?: SortOrder
+    completedDays?: SortOrder
   }
 
   export type VerificationTokenIdentifierTokenCompoundUniqueInput = {
@@ -24673,6 +24710,10 @@ export namespace Prisma {
     update?: XOR<XOR<ReadingPlanUpdateToOneWithWhereWithoutDaysInput, ReadingPlanUpdateWithoutDaysInput>, ReadingPlanUncheckedUpdateWithoutDaysInput>
   }
 
+  export type UserReadingPlanCreatecompletedDaysInput = {
+    set: number[]
+  }
+
   export type UserCreateNestedOneWithoutReadingPlansInput = {
     create?: XOR<UserCreateWithoutReadingPlansInput, UserUncheckedCreateWithoutReadingPlansInput>
     connectOrCreate?: UserCreateOrConnectWithoutReadingPlansInput
@@ -24683,6 +24724,11 @@ export namespace Prisma {
     create?: XOR<ReadingPlanCreateWithoutUserPlansInput, ReadingPlanUncheckedCreateWithoutUserPlansInput>
     connectOrCreate?: ReadingPlanCreateOrConnectWithoutUserPlansInput
     connect?: ReadingPlanWhereUniqueInput
+  }
+
+  export type UserReadingPlanUpdatecompletedDaysInput = {
+    set?: number[]
+    push?: number | number[]
   }
 
   export type UserUpdateOneRequiredWithoutReadingPlansNestedInput = {
@@ -26279,6 +26325,7 @@ export namespace Prisma {
   export type UserReadingPlanCreateWithoutUserInput = {
     id?: string
     currentDay?: number
+    completedDays?: UserReadingPlanCreatecompletedDaysInput | number[]
     isCompleted?: boolean
     startedAt?: Date | string
     completedAt?: Date | string | null
@@ -26289,6 +26336,7 @@ export namespace Prisma {
     id?: string
     planId: string
     currentDay?: number
+    completedDays?: UserReadingPlanCreatecompletedDaysInput | number[]
     isCompleted?: boolean
     startedAt?: Date | string
     completedAt?: Date | string | null
@@ -26480,6 +26528,7 @@ export namespace Prisma {
     userId?: StringFilter<"UserReadingPlan"> | string
     planId?: StringFilter<"UserReadingPlan"> | string
     currentDay?: IntFilter<"UserReadingPlan"> | number
+    completedDays?: IntNullableListFilter<"UserReadingPlan">
     isCompleted?: BoolFilter<"UserReadingPlan"> | boolean
     startedAt?: DateTimeFilter<"UserReadingPlan"> | Date | string
     completedAt?: DateTimeNullableFilter<"UserReadingPlan"> | Date | string | null
@@ -26672,6 +26721,7 @@ export namespace Prisma {
   export type UserReadingPlanCreateWithoutPlanInput = {
     id?: string
     currentDay?: number
+    completedDays?: UserReadingPlanCreatecompletedDaysInput | number[]
     isCompleted?: boolean
     startedAt?: Date | string
     completedAt?: Date | string | null
@@ -26682,6 +26732,7 @@ export namespace Prisma {
     id?: string
     userId: string
     currentDay?: number
+    completedDays?: UserReadingPlanCreatecompletedDaysInput | number[]
     isCompleted?: boolean
     startedAt?: Date | string
     completedAt?: Date | string | null
@@ -27228,6 +27279,7 @@ export namespace Prisma {
     id?: string
     planId: string
     currentDay?: number
+    completedDays?: UserReadingPlanCreatecompletedDaysInput | number[]
     isCompleted?: boolean
     startedAt?: Date | string
     completedAt?: Date | string | null
@@ -27403,6 +27455,7 @@ export namespace Prisma {
   export type UserReadingPlanUpdateWithoutUserInput = {
     id?: StringFieldUpdateOperationsInput | string
     currentDay?: IntFieldUpdateOperationsInput | number
+    completedDays?: UserReadingPlanUpdatecompletedDaysInput | number[]
     isCompleted?: BoolFieldUpdateOperationsInput | boolean
     startedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -27413,6 +27466,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     planId?: StringFieldUpdateOperationsInput | string
     currentDay?: IntFieldUpdateOperationsInput | number
+    completedDays?: UserReadingPlanUpdatecompletedDaysInput | number[]
     isCompleted?: BoolFieldUpdateOperationsInput | boolean
     startedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -27422,6 +27476,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     planId?: StringFieldUpdateOperationsInput | string
     currentDay?: IntFieldUpdateOperationsInput | number
+    completedDays?: UserReadingPlanUpdatecompletedDaysInput | number[]
     isCompleted?: BoolFieldUpdateOperationsInput | boolean
     startedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -27438,6 +27493,7 @@ export namespace Prisma {
     id?: string
     userId: string
     currentDay?: number
+    completedDays?: UserReadingPlanCreatecompletedDaysInput | number[]
     isCompleted?: boolean
     startedAt?: Date | string
     completedAt?: Date | string | null
@@ -27467,6 +27523,7 @@ export namespace Prisma {
   export type UserReadingPlanUpdateWithoutPlanInput = {
     id?: StringFieldUpdateOperationsInput | string
     currentDay?: IntFieldUpdateOperationsInput | number
+    completedDays?: UserReadingPlanUpdatecompletedDaysInput | number[]
     isCompleted?: BoolFieldUpdateOperationsInput | boolean
     startedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -27477,6 +27534,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     userId?: StringFieldUpdateOperationsInput | string
     currentDay?: IntFieldUpdateOperationsInput | number
+    completedDays?: UserReadingPlanUpdatecompletedDaysInput | number[]
     isCompleted?: BoolFieldUpdateOperationsInput | boolean
     startedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
@@ -27486,6 +27544,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     userId?: StringFieldUpdateOperationsInput | string
     currentDay?: IntFieldUpdateOperationsInput | number
+    completedDays?: UserReadingPlanUpdatecompletedDaysInput | number[]
     isCompleted?: BoolFieldUpdateOperationsInput | boolean
     startedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     completedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null

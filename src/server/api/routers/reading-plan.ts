@@ -124,6 +124,7 @@ export const readingPlanRouter = createTRPCRouter({
         create: {
           userId: ctx.session.user.id,
           planId: input.planId,
+          completedDays: [],
         },
       });
     }),
@@ -160,6 +161,47 @@ export const readingPlanRouter = createTRPCRouter({
             planId: input.planId,
           },
         },
+      });
+    }),
+
+  toggleDayCompletion: protectedProcedure
+    .input(z.object({ 
+      planId: z.string(), 
+      dayNumber: z.number(),
+      completed: z.boolean()
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+      const userPlan = await ctx.db.userReadingPlan.findUnique({
+        where: { userId_planId: { userId, planId: input.planId } }
+      });
+
+      if (!userPlan) return { success: false };
+
+      // FIX: Ensure completedDays is treated as array and use input.dayNumber
+      let newCompletedDays = [...(userPlan.completedDays ?? [])];
+      if (input.completed) {
+        if (!newCompletedDays.includes(input.dayNumber)) {
+          newCompletedDays.push(input.dayNumber);
+        }
+      } else {
+        newCompletedDays = newCompletedDays.filter(d => d !== input.dayNumber);
+      }
+
+      const plan = await ctx.db.readingPlan.findUnique({
+        where: { id: input.planId },
+        select: { totalDays: true }
+      });
+
+      const isAllFinished = newCompletedDays.length >= (plan?.totalDays || 0);
+
+      return ctx.db.userReadingPlan.update({
+        where: { userId_planId: { userId, planId: input.planId } },
+        data: {
+          completedDays: newCompletedDays,
+          isCompleted: isAllFinished,
+          completedAt: isAllFinished ? new Date() : null,
+        }
       });
     }),
 

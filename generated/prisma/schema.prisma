@@ -198,15 +198,16 @@ model ReadingPlanDay {
 }
 
 model UserReadingPlan {
-  id          String      @id @default(cuid())
-  userId      String
-  planId      String
-  currentDay  Int         @default(1)
-  isCompleted Boolean     @default(false)
-  startedAt   DateTime    @default(now())
-  completedAt DateTime?
-  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  plan        ReadingPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
+  id            String      @id @default(cuid())
+  userId        String
+  planId        String
+  currentDay    Int         @default(1)
+  completedDays Int[]       @default([])
+  isCompleted   Boolean     @default(false)
+  startedAt     DateTime    @default(now())
+  completedAt   DateTime?
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan          ReadingPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
 
   @@unique([userId, planId])
 }

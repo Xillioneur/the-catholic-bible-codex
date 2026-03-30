@@ -82,6 +82,7 @@ export interface LocalUserReadingPlan {
   userId: string;
   planId: string;
   currentDay: number;
+  completedDays: number[];
   isCompleted: boolean;
   startedAt: number;
   completedAt?: number;
@@ -99,8 +100,8 @@ export class VerbumDominiDB extends Dexie {
 
   constructor() {
     super("VerbumDominiDB");
-    // Version 6: Adding globalOrder to verseStatuses
-    this.version(6).stores({
+    // Version 7: Explicit day completion tracking
+    this.version(7).stores({
       verses: "id, globalOrder, translationId, [translationId+globalOrder]",
       bookmarks: "++id, userId, verseId, translationSlug, [userId+verseId], [userId+translationSlug+globalOrder]",
       highlights: "++id, userId, verseId, [userId+verseId], [userId+translationSlug+globalOrder]",

@@ -65,6 +65,25 @@ export function ProgressSyncer() {
     hasPulledCloudData.current = false;
   }, [currentUserId]);
 
+  // Data Migration: Ensure old records have globalOrder and translationSlug
+  useEffect(() => {
+    if (!localVerseStatuses) return;
+    const migrate = async () => {
+      for (const s of localVerseStatuses) {
+        if (!s.globalOrder || !s.translationSlug) {
+          const verse = await db.verses.get(s.verseId);
+          if (verse) {
+            await db.verseStatuses.update(s.id!, {
+              globalOrder: verse.globalOrder,
+              translationSlug: verse.translationId
+            });
+          }
+        }
+      }
+    };
+    void migrate();
+  }, [localVerseStatuses]);
+
   // Initial Sync from DB to LocalStore (Progress only)
   useEffect(() => {
     if (!session) {
@@ -83,7 +102,7 @@ export function ProgressSyncer() {
       }
       hasInitialSync.current = true;
     }
-  }, [profile, setTranslationSlug, setCurrentOrder, setScrollToOrder]);
+  }, [profile, session, setTranslationSlug, setCurrentOrder, setScrollToOrder]);
 
   // Initial Pull from Cloud to Dexie (The Great Restoration)
   useEffect(() => {
@@ -218,13 +237,14 @@ export function ProgressSyncer() {
     }, 5000);
 
     return () => clearTimeout(timer);
-  }, [currentOrder, translationSlug, session]);
+  }, [currentOrder, translationSlug, session, autoProgress]);
 
   // Auto-mark current verse as read (Advanced Mastery)
   useEffect(() => {
     if (!autoProgress || currentOrder <= 1) return;
 
     const timer = setTimeout(async () => {
+      // Find the verse in Dexie
       const verse = await db.verses
         .where("[translationId+globalOrder]")
         .equals([translationSlug, currentOrder])
@@ -236,9 +256,14 @@ export function ProgressSyncer() {
           .first();
         
         if (!exists || !exists.isRead) {
-          console.log("[PROGRESS] Auto-marking verse as read:", currentOrder);
+          console.log(`[PROGRESS] Auto-marking verse as read: ${currentOrder} (${translationSlug})`);
           if (exists) {
-            await db.verseStatuses.update(exists.id!, { isRead: true, readAt: Date.now() });
+            await db.verseStatuses.update(exists.id!, { 
+              isRead: true, 
+              readAt: Date.now(),
+              globalOrder: verse.globalOrder,
+              translationSlug: verse.translationId
+            });
           } else {
             await db.verseStatuses.add({
               userId: currentUserId,
@@ -334,11 +359,10 @@ export function ProgressSyncer() {
       const payload = [];
       for (const s of localVerseStatuses) {
         if (!s.isRead) continue;
-        const verse = await db.verses.get(s.verseId);
-        if (verse) {
+        if (s.globalOrder && s.translationSlug) {
           payload.push({
-            globalOrder: verse.globalOrder,
-            translationSlug: verse.translationId,
+            globalOrder: s.globalOrder,
+            translationSlug: s.translationSlug,
             isRead: true,
             readAt: s.readAt,
           });

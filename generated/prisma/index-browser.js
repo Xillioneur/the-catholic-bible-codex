@@ -264,6 +264,7 @@ exports.Prisma.UserReadingPlanScalarFieldEnum = {
   userId: 'userId',
   planId: 'planId',
   currentDay: 'currentDay',
+  completedDays: 'completedDays',
   isCompleted: 'isCompleted',
   startedAt: 'startedAt',
   completedAt: 'completedAt'
