@@ -63,6 +63,8 @@ interface ReaderState {
     references: string[];
   } | null;
   setJourneyGuide: (guide: { planId: string; planName: string; planSlug: string; dayNumber: number; orders: number[]; references: string[] } | null) => void;
+  isJourneyGuideMinimized: boolean;
+  setIsJourneyGuideMinimized: (minimized: boolean) => void;
 
   // Journey Session Progress (tracks specifically which assigned verses have been scrolled past)
   journeySeenOrders: Record<string, number[]>; // planId-dayNumber -> array of globalOrders
@@ -146,6 +148,8 @@ export const useReaderStore = create<ReaderState>()(
 
       journeyGuide: null,
       setJourneyGuide: (guide) => set({ journeyGuide: guide }),
+      isJourneyGuideMinimized: false,
+      setIsJourneyGuideMinimized: (minimized) => set({ isJourneyGuideMinimized: minimized }),
 
       journeySeenOrders: {},
       addJourneySeenOrder: (key, orders) => set((state) => {
