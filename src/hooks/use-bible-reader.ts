@@ -25,6 +25,7 @@ export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>
   const fontSize = useReaderStore((state) => state.fontSize);
   const currentOrderStore = useReaderStore((state) => state.currentOrder);
   const setCurrentOrderStore = useReaderStore((state) => state.setCurrentOrder);
+  const setLastVisibleOrderStore = useReaderStore((state) => state.setLastVisibleOrder);
   const setTotalVerseCount = useReaderStore((state) => state.setTotalVerseCount);
 
   const utils = api.useUtils();
@@ -217,7 +218,11 @@ export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>
     
     // SYNC GLOBAL ORDER (Precise Visibility Calculation)
     const scrollTop = parentRef.current.scrollTop;
+    const viewportHeight = parentRef.current.clientHeight;
+    const scrollBottom = scrollTop + viewportHeight;
+    
     let currentGlobalOrder = state.currentOrder;
+    let lastGlobalOrder = state.lastVisibleOrder;
     
     // Find the first item that is actually visible (crosses scrollTop)
     const topVisibleItem = virtualItems.find(item => {
@@ -225,27 +230,44 @@ export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>
       return itemEnd > scrollTop;
     });
 
+    // Find the last item that is actually visible (crosses scrollBottom)
+    const bottomVisibleItem = [...virtualItems].reverse().find(item => {
+      return item.start < scrollBottom;
+    });
+
     if (topVisibleItem) {
       const row = rows[topVisibleItem.index];
       if (row) {
         if (row.type === "prose-block") {
-          // Calculate which verse within the block is at the top
           const delta = Math.max(0, scrollTop - topVisibleItem.start);
           const percentScrolled = delta / topVisibleItem.size;
-          const verseIndex = Math.min(
-            row.verses.length - 1,
-            Math.floor(percentScrolled * row.verses.length)
-          );
+          const verseIndex = Math.min(row.verses.length - 1, Math.floor(percentScrolled * row.verses.length));
           currentGlobalOrder = row.verses[verseIndex].globalOrder;
         } else if (row.firstOrder) {
           currentGlobalOrder = row.firstOrder;
         }
       }
     }
+
+    if (bottomVisibleItem) {
+      const row = rows[bottomVisibleItem.index];
+      if (row) {
+        if (row.type === "prose-block") {
+          const delta = Math.min(bottomVisibleItem.size, scrollBottom - bottomVisibleItem.start);
+          const percentVisible = delta / bottomVisibleItem.size;
+          const verseIndex = Math.min(row.verses.length - 1, Math.floor(percentVisible * row.verses.length));
+          lastGlobalOrder = row.verses[verseIndex].globalOrder;
+        } else if (row.lastOrder || row.firstOrder) {
+          lastGlobalOrder = row.lastOrder || row.firstOrder;
+        }
+      }
+    }
     
     if (state.currentOrder !== currentGlobalOrder) {
-      console.log("[READER] Order update:", currentGlobalOrder);
       setCurrentOrderStore(currentGlobalOrder);
+    }
+    if (state.lastVisibleOrder !== lastGlobalOrder) {
+      setLastVisibleOrderStore(lastGlobalOrder);
     }
 
     // Sync Book/Chapter based on the same precise row

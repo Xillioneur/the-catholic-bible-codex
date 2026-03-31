@@ -228,6 +228,15 @@ export const userRouter = createTRPCRouter({
       return { success: true };
     }),
 
+  resetVerseProgress: protectedProcedure
+    .mutation(async ({ ctx }) => {
+      const userId = ctx.session.user.id;
+      await ctx.db.verseStatus.deleteMany({
+        where: { userId }
+      });
+      return { success: true };
+    }),
+
   deleteNote: protectedProcedure
     .input(z.object({
       globalOrder: z.number(),

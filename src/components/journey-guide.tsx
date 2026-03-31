@@ -13,7 +13,7 @@ import {
   Compass
 } from "lucide-react";
 import { cn } from "~/lib/utils";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { db } from "~/lib/db";
 import { useLiveQuery } from "dexie-react-hooks";
 import { api } from "~/trpc/react";
@@ -28,12 +28,17 @@ export function JourneyGuide({ currentOrder }: JourneyGuideProps) {
   const { data: session } = useSession();
   const utils = api.useUtils();
   const journeyGuide = useReaderStore((state) => state.journeyGuide);
+  const lastVisibleOrder = useReaderStore((state) => state.lastVisibleOrder);
   const setJourneyGuide = useReaderStore((state) => state.setJourneyGuide);
   const setScrollToOrder = useReaderStore((state) => state.setScrollToOrder);
-  const translationSlug = useReaderStore((state) => state.translationSlug);
+  const journeySeenOrders = useReaderStore((state) => state.journeySeenOrders);
+  const addJourneySeenOrder = useReaderStore((state) => state.addJourneySeenOrder);
   
   const [isWarping, setIsWarping] = useState(false);
+  
   const currentUserId = session?.user?.id ?? "guest";
+  const progressKey = journeyGuide ? `${journeyGuide.planId}-${journeyGuide.dayNumber}` : null;
+  const seenOrdersForDay = progressKey ? journeySeenOrders[progressKey] || [] : [];
 
   const localVerseStatuses = useLiveQuery(
     () => db.verseStatuses.where("userId").equals(currentUserId).toArray(),
@@ -47,45 +52,74 @@ export function JourneyGuide({ currentOrder }: JourneyGuideProps) {
     }
   });
 
-  const updatePlanProgress = api.readingPlan.updateProgress.useMutation({
-    onSuccess: () => utils.readingPlan.getUserPlans.invalidate()
-  });
+  // 1. Track assigned verses as they pass through the viewport
+  useEffect(() => {
+    if (journeyGuide && progressKey) {
+      const assigned = journeyGuide.orders;
+      // Find assigned verses currently in view (between top and bottom of viewport)
+      const newlySeen = assigned.filter(o => o >= currentOrder && o <= lastVisibleOrder);
+      
+      if (newlySeen.length > 0) {
+        addJourneySeenOrder(progressKey, newlySeen);
+      }
+    }
+  }, [currentOrder, lastVisibleOrder, journeyGuide, progressKey, addJourneySeenOrder]);
 
-  // Calculate real-time progress for the current day
-  const { readCount, totalCount, firstUnreadOrder, isFullyRead } = useMemo(() => {
-    if (!journeyGuide) return { readCount: 0, totalCount: 0, firstUnreadOrder: null, isFullyRead: false };
+  const { readCount, totalCount, firstUnreadOrder, isFullyRead, lastProgressOrder } = useMemo(() => {
+    if (!journeyGuide) return { readCount: 0, totalCount: 0, firstUnreadOrder: null, isFullyRead: false, lastProgressOrder: 0 };
     
     const dayOrders = journeyGuide.orders;
-    const readOrders = new Set(
-      localVerseStatuses
+    
+    // Progress is based on unique assigned verses seen in viewport
+    const seenSet = new Set(seenOrdersForDay);
+    
+    // Also include manually checkmarked verses for completion
+    const manualReadOrders = localVerseStatuses
         .filter(s => s.isRead && dayOrders.includes(s.globalOrder))
-        .map(s => s.globalOrder)
-    );
-
-    const firstUnread = dayOrders.find(o => !readOrders.has(o)) ?? null;
+        .map(s => s.globalOrder);
+    
+    const combinedSet = new Set([...Array.from(seenSet), ...manualReadOrders]);
+    const firstUnread = dayOrders.find(o => !combinedSet.has(o)) ?? null;
+    const maxSeen = seenOrdersForDay.length > 0 ? Math.max(...seenOrdersForDay) : 0;
 
     return {
-      readCount: readOrders.size,
+      readCount: combinedSet.size,
       totalCount: dayOrders.length,
       firstUnreadOrder: firstUnread,
-      isFullyRead: readOrders.size === dayOrders.length && dayOrders.length > 0
+      isFullyRead: combinedSet.size >= dayOrders.length && dayOrders.length > 0,
+      lastProgressOrder: maxSeen
     };
-  }, [journeyGuide, localVerseStatuses]);
+  }, [journeyGuide, localVerseStatuses, seenOrdersForDay]);
 
   if (!journeyGuide) return null;
 
+  // Visual Progress is exactly (verses seen / total verses)
   const progressPercent = Math.round((readCount / totalCount) * 100);
   
-  // Calculate relative distance
-  const targetOrder = firstUnreadOrder ?? journeyGuide.orders[journeyGuide.orders.length - 1] ?? currentOrder;
+  // Navigation
+  const startOrder = journeyGuide.orders[0]!;
+  const endOrder = journeyGuide.orders[journeyGuide.orders.length - 1]!;
+  
+  // Target is the first unread or the furthest seen point
+  const targetOrder = firstUnreadOrder ?? lastProgressOrder ?? startOrder;
   const diff = targetOrder - currentOrder;
   const isAbove = diff < 0;
-  const isHere = Math.abs(diff) <= 1;
+  
+  // We are "here" if the viewport contains any part of the day's range
+  const isHere = lastVisibleOrder >= startOrder && currentOrder <= endOrder;
 
   const handleWarp = () => {
     if (targetOrder) {
       setIsWarping(true);
       setScrollToOrder(targetOrder);
+      setTimeout(() => setIsWarping(false), 1000);
+    }
+  };
+
+  const handleGoToStart = () => {
+    if (startOrder) {
+      setIsWarping(true);
+      setScrollToOrder(startOrder);
       setTimeout(() => setIsWarping(false), 1000);
     }
   };
@@ -109,14 +143,17 @@ export function JourneyGuide({ currentOrder }: JourneyGuideProps) {
           if (!newCompletedDays.includes(journeyGuide.dayNumber)) {
             newCompletedDays.push(journeyGuide.dayNumber);
           }
-          await db.userReadingPlans.update(userPlan.id!, { completedDays: newCompletedDays });
+          await db.userReadingPlans.update(userPlan.id!, { 
+            completedDays: newCompletedDays,
+            currentDay: Math.min(journeyGuide.dayNumber + 1, 365) // Max days guard
+          });
         }
       }
       
       toast.success(`Day ${journeyGuide.dayNumber} Sealed!`);
-      
-      // Auto-close guide if finished
-      if (isFullyRead) setJourneyGuide(null);
+      setJourneyGuide(null);
+      // Trigger sidebar to open plans
+      window.dispatchEvent(new CustomEvent("open-reading-plans"));
     } catch (e) {
       toast.error("Failed to seal day");
     }
@@ -177,28 +214,27 @@ export function JourneyGuide({ currentOrder }: JourneyGuideProps) {
                   Seal Amen
                 </button>
               ) : (
-                <button 
-                  onClick={handleWarp}
-                  disabled={isWarping || isHere}
-                  className={cn(
-                    "px-4 rounded-xl flex items-center gap-2 text-[8px] font-black uppercase tracking-widest transition-all",
-                    isHere 
-                      ? "bg-primary/5 text-primary cursor-default"
-                      : "bg-primary text-white shadow-lg shadow-primary/20 hover:scale-105 active:scale-95"
+                <div className="flex gap-1">
+                  {!isHere && (
+                    <button 
+                      onClick={handleGoToStart}
+                      className="px-3 bg-zinc-100 dark:bg-zinc-800 text-zinc-500 rounded-xl flex items-center gap-2 text-[8px] font-black uppercase tracking-widest hover:bg-zinc-200 transition-all"
+                    >
+                      Start
+                    </button>
                   )}
-                >
-                  {isHere ? (
-                    <>
-                      <MapPin className="h-3 w-3" />
-                      Reading
-                    </>
-                  ) : (
-                    <>
-                      {isAbove ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />}
-                      Resume
-                    </>
-                  )}
-                </button>
+                  <button 
+                    onClick={handleWarp}
+                    disabled={isWarping}
+                    className={cn(
+                      "px-4 rounded-xl flex items-center gap-2 text-[8px] font-black uppercase tracking-widest transition-all",
+                      "bg-primary text-white shadow-lg shadow-primary/20 hover:scale-105 active:scale-95"
+                    )}
+                  >
+                    {isAbove ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />}
+                    {isHere ? "Next" : "Resume"}
+                  </button>
+                </div>
               )}
             </div>
           </div>

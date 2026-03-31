@@ -12,6 +12,7 @@ export function ProgressSyncer() {
   const currentUserId = session?.user?.id ?? "guest";
   
   const currentOrder = useReaderStore((state) => state.currentOrder);
+  const lastVisibleOrder = useReaderStore((state) => state.lastVisibleOrder);
   const translationSlug = useReaderStore((state) => state.translationSlug);
   const setScrollToOrder = useReaderStore((state) => state.setScrollToOrder);
   const setCurrentOrder = useReaderStore((state) => state.setCurrentOrder);
@@ -238,48 +239,6 @@ export function ProgressSyncer() {
 
     return () => clearTimeout(timer);
   }, [currentOrder, translationSlug, session, autoProgress]);
-
-  // Auto-mark current verse as read (Advanced Mastery)
-  useEffect(() => {
-    if (!autoProgress || currentOrder <= 1) return;
-
-    const timer = setTimeout(async () => {
-      // Find the verse in Dexie
-      const verse = await db.verses
-        .where("[translationId+globalOrder]")
-        .equals([translationSlug, currentOrder])
-        .first();
-      
-      if (verse) {
-        const exists = await db.verseStatuses.where("[userId+verseId]")
-          .equals([currentUserId, verse.id])
-          .first();
-        
-        if (!exists || !exists.isRead) {
-          console.log(`[PROGRESS] Auto-marking verse as read: ${currentOrder} (${translationSlug})`);
-          if (exists) {
-            await db.verseStatuses.update(exists.id!, { 
-              isRead: true, 
-              readAt: Date.now(),
-              globalOrder: verse.globalOrder,
-              translationSlug: verse.translationId
-            });
-          } else {
-            await db.verseStatuses.add({
-              userId: currentUserId,
-              verseId: verse.id,
-              globalOrder: verse.globalOrder,
-              translationSlug: verse.translationId,
-              isRead: true,
-              readAt: Date.now()
-            });
-          }
-        }
-      }
-    }, 2000); // 2 second dwell time
-
-    return () => clearTimeout(timer);
-  }, [currentOrder, translationSlug, currentUserId, autoProgress]);
 
   // Sync Highlights to Server (Stable Ref)
   useEffect(() => {

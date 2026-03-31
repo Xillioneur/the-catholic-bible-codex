@@ -19,6 +19,8 @@ interface ReaderState {
   // LIVE POSITION
   currentOrder: number;
   setCurrentOrder: (order: number) => void;
+  lastVisibleOrder: number;
+  setLastVisibleOrder: (order: number) => void;
   progress: number;
   setProgress: (val: number) => void;
   totalVerseCount: number;
@@ -60,6 +62,11 @@ interface ReaderState {
     references: string[];
   } | null;
   setJourneyGuide: (guide: { planId: string; planName: string; dayNumber: number; orders: number[]; references: string[] } | null) => void;
+
+  // Journey Session Progress (tracks specifically which assigned verses have been scrolled past)
+  journeySeenOrders: Record<string, number[]>; // planId-dayNumber -> array of globalOrders
+  addJourneySeenOrder: (key: string, orders: number[]) => void;
+  clearJourneyProgress: () => void;
 
   // Sidebar UI
   isSidebarCollapsed: boolean;
@@ -111,6 +118,8 @@ export const useReaderStore = create<ReaderState>()(
       
       currentOrder: 1,
       setCurrentOrder: (order) => set({ currentOrder: order }),
+      lastVisibleOrder: 1,
+      setLastVisibleOrder: (order) => set({ lastVisibleOrder: order }),
       progress: 0,
       setProgress: (val) => set({ progress: val }),
       totalVerseCount: 0,
@@ -135,6 +144,20 @@ export const useReaderStore = create<ReaderState>()(
 
       journeyGuide: null,
       setJourneyGuide: (guide) => set({ journeyGuide: guide }),
+
+      journeySeenOrders: {},
+      addJourneySeenOrder: (key, orders) => set((state) => {
+        const existing = state.journeySeenOrders[key] || [];
+        const newOrders = orders.filter(o => !existing.includes(o));
+        if (newOrders.length === 0) return state;
+        return {
+          journeySeenOrders: {
+            ...state.journeySeenOrders,
+            [key]: [...existing, ...newOrders]
+          }
+        };
+      }),
+      clearJourneyProgress: () => set({ journeySeenOrders: {} }),
 
       isSidebarCollapsed: false,
       toggleSidebar: () => set((state) => ({ isSidebarCollapsed: !state.isSidebarCollapsed })),
@@ -185,6 +208,8 @@ export const useReaderStore = create<ReaderState>()(
       partialize: (state) => ({
         translationSlug: state.translationSlug,
         currentOrder: state.currentOrder,
+        lastVisibleOrder: state.lastVisibleOrder,
+        journeySeenOrders: state.journeySeenOrders,
         fontSize: state.fontSize,
         autoProgress: state.autoProgress,
         theme: state.theme,

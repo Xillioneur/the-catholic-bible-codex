@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo, useEffect } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { api } from "~/trpc/react";
 import { 
   Search, 
@@ -57,6 +57,7 @@ export function SidebarNav() {
   const [librarySearch, setLibrarySearch] = useState("");
   const [editingNoteId, setEditingNoteId] = useState<string | number | null>(null);
   const [editingNoteContent, setEditingNoteContent] = useState("");
+  const lastAdvancedDay = useRef<Record<string, number>>({});
 
   // 2. STORE
   const isCollapsed = useReaderStore((state) => state.isSidebarCollapsed);
@@ -80,6 +81,7 @@ export function SidebarNav() {
   const autoProgress = useReaderStore((state) => state.autoProgress);
   const setAutoProgress = useReaderStore((state) => state.setAutoProgress);
   const setJourneyGuide = useReaderStore((state) => state.setJourneyGuide);
+  const clearJourneyProgress = useReaderStore((state) => state.clearJourneyProgress);
 
   const currentUserId = session?.user?.id ?? "guest";
 
@@ -178,6 +180,33 @@ export function SidebarNav() {
 
   const toggleDayCompletion = api.readingPlan.toggleDayCompletion.useMutation({
     onSuccess: () => utils.readingPlan.getUserPlans.invalidate()
+  });
+
+  const resetVerseProgress = api.user.resetVerseProgress.useMutation({
+    onSuccess: async () => {
+      console.log("[MASTERY] Resetting all progress...");
+      utils.user.getSyncData.invalidate();
+      utils.readingPlan.getUserPlans.invalidate();
+      
+      // Clear local mastery
+      await db.verseStatuses.where("userId").equals(currentUserId).delete();
+      
+      // Reset journey milestones
+      await db.userReadingPlans.where("userId").equals(currentUserId).modify({
+        completedDays: [],
+        currentDay: 1,
+        isCompleted: false,
+        completedAt: undefined
+      });
+      
+      clearJourneyProgress();
+      setJourneyGuide(null);
+      toast.success("Sacred journey and mastery reset");
+    },
+    onError: (e) => {
+      console.error("[MASTERY] Reset failed:", e);
+      toast.error("Failed to reset progress");
+    }
   });
 
   // 6. HANDLERS
@@ -352,6 +381,19 @@ export function SidebarNav() {
   };
 
   // 7. EFFECTS
+  useEffect(() => {
+    const handleOpenPlans = () => {
+      setActiveTab("study");
+      setStudyFilter("plans");
+      // Use a small delay to ensure the tab transition is smooth
+      setTimeout(() => {
+        setSelectedPlanSlug(null); // Back to list view to show progress
+      }, 100);
+    };
+    window.addEventListener("open-reading-plans", handleOpenPlans);
+    return () => window.removeEventListener("open-reading-plans", handleOpenPlans);
+  }, []);
+
   // Auto-scroll to current day in roadmap
   useEffect(() => {
     if (selectedPlanSlug && planDetails && !isLoadingPlan) {
@@ -364,51 +406,6 @@ export function SidebarNav() {
       return () => clearTimeout(timer);
     }
   }, [selectedPlanSlug, planDetails, isLoadingPlan]);
-
-  // Auto-advance reading plans
-  useEffect(() => {
-    if (!planDetails || !readOrdersSet.size || !autoProgress) return;
-    
-    const activePlans = session ? userPlans : localUserPlans;
-    const currentPlan = activePlans.find((up: any) => up.planId === planDetails.id);
-    if (!currentPlan || currentPlan.isCompleted) return;
-
-    const dayData = planDetails.days.find((d: any) => d.dayNumber === currentPlan.currentDay);
-    if (!dayData || !dayData.orders || dayData.orders.length === 0) return;
-
-    // Check if the current day was JUST completed via auto-tracking
-    if (isDayCompleted(dayData.orders)) {
-      const nextDay = currentPlan.currentDay + 1;
-      const isFinished = nextDay > planDetails.totalDays;
-      
-      // PREVENT INFINITE LOOP: only advance if the current day in the store hasn't moved yet
-      if (currentPlan.currentDay < nextDay) {
-        console.log(`[JOURNEY] Day ${currentPlan.currentDay} completed via automatic tracking. Advancing to ${nextDay}...`);
-
-        if (session) {
-          updatePlanProgress.mutate({
-            planId: planDetails.id,
-            currentDay: isFinished ? currentPlan.currentDay : nextDay,
-            isCompleted: isFinished
-          });
-        } else {
-          if (currentPlan.id) {
-            void db.userReadingPlans.update(currentPlan.id, {
-              currentDay: isFinished ? currentPlan.currentDay : nextDay,
-              isCompleted: isFinished,
-              completedAt: isFinished ? Date.now() : undefined
-            });
-          }
-        }
-        
-        if (isFinished) {
-          toast.success(`Journey Complete: ${planDetails.name}!`);
-        } else {
-          toast.success(`Journey Advanced: Day ${nextDay}`);
-        }
-      }
-    }
-  }, [readOrdersSet, planDetails, userPlans, localUserPlans, session, isDayCompleted, updatePlanProgress, autoProgress]);
 
   return (
     <>
@@ -1283,6 +1280,35 @@ export function SidebarNav() {
                       <div className={cn("w-10 h-5 rounded-full transition-all flex items-center px-1", autoProgress ? "bg-primary" : "bg-zinc-200 dark:bg-zinc-700")}>
                         <div className={cn("h-3 w-3 rounded-full bg-white transition-all shadow-sm", autoProgress ? "translate-x-5" : "translate-x-0")} />
                       </div>
+                    </button>
+                  </div>
+
+                  <div className="space-y-3">
+                    <span className="text-[9px] font-black uppercase tracking-widest text-zinc-400 block ml-2">Mastery Tools</span>
+                    <button 
+                      onClick={() => {
+                        if (confirm("This will permanently remove all emerald mastery checkmarks from the Bible. Your notes and bookmarks will be preserved. Proceed?")) {
+                          if (session) {
+                            resetVerseProgress.mutate();
+                          } else {
+                            void db.verseStatuses.where("userId").equals("guest").delete().then(() => {
+                              toast.success("Local mastery history cleared");
+                            });
+                          }
+                        }
+                      }}
+                      className="w-full p-4 rounded-[2rem] bg-zinc-50 dark:bg-zinc-800/30 border border-zinc-100/50 dark:border-zinc-800/50 flex items-center justify-between group transition-all hover:border-rose-500/20"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={cn("h-8 w-8 rounded-xl bg-rose-500/5 text-rose-500 flex items-center justify-center transition-colors group-hover:bg-rose-500 group-hover:text-white")}>
+                          <Trash2 className="h-4 w-4" />
+                        </div>
+                        <div className="flex flex-col items-start text-left">
+                          <span className="text-[10px] font-bold text-zinc-900 dark:text-zinc-100">Reset Mastery</span>
+                          <span className="text-[8px] font-medium text-zinc-500 leading-tight">Clear all "Mark as Read" history</span>
+                        </div>
+                      </div>
+                      <ChevronRight className="h-3 w-3 text-zinc-300" />
                     </button>
                   </div>
 
