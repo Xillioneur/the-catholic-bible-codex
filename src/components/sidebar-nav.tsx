@@ -382,16 +382,19 @@ export function SidebarNav() {
 
   // 7. EFFECTS
   useEffect(() => {
-    const handleOpenPlans = () => {
+    const handleOpenPlans = (e: any) => {
+      const planSlug = e.detail?.planSlug;
       setActiveTab("study");
       setStudyFilter("plans");
-      // Use a small delay to ensure the tab transition is smooth
-      setTimeout(() => {
-        setSelectedPlanSlug(null); // Back to list view to show progress
-      }, 100);
+      if (planSlug) {
+        // Use a small delay to ensure the tab transition is smooth
+        setTimeout(() => {
+          setSelectedPlanSlug(planSlug);
+        }, 100);
+      }
     };
-    window.addEventListener("open-reading-plans", handleOpenPlans);
-    return () => window.removeEventListener("open-reading-plans", handleOpenPlans);
+    window.addEventListener("open-reading-plans" as any, handleOpenPlans);
+    return () => window.removeEventListener("open-reading-plans" as any, handleOpenPlans);
   }, []);
 
   // Auto-scroll to current day in roadmap
@@ -1056,6 +1059,7 @@ export function SidebarNav() {
                                             setJourneyGuide({
                                               planId: planDetails.id,
                                               planName: planDetails.name,
+                                              planSlug: planDetails.slug,
                                               dayNumber: day.dayNumber,
                                               orders: day.orders,
                                               references: day.references

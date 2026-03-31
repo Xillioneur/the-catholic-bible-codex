@@ -10,10 +10,11 @@ import {
   ArrowDown, 
   Scroll,
   ChevronRight,
-  Compass
+  Compass,
+  RotateCcw
 } from "lucide-react";
 import { cn } from "~/lib/utils";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { db } from "~/lib/db";
 import { useLiveQuery } from "dexie-react-hooks";
 import { api } from "~/trpc/react";
@@ -33,8 +34,10 @@ export function JourneyGuide({ currentOrder }: JourneyGuideProps) {
   const setScrollToOrder = useReaderStore((state) => state.setScrollToOrder);
   const journeySeenOrders = useReaderStore((state) => state.journeySeenOrders);
   const addJourneySeenOrder = useReaderStore((state) => state.addJourneySeenOrder);
+  const clearDayProgress = useReaderStore((state) => state.clearDayProgress);
   
   const [isWarping, setIsWarping] = useState(false);
+  const hasInitialJumped = useRef<string | null>(null);
   
   const currentUserId = session?.user?.id ?? "guest";
   const progressKey = journeyGuide ? `${journeyGuide.planId}-${journeyGuide.dayNumber}` : null;
@@ -52,32 +55,14 @@ export function JourneyGuide({ currentOrder }: JourneyGuideProps) {
     }
   });
 
-  // 1. Track assigned verses as they pass through the viewport
-  useEffect(() => {
-    if (journeyGuide && progressKey) {
-      const assigned = journeyGuide.orders;
-      // Find assigned verses currently in view (between top and bottom of viewport)
-      const newlySeen = assigned.filter(o => o >= currentOrder && o <= lastVisibleOrder);
-      
-      if (newlySeen.length > 0) {
-        addJourneySeenOrder(progressKey, newlySeen);
-      }
-    }
-  }, [currentOrder, lastVisibleOrder, journeyGuide, progressKey, addJourneySeenOrder]);
-
+  // Calculate stats first so we can use them in the jump effect
   const { readCount, totalCount, firstUnreadOrder, isFullyRead, lastProgressOrder } = useMemo(() => {
     if (!journeyGuide) return { readCount: 0, totalCount: 0, firstUnreadOrder: null, isFullyRead: false, lastProgressOrder: 0 };
-    
     const dayOrders = journeyGuide.orders;
-    
-    // Progress is based on unique assigned verses seen in viewport
     const seenSet = new Set(seenOrdersForDay);
-    
-    // Also include manually checkmarked verses for completion
     const manualReadOrders = localVerseStatuses
         .filter(s => s.isRead && dayOrders.includes(s.globalOrder))
         .map(s => s.globalOrder);
-    
     const combinedSet = new Set([...Array.from(seenSet), ...manualReadOrders]);
     const firstUnread = dayOrders.find(o => !combinedSet.has(o)) ?? null;
     const maxSeen = seenOrdersForDay.length > 0 ? Math.max(...seenOrdersForDay) : 0;
@@ -91,21 +76,39 @@ export function JourneyGuide({ currentOrder }: JourneyGuideProps) {
     };
   }, [journeyGuide, localVerseStatuses, seenOrdersForDay]);
 
+  // 1. Initial Jump Logic (Tweak #1)
+  useEffect(() => {
+    if (journeyGuide && progressKey && hasInitialJumped.current !== progressKey) {
+      const startOrder = journeyGuide.orders[0]!;
+      // If no progress, go to start. If progress, go to furthest seen.
+      const target = seenOrdersForDay.length === 0 ? startOrder : (lastProgressOrder || startOrder);
+      
+      console.log("[GUIDE] Initial activation jump to:", target);
+      setScrollToOrder(target);
+      hasInitialJumped.current = progressKey;
+    }
+  }, [journeyGuide, progressKey, lastProgressOrder, setScrollToOrder, seenOrdersForDay.length]);
+
+  // 2. Track assigned verses
+  useEffect(() => {
+    if (journeyGuide && progressKey) {
+      const assigned = journeyGuide.orders;
+      const newlySeen = assigned.filter(o => o >= currentOrder && o <= lastVisibleOrder);
+      if (newlySeen.length > 0) {
+        addJourneySeenOrder(progressKey, newlySeen);
+      }
+    }
+  }, [currentOrder, lastVisibleOrder, journeyGuide, progressKey, addJourneySeenOrder]);
+
   if (!journeyGuide) return null;
 
-  // Visual Progress is exactly (verses seen / total verses)
   const progressPercent = Math.round((readCount / totalCount) * 100);
-  
-  // Navigation
   const startOrder = journeyGuide.orders[0]!;
   const endOrder = journeyGuide.orders[journeyGuide.orders.length - 1]!;
   
-  // Target is the first unread or the furthest seen point
   const targetOrder = firstUnreadOrder ?? lastProgressOrder ?? startOrder;
   const diff = targetOrder - currentOrder;
   const isAbove = diff < 0;
-  
-  // We are "here" if the viewport contains any part of the day's range
   const isHere = lastVisibleOrder >= startOrder && currentOrder <= endOrder;
 
   const handleWarp = () => {
@@ -124,6 +127,13 @@ export function JourneyGuide({ currentOrder }: JourneyGuideProps) {
     }
   };
 
+  const handleResetDay = () => {
+    if (progressKey && confirm("Reset scroll progress for this day?")) {
+      clearDayProgress(progressKey);
+      toast.success("Progress cleared");
+    }
+  };
+
   const handleSeal = async () => {
     try {
       if (session) {
@@ -137,7 +147,6 @@ export function JourneyGuide({ currentOrder }: JourneyGuideProps) {
           .where("[userId+planId]")
           .equals([currentUserId, journeyGuide.planId])
           .first();
-        
         if (userPlan) {
           const newCompletedDays = [...(userPlan.completedDays || [])];
           if (!newCompletedDays.includes(journeyGuide.dayNumber)) {
@@ -145,72 +154,76 @@ export function JourneyGuide({ currentOrder }: JourneyGuideProps) {
           }
           await db.userReadingPlans.update(userPlan.id!, { 
             completedDays: newCompletedDays,
-            currentDay: Math.min(journeyGuide.dayNumber + 1, 365) // Max days guard
+            currentDay: Math.min(journeyGuide.dayNumber + 1, 365)
           });
         }
       }
-      
       toast.success(`Day ${journeyGuide.dayNumber} Sealed!`);
+      const slug = journeyGuide.planSlug;
       setJourneyGuide(null);
-      // Trigger sidebar to open plans
-      window.dispatchEvent(new CustomEvent("open-reading-plans"));
+      // Open specifically the roadmap for this plan (Tweak #4)
+      window.dispatchEvent(new CustomEvent("open-reading-plans", { detail: { planSlug: slug } }));
     } catch (e) {
       toast.error("Failed to seal day");
     }
   };
 
   return (
-    <div className="fixed bottom-6 inset-x-4 md:inset-x-auto md:left-1/2 md:-translate-x-1/2 z-[110] flex justify-center pointer-events-none">
-      <div className="w-full max-w-lg bg-white/95 dark:bg-zinc-900/95 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] shadow-2xl p-2 flex flex-col gap-2 backdrop-blur-2xl pointer-events-auto animate-in fade-in slide-in-from-bottom-8 duration-700">
+    <div className="fixed bottom-4 inset-x-4 md:inset-x-auto md:left-1/2 md:-translate-x-1/2 z-[110] flex justify-center pointer-events-none">
+      <div className="w-full max-w-md bg-white/90 dark:bg-zinc-900/90 border border-zinc-200/50 dark:border-zinc-800/50 rounded-3xl shadow-2xl p-1.5 flex flex-col gap-1.5 backdrop-blur-xl pointer-events-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
         
-        {/* HEADER AREA */}
-        <div className="flex items-center justify-between px-4 py-1">
+        {/* COMPACT HEADER */}
+        <div className="flex items-center justify-between px-3 py-0.5">
           <div className="flex items-center gap-2">
-            <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center">
-              <Compass className="h-3 w-3 text-primary" />
+            <div className="h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+              <Compass className="h-2.5 w-2.5 text-primary" />
             </div>
-            <div className="flex flex-col">
-              <span className="text-[7px] font-black uppercase tracking-[0.3em] text-zinc-400">Active Journey</span>
-              <span className="text-[10px] font-bold text-zinc-900 dark:text-zinc-100 truncate max-w-[120px]">
+            <div className="flex items-center gap-2">
+              <span className="text-[9px] font-bold text-zinc-900 dark:text-zinc-100 truncate max-w-[100px]">
                 {journeyGuide.planName}
               </span>
+              <div className="h-3 w-px bg-zinc-200 dark:bg-zinc-800" />
+              <span className="text-[8px] font-black uppercase text-primary">Day {journeyGuide.dayNumber}</span>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <div className="flex flex-col items-end">
-              <span className="text-[7px] font-black uppercase tracking-[0.3em] text-primary">Day {journeyGuide.dayNumber}</span>
-              <span className="text-[9px] font-serif italic text-zinc-500">{journeyGuide.references[0]}</span>
-            </div>
+          <div className="flex items-center gap-1.5">
+            <button 
+              onClick={handleResetDay}
+              className="h-6 w-6 flex items-center justify-center rounded-lg text-zinc-300 hover:text-zinc-600 dark:hover:text-zinc-400 transition-colors"
+              title="Reset Day Progress"
+            >
+              <RotateCcw className="h-3 w-3" />
+            </button>
             <button 
               onClick={() => setJourneyGuide(null)}
-              className="h-7 w-7 flex items-center justify-center rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+              className="h-6 w-6 flex items-center justify-center rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
             >
-              <X className="h-3.5 w-3.5 text-zinc-400" />
+              <X className="h-3 w-3 text-zinc-400" />
             </button>
           </div>
         </div>
 
-        {/* PROGRESS PILL */}
-        <div className="px-3">
-          <div className="h-10 w-full bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800 flex items-center px-1 overflow-hidden">
-            <div className="flex-1 flex items-center gap-3 px-3">
-              <div className="flex-1 h-1.5 bg-zinc-200 dark:bg-zinc-700 rounded-full overflow-hidden relative">
+        {/* COMPACT PROGRESS */}
+        <div className="px-1.5 pb-0.5">
+          <div className="h-9 w-full bg-zinc-50 dark:bg-zinc-800/30 rounded-2xl border border-zinc-100/50 dark:border-zinc-800/50 flex items-center px-1">
+            <div className="flex-1 flex items-center gap-2 px-2.5">
+              <div className="flex-1 h-1 bg-zinc-200 dark:bg-zinc-700 rounded-full overflow-hidden">
                 <div 
-                  className="absolute inset-y-0 left-0 bg-primary transition-all duration-1000 ease-out"
+                  className="h-full bg-primary transition-all duration-700 ease-out"
                   style={{ width: `${progressPercent}%` }}
                 />
               </div>
-              <span className="text-[9px] font-black tabular-nums text-primary w-8 text-right">{progressPercent}%</span>
+              <span className="text-[8px] font-black tabular-nums text-primary w-6 text-right">{progressPercent}%</span>
             </div>
 
-            <div className="flex gap-1 h-8">
+            <div className="flex gap-1 h-7">
               {isFullyRead ? (
                 <button 
                   onClick={handleSeal}
-                  className="px-4 bg-emerald-500 text-white rounded-xl flex items-center gap-2 text-[8px] font-black uppercase tracking-widest shadow-lg shadow-emerald-500/20 hover:scale-105 active:scale-95 transition-all animate-in zoom-in duration-500"
+                  className="px-3 bg-emerald-500 text-white rounded-xl flex items-center gap-1.5 text-[7px] font-black uppercase tracking-widest shadow-lg shadow-emerald-500/20 hover:scale-105 active:scale-95 transition-all"
                 >
-                  <Scroll className="h-3 w-3 fill-current" />
+                  <Scroll className="h-2.5 w-2.5 fill-current" />
                   Seal Amen
                 </button>
               ) : (
@@ -218,7 +231,7 @@ export function JourneyGuide({ currentOrder }: JourneyGuideProps) {
                   {!isHere && (
                     <button 
                       onClick={handleGoToStart}
-                      className="px-3 bg-zinc-100 dark:bg-zinc-800 text-zinc-500 rounded-xl flex items-center gap-2 text-[8px] font-black uppercase tracking-widest hover:bg-zinc-200 transition-all"
+                      className="px-2.5 bg-zinc-100 dark:bg-zinc-800 text-zinc-500 rounded-xl flex items-center text-[7px] font-black uppercase tracking-widest hover:bg-zinc-200 transition-all"
                     >
                       Start
                     </button>
@@ -227,11 +240,11 @@ export function JourneyGuide({ currentOrder }: JourneyGuideProps) {
                     onClick={handleWarp}
                     disabled={isWarping}
                     className={cn(
-                      "px-4 rounded-xl flex items-center gap-2 text-[8px] font-black uppercase tracking-widest transition-all",
+                      "px-3 rounded-xl flex items-center gap-1.5 text-[7px] font-black uppercase tracking-widest transition-all",
                       "bg-primary text-white shadow-lg shadow-primary/20 hover:scale-105 active:scale-95"
                     )}
                   >
-                    {isAbove ? <ArrowUp className="h-3 w-3" /> : <ArrowDown className="h-3 w-3" />}
+                    {isAbove ? <ArrowUp className="h-2.5 w-2.5" /> : <ArrowDown className="h-2.5 w-2.5" />}
                     {isHere ? "Next" : "Resume"}
                   </button>
                 </div>

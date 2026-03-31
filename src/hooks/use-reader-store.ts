@@ -57,15 +57,17 @@ interface ReaderState {
   journeyGuide: {
     planId: string;
     planName: string;
+    planSlug: string;
     dayNumber: number;
     orders: number[];
     references: string[];
   } | null;
-  setJourneyGuide: (guide: { planId: string; planName: string; dayNumber: number; orders: number[]; references: string[] } | null) => void;
+  setJourneyGuide: (guide: { planId: string; planName: string; planSlug: string; dayNumber: number; orders: number[]; references: string[] } | null) => void;
 
   // Journey Session Progress (tracks specifically which assigned verses have been scrolled past)
   journeySeenOrders: Record<string, number[]>; // planId-dayNumber -> array of globalOrders
   addJourneySeenOrder: (key: string, orders: number[]) => void;
+  clearDayProgress: (key: string) => void;
   clearJourneyProgress: () => void;
 
   // Sidebar UI
@@ -156,6 +158,11 @@ export const useReaderStore = create<ReaderState>()(
             [key]: [...existing, ...newOrders]
           }
         };
+      }),
+      clearDayProgress: (key) => set((state) => {
+        const next = { ...state.journeySeenOrders };
+        delete next[key];
+        return { journeySeenOrders: next };
       }),
       clearJourneyProgress: () => set({ journeySeenOrders: {} }),
 
