@@ -65,10 +65,21 @@ interface ReaderState {
   setJourneyGuide: (guide: { planId: string; planName: string; planSlug: string; dayNumber: number; orders: number[]; references: string[] } | null) => void;
   isJourneyGuideMinimized: boolean;
   setIsJourneyGuideMinimized: (minimized: boolean) => void;
+  autoAdvanceJourney: boolean;
+  setAutoAdvanceJourney: (advance: boolean) => void;
+  isJourneyVoiceActive: boolean;
+  setIsJourneyVoiceActive: (active: boolean) => void;
 
   // Journey Session Progress (tracks specifically which assigned verses have been scrolled past)
   journeySeenOrders: Record<string, number[]>; // planId-dayNumber -> array of globalOrders
   addJourneySeenOrder: (key: string, orders: number[]) => void;
+  
+  // Journey Audio Progress (Decoupled from scrolling)
+  journeyAudioSeenOrders: Record<string, number[]>;
+  addJourneyAudioOrder: (key: string, orders: number[]) => void;
+  journeyAudioPlayhead: Record<string, number>; // last heard globalOrder
+  setJourneyAudioPlayhead: (key: string, order: number) => void;
+
   clearDayProgress: (key: string) => void;
   clearJourneyProgress: () => void;
 
@@ -150,6 +161,10 @@ export const useReaderStore = create<ReaderState>()(
       setJourneyGuide: (guide) => set({ journeyGuide: guide }),
       isJourneyGuideMinimized: false,
       setIsJourneyGuideMinimized: (minimized) => set({ isJourneyGuideMinimized: minimized }),
+      autoAdvanceJourney: true,
+      setAutoAdvanceJourney: (advance) => set({ autoAdvanceJourney: advance }),
+      isJourneyVoiceActive: false,
+      setIsJourneyVoiceActive: (active) => set({ isJourneyVoiceActive: active }),
 
       journeySeenOrders: {},
       addJourneySeenOrder: (key, orders) => set((state) => {
@@ -163,12 +178,42 @@ export const useReaderStore = create<ReaderState>()(
           }
         };
       }),
-      clearDayProgress: (key) => set((state) => {
-        const next = { ...state.journeySeenOrders };
-        delete next[key];
-        return { journeySeenOrders: next };
+
+      journeyAudioSeenOrders: {},
+      addJourneyAudioOrder: (key, orders) => set((state) => {
+        const existing = state.journeyAudioSeenOrders[key] || [];
+        const newOrders = orders.filter(o => !existing.includes(o));
+        if (newOrders.length === 0) return state;
+        return {
+          journeyAudioSeenOrders: {
+            ...state.journeyAudioSeenOrders,
+            [key]: [...existing, ...newOrders]
+          }
+        };
       }),
-      clearJourneyProgress: () => set({ journeySeenOrders: {} }),
+      journeyAudioPlayhead: {},
+      setJourneyAudioPlayhead: (key, order) => set((state) => ({
+        journeyAudioPlayhead: { ...state.journeyAudioPlayhead, [key]: order }
+      })),
+
+      clearDayProgress: (key) => set((state) => {
+        const nextSeen = { ...state.journeySeenOrders };
+        delete nextSeen[key];
+        const nextAudio = { ...state.journeyAudioSeenOrders };
+        delete nextAudio[key];
+        const nextPlayhead = { ...state.journeyAudioPlayhead };
+        delete nextPlayhead[key];
+        return { 
+          journeySeenOrders: nextSeen,
+          journeyAudioSeenOrders: nextAudio,
+          journeyAudioPlayhead: nextPlayhead
+        };
+      }),
+      clearJourneyProgress: () => set({ 
+        journeySeenOrders: {}, 
+        journeyAudioSeenOrders: {},
+        journeyAudioPlayhead: {}
+      }),
 
       isSidebarCollapsed: false,
       toggleSidebar: () => set((state) => ({ isSidebarCollapsed: !state.isSidebarCollapsed })),
@@ -221,8 +266,11 @@ export const useReaderStore = create<ReaderState>()(
         currentOrder: state.currentOrder,
         lastVisibleOrder: state.lastVisibleOrder,
         journeySeenOrders: state.journeySeenOrders,
+        journeyAudioSeenOrders: state.journeyAudioSeenOrders,
+        journeyAudioPlayhead: state.journeyAudioPlayhead,
         fontSize: state.fontSize,
         autoProgress: state.autoProgress,
+        autoAdvanceJourney: state.autoAdvanceJourney,
         theme: state.theme,
         isSidebarCollapsed: state.isSidebarCollapsed,
       }),

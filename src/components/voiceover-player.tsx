@@ -103,6 +103,10 @@ export function VoiceoverPlayer() {
   const speeds = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
   const currentVoice = voices.find(v => v.voiceURI === voiceURI);
 
+  const isJourneyVoiceActive = useReaderStore((state) => state.isJourneyVoiceActive);
+
+  if (isJourneyVoiceActive) return null;
+
   return (
     <AnimatePresence>
       {isActive && !isMinimized && currentVerse && (

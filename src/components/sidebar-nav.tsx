@@ -82,6 +82,7 @@ export function SidebarNav() {
   const setAutoProgress = useReaderStore((state) => state.setAutoProgress);
   const setJourneyGuide = useReaderStore((state) => state.setJourneyGuide);
   const clearJourneyProgress = useReaderStore((state) => state.clearJourneyProgress);
+  const setIsJourneyVoiceActive = useReaderStore((state) => state.setIsJourneyVoiceActive);
 
   const currentUserId = session?.user?.id ?? "guest";
 
@@ -199,6 +200,7 @@ export function SidebarNav() {
         completedAt: undefined
       });
       
+      setIsJourneyVoiceActive(false);
       clearJourneyProgress();
       setJourneyGuide(null);
       toast.success("Sacred journey and mastery reset");

@@ -79,7 +79,6 @@ export function VoiceoverManager() {
   const stop = useCallback(() => {
     isInternalCancelRef.current = true;
     if (synthRef.current) {
-      if (synthRef.current.paused) synthRef.current.resume();
       synthRef.current.cancel();
     }
     
@@ -141,8 +140,6 @@ export function VoiceoverManager() {
   const speak = useCallback(async (order: number, forceTitle = false) => {
     if (!synthRef.current || !isPlaying) return;
 
-    if (synthRef.current.paused) synthRef.current.resume();
-    
     isInternalCancelRef.current = true;
     synthRef.current.cancel();
 
@@ -151,7 +148,6 @@ export function VoiceoverManager() {
     setIsActive(true);
 
     try {
-      // 1. Fetch verse first to know what we are speaking
       const verse = await db.verses
         .where("[translationId+globalOrder]")
         .equals([translationSlug, order])
@@ -165,17 +161,12 @@ export function VoiceoverManager() {
       let textToSpeak = "";
       let isTitle = false;
 
-      // 2. Title Logic
       if (isReadTitlesEnabled && !forceTitle && !isSpeakingTitleRef.current) {
-        // A. Check Liturgical First
         const reading = liturgicalReadings.find(r => r.orders[0] === order);
         if (reading) {
           textToSpeak = `${reading.type}. ${reading.citation}.`;
           isTitle = true;
-        } 
-        // B. Check Chapter Start if no liturgical title or always? 
-        // User wants "Books and Chapter numbers".
-        else if (verse.verse === 1) {
+        } else if (verse.verse === 1) {
           textToSpeak = `${verse.book.name}. Chapter ${verse.chapter}.`;
           isTitle = true;
         }
@@ -208,12 +199,11 @@ export function VoiceoverManager() {
       utterance.rate = speed;
       utterance.volume = 1;
 
-      // PERFORMANCE: Throttle progress updates to avoid excessive re-renders
       let lastProgressUpdate = 0;
       utterance.onboundary = (event) => {
         if (currentSession === sessionRef.current && !isTitle) {
           const now = Date.now();
-          if (now - lastProgressUpdate > 100) { // Every 100ms max
+          if (now - lastProgressUpdate > 100) {
             const progress = (event.charIndex / textToSpeak.length) * 100;
             setVerseProgress(progress);
             lastProgressUpdate = now;
@@ -270,15 +260,8 @@ export function VoiceoverManager() {
     if (isPlaying) {
       const orderToSpeak = currentOrder ?? globalCurrentOrder;
       
-      if (synthRef.current?.paused) {
-        synthRef.current.resume();
-        if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "playing";
-        if (speakingOrderRef.current === orderToSpeak) return;
-      }
-
-      const isEngineIdle = synthRef.current && !synthRef.current.speaking && !synthRef.current.pending && !synthRef.current.paused;
-      
-      if (speakingOrderRef.current === orderToSpeak && !isEngineIdle) return;
+      // RELIABILITY: Instead of resume(), we ensure engine is speaking our current order
+      if (speakingOrderRef.current === orderToSpeak && synthRef.current?.speaking) return;
 
       if (currentOrder === null) {
         setCurrentOrder(globalCurrentOrder);
@@ -287,19 +270,20 @@ export function VoiceoverManager() {
 
       void speak(orderToSpeak);
     } else {
-      if (isActive) {
-        if (synthRef.current?.speaking && !synthRef.current.paused) {
-          synthRef.current.pause();
-          if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "paused";
-        }
-      } else {
+      if (!isActive) {
         speakingOrderRef.current = null;
         if (synthRef.current) {
           isInternalCancelRef.current = true;
-          if (synthRef.current.paused) synthRef.current.resume();
           synthRef.current.cancel();
         }
         if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "none";
+      } else {
+        // Paused state: Stop the actual speech engine but keep track of position
+        if (synthRef.current?.speaking) {
+          isInternalCancelRef.current = true;
+          synthRef.current.cancel();
+          if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "paused";
+        }
       }
     }
   }, [isPlaying, isActive, currentOrder, globalCurrentOrder, speed, speak, setCurrentOrder]);
