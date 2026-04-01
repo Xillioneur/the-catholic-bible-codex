@@ -40,9 +40,10 @@ export function useVoiceover() {
 
   const jumpToOrder = useCallback((order: number, newPlaylist?: number[]) => {
     // Reset state for a new jump
-    setIsPlaying(false); // Briefly stop to ensure Manager resets? 
-    // Actually, if we just update currentOrder, Manager will see the change and jump.
-    // But if we want to force a "cancel current", switching order does that in Manager.
+    setIsPlaying(false);
+    
+    // Warm up engine for iOS
+    unlockAudio();
     
     if (newPlaylist) setPlaylist(newPlaylist);
     if (isFollowEnabled) setScrollToOrder(order);

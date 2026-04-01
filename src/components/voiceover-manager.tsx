@@ -33,6 +33,10 @@ export function VoiceoverManager() {
   const speakingOrderRef = useRef<number | null>(null);
   const isInternalCancelRef = useRef<boolean>(false);
   const isSpeakingTitleRef = useRef<boolean>(false);
+  
+  // PRECISION: Midway resumption playhead
+  const lastCharIndexRef = useRef<number>(0);
+  const lastOrderRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -78,7 +82,10 @@ export function VoiceoverManager() {
 
   const stop = useCallback(() => {
     isInternalCancelRef.current = true;
+    lastCharIndexRef.current = 0;
+    
     if (synthRef.current) {
+      if (synthRef.current.paused) synthRef.current.resume();
       synthRef.current.cancel();
     }
     
@@ -111,11 +118,15 @@ export function VoiceoverManager() {
   const skipForward = useCallback(() => {
     const current = currentOrder ?? globalCurrentOrder;
     const next = getNextOrder(current);
-    if (next !== null) setCurrentOrder(next);
+    if (next !== null) {
+      lastCharIndexRef.current = 0;
+      setCurrentOrder(next);
+    }
   }, [currentOrder, globalCurrentOrder, getNextOrder, setCurrentOrder]);
 
   const skipBackward = useCallback(() => {
     const current = currentOrder ?? globalCurrentOrder;
+    lastCharIndexRef.current = 0;
     if (playlist) {
       const idx = playlist.indexOf(current);
       if (idx > 0) {
@@ -137,10 +148,12 @@ export function VoiceoverManager() {
     }
   }, [setIsPlaying, stop, skipBackward, skipForward]);
 
-  const speak = useCallback(async (order: number, forceTitle = false) => {
+  const speak = useCallback(async (order: number, forceTitle = false, charOffset = 0) => {
     if (!synthRef.current || !isPlaying) return;
 
+    // Safety: ensure engine is clear
     isInternalCancelRef.current = true;
+    if (synthRef.current.paused) synthRef.current.resume();
     synthRef.current.cancel();
 
     const currentSession = ++sessionRef.current;
@@ -177,20 +190,16 @@ export function VoiceoverManager() {
       } else {
         isSpeakingTitleRef.current = false;
         textToSpeak = verse.text;
+        
+        // SLICED RESUMPTION: midway verse resume
+        if (charOffset > 0 && charOffset < textToSpeak.length) {
+          textToSpeak = textToSpeak.slice(charOffset);
+        } else {
+          lastCharIndexRef.current = 0;
+        }
+
         setVerse(verse);
         setVerseProgress(0);
-      }
-
-      if ("mediaSession" in navigator) {
-        navigator.mediaSession.metadata = new MediaMetadata({
-          title: isTitle ? `Title: ${textToSpeak}` : `${verse.book.name} ${verse.chapter}:${verse.verse}`,
-          artist: "Catholic Bible Codex",
-          album: "Verbum Domini",
-          artwork: [
-            { src: "/favicon.svg", sizes: "512x512", type: "image/svg+xml" }
-          ]
-        });
-        navigator.mediaSession.playbackState = "playing";
       }
 
       const utterance = new SpeechSynthesisUtterance(textToSpeak);
@@ -199,15 +208,11 @@ export function VoiceoverManager() {
       utterance.rate = speed;
       utterance.volume = 1;
 
-      let lastProgressUpdate = 0;
       utterance.onboundary = (event) => {
         if (currentSession === sessionRef.current && !isTitle) {
-          const now = Date.now();
-          if (now - lastProgressUpdate > 100) {
-            const progress = (event.charIndex / textToSpeak.length) * 100;
-            setVerseProgress(progress);
-            lastProgressUpdate = now;
-          }
+          lastCharIndexRef.current = charOffset + event.charIndex;
+          const progress = (lastCharIndexRef.current / verse.text.length) * 100;
+          setVerseProgress(progress);
         }
       };
 
@@ -217,17 +222,16 @@ export function VoiceoverManager() {
           return;
         }
 
-        const currentIsPlaying = useReaderStore.getState().isVoiceoverPlaying;
-        if (currentSession === sessionRef.current && currentIsPlaying) {
+        if (currentSession === sessionRef.current && useReaderStore.getState().isVoiceoverPlaying) {
           if (isTitle) {
-            void speak(order, true); 
+            void speak(order, true, 0); 
           } else {
             setVerseProgress(100);
+            lastCharIndexRef.current = 0;
             const next = getNextOrder(order);
             if (next !== null) {
               setCurrentOrder(next);
-              const currentIsFollowEnabled = useReaderStore.getState().isVoiceoverFollowEnabled;
-              if (currentIsFollowEnabled) setScrollToOrder(next);
+              if (useReaderStore.getState().isVoiceoverFollowEnabled) setScrollToOrder(next);
             } else {
               stop();
             }
@@ -236,13 +240,12 @@ export function VoiceoverManager() {
       };
 
       utterance.onerror = (event) => {
-        if (currentSession === sessionRef.current && event.error && event.error !== "interrupted" && event.error !== "canceled") {
+        if (currentSession === sessionRef.current && event.error !== "interrupted" && event.error !== "canceled") {
           console.error("Voiceover error:", event.error);
           setTimeout(() => {
-            const currentIsPlaying = useReaderStore.getState().isVoiceoverPlaying;
-            if (currentSession === sessionRef.current && currentIsPlaying) {
+            if (useReaderStore.getState().isVoiceoverPlaying) {
               speakingOrderRef.current = null;
-              void speak(order, isTitle);
+              void speak(order, isTitle, charOffset);
             }
           }, 500);
         }
@@ -251,42 +254,64 @@ export function VoiceoverManager() {
       isInternalCancelRef.current = false;
       synthRef.current.speak(utterance);
 
+      if ("mediaSession" in navigator) {
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title: isTitle ? `Title: ${textToSpeak}` : `${verse.book.name} ${verse.chapter}:${verse.verse}`,
+          artist: "Catholic Bible Codex",
+          album: "Verbum Domini",
+          artwork: [{ src: "/favicon.svg", sizes: "512x512", type: "image/svg+xml" }]
+        });
+        navigator.mediaSession.playbackState = "playing";
+      }
+
     } catch (err) {
       console.error("Voiceover engine error:", err);
     }
   }, [translationSlug, isPlaying, speed, getBestVoice, isReadTitlesEnabled, liturgicalReadings, setCurrentOrder, setScrollToOrder, setVerse, stop, getNextOrder, setIsActive, setVerseProgress]);
 
+  // MAIN CONTROL LOOP
   useEffect(() => {
+    if (!synthRef.current) return;
+
+    if (currentOrder !== lastOrderRef.current) {
+      lastCharIndexRef.current = 0;
+      lastOrderRef.current = currentOrder;
+    }
+
     if (isPlaying) {
       const orderToSpeak = currentOrder ?? globalCurrentOrder;
       
-      // RELIABILITY: Instead of resume(), we ensure engine is speaking our current order
-      if (speakingOrderRef.current === orderToSpeak && synthRef.current?.speaking) return;
-
-      if (currentOrder === null) {
-        setCurrentOrder(globalCurrentOrder);
+      // If engine is already speaking the right thing, don't interrupt
+      if (synthRef.current.speaking && speakingOrderRef.current === orderToSpeak && !isInternalCancelRef.current) {
         return;
       }
 
-      void speak(orderToSpeak);
-    } else {
-      if (!isActive) {
-        speakingOrderRef.current = null;
-        if (synthRef.current) {
-          isInternalCancelRef.current = true;
-          synthRef.current.cancel();
-        }
-        if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "none";
+      if (currentOrder === null) {
+        setCurrentOrder(globalCurrentOrder);
       } else {
-        // Paused state: Stop the actual speech engine but keep track of position
-        if (synthRef.current?.speaking) {
-          isInternalCancelRef.current = true;
-          synthRef.current.cancel();
-          if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "paused";
-        }
+        // RESUME: Small delay to let cancel settle on Desktop
+        const timer = setTimeout(() => {
+          void speak(orderToSpeak, false, lastCharIndexRef.current);
+        }, 50);
+        return () => clearTimeout(timer);
+      }
+    } else {
+      if (isActive) {
+        // PAUSE: authoritative cancel to prevent desktop "lock"
+        isInternalCancelRef.current = true;
+        synthRef.current.cancel();
+        if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "paused";
+      } else {
+        // STOP
+        speakingOrderRef.current = null;
+        lastCharIndexRef.current = 0;
+        isInternalCancelRef.current = true;
+        if (synthRef.current.paused) synthRef.current.resume();
+        synthRef.current.cancel();
+        if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "none";
       }
     }
-  }, [isPlaying, isActive, currentOrder, globalCurrentOrder, speed, speak, setCurrentOrder]);
+  }, [isPlaying, isActive, currentOrder, globalCurrentOrder, speak, setCurrentOrder]);
 
   return null;
 }

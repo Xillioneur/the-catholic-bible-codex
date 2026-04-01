@@ -105,7 +105,8 @@ export function JourneyGuide({ currentOrder }: JourneyGuideProps) {
     playlist,
     skipForward,
     skipBackward,
-    speed
+    speed,
+    unlockAudio
   } = useVoiceover();
 
   const toggleDayCompletion = api.readingPlan.toggleDayCompletion.useMutation({
@@ -222,6 +223,9 @@ export function JourneyGuide({ currentOrder }: JourneyGuideProps) {
   }, [journeyGuide, session, currentUserId, toggleDayCompletion, autoAdvance, handleNextDay, setJourneyGuide, setIsJourneyVoiceActive]);
 
   const handleToggleVoice = useCallback(() => {
+    // SECURE: Unlock audio context for iOS
+    unlockAudio();
+
     if (isJourneyVoiceActive) {
       togglePlay();
     } else {
@@ -234,13 +238,17 @@ export function JourneyGuide({ currentOrder }: JourneyGuideProps) {
         toast.success("Guided Audio Started");
       }
     }
-  }, [isJourneyVoiceActive, togglePlay, firstUnseenOrder, journeyGuide, jumpToOrder, audioPlayhead, setIsJourneyVoiceActive]);
+  }, [isJourneyVoiceActive, togglePlay, firstUnseenOrder, journeyGuide, jumpToOrder, audioPlayhead, setIsJourneyVoiceActive, unlockAudio]);
 
   const handleStopVoice = useCallback(() => {
     stop();
     setIsJourneyVoiceActive(false);
-    toast.success("Audio Stopped");
   }, [stop, setIsJourneyVoiceActive]);
+
+  const handleCloseGuide = useCallback(() => {
+    handleStopVoice();
+    setJourneyGuide(null);
+  }, [handleStopVoice, setJourneyGuide]);
 
   useEffect(() => {
     if (journeyGuide) {
@@ -275,7 +283,7 @@ export function JourneyGuide({ currentOrder }: JourneyGuideProps) {
     }
   }, [currentOrder, journeyGuide, progressKey, addJourneySeenOrder, isWarping]);
 
-  // EFFECT: Audio Progress Tracking (DECOUPLED)
+  // EFFECT: Audio Progress Tracking
   useEffect(() => {
     if (isJourneyVoiceActive && voiceOrder && progressKey && isPlaying) {
       addJourneyAudioOrder(progressKey, [voiceOrder]);
@@ -283,7 +291,7 @@ export function JourneyGuide({ currentOrder }: JourneyGuideProps) {
     }
   }, [voiceOrder, isJourneyVoiceActive, progressKey, addJourneyAudioOrder, setJourneyAudioPlayhead, isPlaying]);
 
-  // Handle outside audio stop (e.g. via VoiceoverManager or playlist end)
+  // Handle outside audio stop
   useEffect(() => {
     if (isJourneyVoiceActive && !isVoiceActive) {
       setIsJourneyVoiceActive(false);
@@ -382,7 +390,7 @@ export function JourneyGuide({ currentOrder }: JourneyGuideProps) {
               <button onClick={() => setAutoAdvance(!autoAdvance)} className={cn("h-7 px-2 rounded-lg flex items-center gap-1 transition-all border text-[6px] font-black uppercase tracking-tighter", autoAdvance ? "bg-primary/10 border-primary/20 text-primary" : "bg-zinc-50 dark:bg-zinc-800 border-zinc-100 dark:border-zinc-700 text-zinc-400")} title="Auto-Advance"><PlayCircle className={cn("h-3 w-3", autoAdvance && "fill-current")} />Auto</button>
               <button onClick={handleResetDay} className="h-7 w-7 flex items-center justify-center rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/20 text-zinc-300 hover:text-rose-500 transition-colors" title="Reset Day"><RotateCcw className="h-3 w-3" /></button>
               <button onClick={() => setIsMinimized(true)} className="h-7 w-7 flex items-center justify-center rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400 transition-colors" title="Minimize"><Minimize2 className="h-3 w-3" /></button>
-              <button onClick={() => setJourneyGuide(null)} className="h-7 w-7 flex items-center justify-center rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400 transition-colors" title="Close"><X className="h-3.5 w-3.5" /></button>
+              <button onClick={handleCloseGuide} className="h-7 w-7 flex items-center justify-center rounded-lg hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400 transition-colors" title="Close"><X className="h-3.5 w-3.5" /></button>
             </div>
           </div>
 
