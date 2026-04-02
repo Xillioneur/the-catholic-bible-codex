@@ -153,8 +153,8 @@ export function JourneyGuide({ currentOrder }: JourneyGuideProps) {
   const handleNextDay = useCallback(async () => {
     if (!journeyGuide) return;
     try {
-      const { data: allPlans } = await utils.readingPlan.getPlans.ensureData();
-      const plan = allPlans.find(p => p.id === journeyGuide.planId);
+      const allPlans = await utils.readingPlan.getPlans.ensureData();
+      const plan = allPlans.find((p: any) => p.id === journeyGuide.planId);
       if (!plan) return;
 
       const nextDayNum = journeyGuide.dayNumber + 1;

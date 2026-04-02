@@ -379,7 +379,7 @@ export function SidebarNav() {
   }, [liturgicalReadings, jumpToOrder, unlockAudio]);
 
   const handleContinuePlan = async (up: any) => {
-    const plan = up.plan ?? allPlans.find((p: any) => p.id === up.planId);
+    const plan = up.plan ?? (allPlans as any[]).find((p: any) => p.id === up.planId);
     const planSlug = plan?.slug;
     
     if (planSlug) {
