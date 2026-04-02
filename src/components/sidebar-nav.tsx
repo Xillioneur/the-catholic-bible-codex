@@ -43,10 +43,15 @@ import { DailyAllView } from "./liturgical-full-view";
 import { toast } from "sonner";
 import { useVoiceover } from "~/hooks/use-voiceover";
 import { useSession, signIn, signOut } from "next-auth/react";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import type { ReadingPlanDayStatus } from "~/workers/reading-plan-worker";
 
 export function SidebarNav() {
   const { data: session } = useSession();
   const utils = api.useUtils();
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const planWorker = useRef<Worker | null>(null);
+  const [dayStatuses, setDayStatuses] = useState<Record<number, ReadingPlanDayStatus>>({});
   
   // 1. STATE
   const [activeTab, setActiveTab] = useState<"library" | "daily" | "study" | "sanctuary" | null>(null);
@@ -57,7 +62,6 @@ export function SidebarNav() {
   const [librarySearch, setLibrarySearch] = useState("");
   const [editingNoteId, setEditingNoteId] = useState<string | number | null>(null);
   const [editingNoteContent, setEditingNoteContent] = useState("");
-  const lastAdvancedDay = useRef<Record<string, number>>({});
 
   // 2. STORE
   const isCollapsed = useReaderStore((state) => state.isSidebarCollapsed);
@@ -98,9 +102,16 @@ export function SidebarNav() {
   });
 
   const { data: planDetails, isLoading: isLoadingPlan } = api.readingPlan.getPlanDetails.useQuery(
-    { slug: selectedPlanSlug ?? "", translationSlug },
+    { slug: selectedPlanSlug ?? "", translationSlug, includeOrders: false },
     { enabled: !!selectedPlanSlug && selectedPlanSlug !== "" }
   );
+
+  const rowVirtualizer = useVirtualizer({
+    count: planDetails?.days.length ?? 0,
+    getScrollElement: () => scrollRef.current,
+    estimateSize: () => 80,
+    overscan: 5,
+  });
 
   const bookmarks = useLiveQuery(() => db.bookmarks.where("userId").equals(currentUserId).reverse().limit(10).toArray(), [currentUserId]) ?? [];
   const localNotesRaw = useLiveQuery(() => db.notes.where("userId").equals(currentUserId).reverse().toArray(), [currentUserId]) ?? [];
@@ -115,11 +126,6 @@ export function SidebarNav() {
     console.log(`[JOURNEY] readOrdersSet updated: ${set.size} total verses read`);
     return set;
   }, [localVerseStatuses]);
-
-  const isDayCompleted = useCallback((orders: number[]) => {
-    if (!orders || orders.length === 0) return false;
-    return orders.every(order => readOrdersSet.has(order));
-  }, [readOrdersSet]);
 
   const categories = useMemo(() => {
     const cats = ["Pentateuch", "History", "Wisdom", "Prophets", "Gospels", "Acts", "Epistles", "Revelation"];
@@ -361,9 +367,10 @@ export function SidebarNav() {
 
   const handleListenAll = useCallback(() => {
     const allOrders = liturgicalReadings.flatMap(r => r.orders);
-    if (allOrders.length > 0) {
+    const firstOrder = allOrders[0];
+    if (firstOrder !== undefined) {
       unlockAudio();
-      jumpToOrder(allOrders[0], allOrders);
+      jumpToOrder(firstOrder, allOrders);
       toast.success("Daily Bread: Voiceover Started");
       setActiveTab(null);
     } else {
@@ -384,6 +391,30 @@ export function SidebarNav() {
 
   // 7. EFFECTS
   useEffect(() => {
+    planWorker.current = new Worker(new URL("../workers/reading-plan-worker.ts", import.meta.url));
+    planWorker.current.onmessage = (e) => {
+      if (e.data.type === "STATUS_RESULT") {
+        setDayStatuses(e.data.payload);
+      }
+    };
+    return () => planWorker.current?.terminate();
+  }, []);
+
+  useEffect(() => {
+    if (planDetails && (session || localUserPlans.length > 0)) {
+      const currentPlanProgress = (session ? userPlans : localUserPlans).find((up: any) => up.planId === planDetails.id);
+      planWorker.current?.postMessage({
+        type: "PROCESS_STATUS",
+        payload: {
+          days: planDetails.days,
+          userPlan: currentPlanProgress,
+          totalDays: planDetails.totalDays
+        }
+      });
+    }
+  }, [planDetails, session, userPlans, localUserPlans]);
+
+  useEffect(() => {
     const handleOpenPlans = (e: any) => {
       const planSlug = e.detail?.planSlug;
       setActiveTab("study");
@@ -399,18 +430,21 @@ export function SidebarNav() {
     return () => window.removeEventListener("open-reading-plans" as any, handleOpenPlans);
   }, []);
 
-  // Auto-scroll to current day in roadmap
+  // Auto-scroll to current day in roadmap using virtualizer
   useEffect(() => {
-    if (selectedPlanSlug && planDetails && !isLoadingPlan) {
-      const timer = setTimeout(() => {
-        const el = document.getElementById("current-journey-day");
-        if (el) {
-          el.scrollIntoView({ behavior: "smooth", block: "center" });
-        }
-      }, 500);
-      return () => clearTimeout(timer);
+    if (selectedPlanSlug && planDetails && !isLoadingPlan && Object.keys(dayStatuses).length > 0) {
+      const currentPlanProgress = (session ? userPlans : localUserPlans).find((up: any) => up.planId === planDetails.id);
+      const currentDay = currentPlanProgress?.currentDay || 1;
+      const index = planDetails.days.findIndex(d => d.dayNumber === currentDay);
+      
+      if (index !== -1) {
+        const timer = setTimeout(() => {
+          rowVirtualizer.scrollToIndex(index, { align: "center", behavior: "smooth" });
+        }, 500);
+        return () => clearTimeout(timer);
+      }
     }
-  }, [selectedPlanSlug, planDetails, isLoadingPlan]);
+  }, [selectedPlanSlug, planDetails, isLoadingPlan, dayStatuses, session, userPlans, localUserPlans, rowVirtualizer]);
 
   return (
     <>
@@ -503,7 +537,7 @@ export function SidebarNav() {
             </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto px-4 pb-6 scrollbar-elegant">
+          <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 pb-6 scrollbar-elegant">
             {activeTab === "daily" && info && (
               <div className="space-y-6 mt-4">
                 <div className="px-3 py-2 bg-primary/5 rounded-2xl border border-primary/10 flex items-center justify-between">
@@ -889,10 +923,15 @@ export function SidebarNav() {
                         </button>
 
                         {isLoadingPlan ? (
-                          <div className="flex justify-center py-20"><Loader2 className="h-6 w-6 text-primary/20 animate-spin" /></div>
+                          <div className="space-y-3 px-1">
+                            {Array.from({ length: 8 }).map((_, i) => (
+                              <div key={i} className="h-20 w-full rounded-[1.5rem] bg-zinc-100/50 dark:bg-zinc-800/30 animate-pulse border border-zinc-100 dark:border-zinc-800" />
+                            ))}
+                          </div>
                         ) : planDetails ? (
                           <div className="space-y-6">
                             <div className="px-1 space-y-4">
+                              {/* ... header and buttons ... */}
                               <div className="flex items-start justify-between gap-4">
                                 <div className="space-y-2 flex-1">
                                   <h3 className="text-lg font-serif font-bold italic text-zinc-900 dark:text-zinc-100">{planDetails.name}</h3>
@@ -922,13 +961,27 @@ export function SidebarNav() {
 
                               <div className="flex flex-col gap-3">
                                 <button 
-                                  onClick={() => {
-                                    const firstUnfinished = planDetails.days.find((d: any) => !isDayCompleted(d.orders));
-                                    const targetDay = firstUnfinished || planDetails.days[planDetails.days.length - 1];
-                                    if (targetDay?.orders?.length > 0) {
-                                      setScrollToOrder(targetDay.orders[0]);
-                                      setActiveTab(null);
-                                      toast.success(`Resuming: Day ${targetDay.dayNumber}`);
+                                  onClick={async () => {
+                                    const currentPlanProgress = (session ? userPlans : localUserPlans).find((up: any) => up.planId === planDetails.id);
+                                    const currentDayNum = currentPlanProgress?.currentDay || 1;
+                                    const targetDay = planDetails.days.find(d => d.dayNumber === currentDayNum) || planDetails.days[0];
+                                    
+                                    if (targetDay) {
+                                      toast.loading("Resolving Scripture...", { id: "resume-resolve" });
+                                      const orders = await utils.readingPlan.getPlanDayVerses.fetch({
+                                        planId: planDetails.id,
+                                        dayNumber: targetDay.dayNumber,
+                                        translationSlug
+                                      });
+                                      toast.dismiss("resume-resolve");
+                                      
+                                      if (orders?.[0] !== undefined) {
+                                        setScrollToOrder(orders[0]);
+                                        setActiveTab(null);
+                                        toast.success(`Resuming: Day ${targetDay.dayNumber}`);
+                                      } else {
+                                        toast.error("Could not load journey text.");
+                                      }
                                     }
                                   }}
                                   className="w-full py-3 rounded-2xl bg-primary text-white text-[9px] font-black uppercase tracking-[0.2em] shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-2"
@@ -971,128 +1024,148 @@ export function SidebarNav() {
                               </div>
                             </div>
 
-                            <div className="space-y-3">
-                              {planDetails.days.map((day: any) => {
-                                const currentPlanProgress = (session ? userPlans : localUserPlans).find((up: any) => up.planId === planDetails.id);
-                                const isCurrent = currentPlanProgress?.currentDay === day.dayNumber;
-                                const isSealed = currentPlanProgress?.completedDays?.includes(day.dayNumber) || isDayCompleted(day.orders);
+                            <div 
+                              style={{ height: `${rowVirtualizer.getTotalSize()}px`, width: "100%", position: "relative" }}
+                            >
+                              {rowVirtualizer.getVirtualItems().map((virtualItem) => {
+                                const day = planDetails.days[virtualItem.index];
+                                if (!day) return null;
                                 
-                                // Calculate Date for this day
-                                const startedAt = currentPlanProgress?.startedAt;
-                                let isOverdue = false;
-                                let dateStr = "";
-                                if (startedAt) {
-                                  const d = new Date(startedAt);
-                                  d.setDate(d.getDate() + (day.dayNumber - 1));
-                                  dateStr = d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-                                  
-                                  const now = new Date();
-                                  now.setHours(0, 0, 0, 0);
-                                  const dayDate = new Date(d);
-                                  dayDate.setHours(0, 0, 0, 0);
-                                  
-                                  if (dayDate < now && !isSealed) {
-                                    isOverdue = true;
-                                  }
-                                }
+                                const currentPlanProgress = (session ? userPlans : localUserPlans).find((up: any) => up.planId === planDetails.id);
+                                const status = dayStatuses[day.dayNumber] || {
+                                  dayNumber: day.dayNumber,
+                                  dateStr: "",
+                                  isOverdue: false,
+                                  isCurrent: currentPlanProgress?.currentDay === day.dayNumber,
+                                  isSealed: currentPlanProgress?.completedDays?.includes(day.dayNumber)
+                                };
                                 
                                 return (
-                                  <div key={day.id} className="relative">
-                                    <button 
-                                      id={isCurrent ? "current-journey-day" : undefined}
-                                      onClick={() => {
-                                        if (day.orders.length > 0) {
-                                          setScrollToOrder(day.orders[0]);
-                                          setActiveTab(null);
-                                          toast.success(`Journey: Day ${day.dayNumber}`);
-                                        }
-                                      }}
-                                      className={cn(
-                                        "w-full flex items-center gap-4 p-4 rounded-[1.5rem] border transition-all text-left group",
-                                        isSealed 
-                                          ? "bg-emerald-50/50 dark:bg-emerald-950/10 border-emerald-100 dark:border-emerald-900/30" 
-                                          : isCurrent
-                                            ? "bg-primary/5 border-primary/20 ring-1 ring-primary/10"
-                                            : isOverdue
-                                              ? "bg-rose-50/30 dark:bg-rose-950/5 border-rose-100/50 dark:border-rose-900/20"
-                                              : "bg-white dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 hover:border-primary/20"
-                                      )}
-                                    >
-                                      <div className={cn(
-                                        "h-10 w-10 rounded-full flex items-center justify-center shrink-0 border-2 transition-all",
-                                        isSealed 
-                                          ? "bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-500/20" 
-                                          : isCurrent
-                                            ? "bg-primary border-primary text-white shadow-lg shadow-primary/20"
-                                            : isOverdue
-                                              ? "bg-rose-50 dark:bg-rose-900/20 border-rose-200 dark:border-rose-800 text-rose-500"
-                                              : "bg-zinc-50 dark:bg-zinc-800 border-zinc-100 dark:border-zinc-800 text-zinc-400 group-hover:border-primary/20"
-                                      )}>
-                                        {isSealed ? <CheckCircle2 className="h-5 w-5" /> : <span className="text-[11px] font-black">{day.dayNumber}</span>}
-                                      </div>
-                                      <div className="flex flex-col gap-0.5 overflow-hidden flex-1">
-                                        <div className="flex items-center gap-2">
-                                          <span className={cn(
-                                            "text-[10px] font-black uppercase tracking-tight truncate",
-                                            isSealed ? "text-emerald-600 dark:text-emerald-400" : isCurrent ? "text-primary" : isOverdue ? "text-rose-600 dark:text-rose-400" : "text-zinc-900 dark:text-zinc-100"
-                                          )}>
-                                            {day.title || `Day ${day.dayNumber}`}
-                                          </span>
-                                          {isOverdue && !isSealed && (
-                                            <span className="text-[6px] font-black uppercase bg-rose-500 text-white px-1 py-0.5 rounded-sm animate-pulse">Missed</span>
-                                          )}
-                                          {dateStr && (
-                                            <span className="text-[7px] font-bold text-zinc-400 uppercase tracking-tighter bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded-sm">
-                                              {dateStr}
-                                            </span>
-                                          )}
-                                        </div>
-                                        <span className="text-[9px] font-serif italic text-zinc-500 truncate">
-                                          {day.references.join(", ")}
-                                        </span>
-                                      </div>
-                                    </button>
-                                    
-                                    <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                                      <button
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          if (planDetails) {
-                                            setJourneyGuide({
-                                              planId: planDetails.id,
-                                              planName: planDetails.name,
-                                              planSlug: planDetails.slug,
-                                              dayNumber: day.dayNumber,
-                                              orders: day.orders,
-                                              references: day.references
-                                            });
+                                  <div 
+                                    key={day.id} 
+                                    className="absolute top-0 left-0 w-full"
+                                    style={{ 
+                                      height: `${virtualItem.size}px`,
+                                      transform: `translateY(${virtualItem.start}px)`
+                                    }}
+                                  >
+                                    <div className="p-1 px-1">
+                                      <button 
+                                        onClick={async () => {
+                                          toast.loading("Resolving Scripture...", { id: "resolve-day" });
+                                          const orders = await utils.readingPlan.getPlanDayVerses.fetch({
+                                            planId: planDetails.id,
+                                            dayNumber: day.dayNumber,
+                                            translationSlug
+                                          });
+                                          toast.dismiss("resolve-day");
+                                          
+                                          const firstOrder = orders?.[0];
+                                          if (firstOrder !== undefined) {
+                                            setScrollToOrder(firstOrder);
                                             setActiveTab(null);
-                                            toast.success(`Guide active for Day ${day.dayNumber}`);
-                                          }
-                                        }}
-                                        className="p-2 rounded-full text-zinc-300 hover:text-primary hover:bg-primary/5 transition-all"
-                                        title="Activate Guide"
-                                      >
-                                        <Compass className="h-4 w-4" />
-                                      </button>
-                                      
-                                      <button
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          if (currentPlanProgress) {
-                                            handleToggleDay(currentPlanProgress, day.dayNumber, !isSealed);
+                                            toast.success(`Journey: Day ${day.dayNumber}`);
+                                          } else {
+                                            toast.error("Could not load verses for this day.");
                                           }
                                         }}
                                         className={cn(
-                                          "p-2 rounded-full transition-all",
-                                          isSealed 
-                                            ? "text-emerald-500 hover:bg-emerald-100/50" 
-                                            : "text-zinc-300 hover:text-primary hover:bg-primary/5"
+                                          "w-full h-full flex items-center gap-4 p-4 rounded-[1.5rem] border transition-all text-left group",
+                                          status.isSealed 
+                                            ? "bg-emerald-50/50 dark:bg-emerald-950/10 border-emerald-100 dark:border-emerald-900/30" 
+                                            : status.isCurrent
+                                              ? "bg-primary/5 border-primary/20 ring-1 ring-primary/10"
+                                              : status.isOverdue
+                                                ? "bg-rose-50/30 dark:bg-rose-950/5 border-rose-100/50 dark:border-rose-900/20"
+                                                : "bg-white dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 hover:border-primary/20"
                                         )}
-                                        title={isSealed ? "Break the Seal" : "Seal with Amen"}
                                       >
-                                        <Scroll className={cn("h-4 w-4", isSealed && "fill-current")} />
+                                        <div className={cn(
+                                          "h-10 w-10 rounded-full flex items-center justify-center shrink-0 border-2 transition-all",
+                                          status.isSealed 
+                                            ? "bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-500/20" 
+                                            : status.isCurrent
+                                              ? "bg-primary border-primary text-white shadow-lg shadow-primary/20"
+                                              : status.isOverdue
+                                                ? "bg-rose-50 dark:bg-rose-900/20 border-rose-200 dark:border-rose-800 text-rose-500"
+                                                : "bg-zinc-50 dark:bg-zinc-800 border-zinc-100 dark:border-zinc-800 text-zinc-400 group-hover:border-primary/20"
+                                        )}>
+                                          {status.isSealed ? <CheckCircle2 className="h-5 w-5" /> : <span className="text-[11px] font-black">{day.dayNumber}</span>}
+                                        </div>
+                                        <div className="flex flex-col gap-0.5 overflow-hidden flex-1">
+                                          <div className="flex items-center gap-2">
+                                            <span className={cn(
+                                              "text-[10px] font-black uppercase tracking-tight truncate",
+                                              status.isSealed ? "text-emerald-600 dark:text-emerald-400" : status.isCurrent ? "text-primary" : status.isOverdue ? "text-rose-600 dark:text-rose-400" : "text-zinc-900 dark:text-zinc-100"
+                                            )}>
+                                              {day.title || `Day ${day.dayNumber}`}
+                                            </span>
+                                            {status.isOverdue && !status.isSealed && (
+                                              <span className="text-[6px] font-black uppercase bg-rose-500 text-white px-1 py-0.5 rounded-sm animate-pulse">Missed</span>
+                                            )}
+                                            {status.dateStr && (
+                                              <span className="text-[7px] font-bold text-zinc-400 uppercase tracking-tighter bg-zinc-100 dark:bg-zinc-800 px-1.5 py-0.5 rounded-sm">
+                                                {status.dateStr}
+                                              </span>
+                                            )}
+                                          </div>
+                                          <span className="text-[9px] font-serif italic text-zinc-500 truncate">
+                                            {day.references.join(", ")}
+                                          </span>
+                                        </div>
                                       </button>
+                                      
+                                      <div className="absolute right-6 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                                        <button
+                                          onClick={async (e) => {
+                                            e.stopPropagation();
+                                            if (planDetails) {
+                                              toast.loading("Activating Guide...", { id: "resolve-guide" });
+                                              const orders = await utils.readingPlan.getPlanDayVerses.fetch({
+                                                planId: planDetails.id,
+                                                dayNumber: day.dayNumber,
+                                                translationSlug
+                                              });
+                                              toast.dismiss("resolve-guide");
+
+                                              if (orders?.length > 0) {
+                                                setJourneyGuide({
+                                                  planId: planDetails.id,
+                                                  planName: planDetails.name,
+                                                  planSlug: planDetails.slug,
+                                                  dayNumber: day.dayNumber,
+                                                  orders: orders,
+                                                  references: day.references
+                                                });
+                                                setActiveTab(null);
+                                                toast.success(`Guide active for Day ${day.dayNumber}`);
+                                              }
+                                            }
+                                          }}
+                                          className="p-2 rounded-full text-zinc-300 hover:text-primary hover:bg-primary/5 transition-all"
+                                          title="Activate Guide"
+                                        >
+                                          <Compass className="h-4 w-4" />
+                                        </button>
+                                        
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            if (currentPlanProgress) {
+                                              handleToggleDay(currentPlanProgress, day.dayNumber, !status.isSealed);
+                                            }
+                                          }}
+                                          className={cn(
+                                            "p-2 rounded-full transition-all",
+                                            status.isSealed 
+                                              ? "text-emerald-500 hover:bg-emerald-100/50" 
+                                              : "text-zinc-300 hover:text-primary hover:bg-primary/5"
+                                          )}
+                                          title={status.isSealed ? "Break the Seal" : "Seal with Amen"}
+                                        >
+                                          <Scroll className={cn("h-4 w-4", status.isSealed && "fill-current")} />
+                                        </button>
+                                      </div>
                                     </div>
                                   </div>
                                 );

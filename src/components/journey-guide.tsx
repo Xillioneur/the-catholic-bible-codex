@@ -164,19 +164,28 @@ export function JourneyGuide({ currentOrder }: JourneyGuideProps) {
         return;
       }
 
-      const { data: nextDetails } = await utils.readingPlan.getPlanDetails.fetch({ 
-        slug: journeyGuide.planSlug, 
+      toast.loading(`Preparing Day ${nextDayNum}...`, { id: "advance-resolve" });
+      const nextOrders = await utils.readingPlan.getPlanDayVerses.fetch({ 
+        planId: journeyGuide.planId,
+        dayNumber: nextDayNum,
         translationSlug 
       });
       
-      const nextDayData = nextDetails?.days.find(d => d.dayNumber === nextDayNum);
-      if (nextDayData) {
+      const details = await utils.readingPlan.getPlanDetails.fetch({ 
+        slug: journeyGuide.planSlug, 
+        translationSlug,
+        includeOrders: false
+      });
+      toast.dismiss("advance-resolve");
+      
+      const nextDayData = details?.days.find(d => d.dayNumber === nextDayNum);
+      if (nextDayData && nextOrders) {
         setJourneyGuide({
           planId: journeyGuide.planId,
           planName: journeyGuide.planName,
           planSlug: journeyGuide.planSlug,
           dayNumber: nextDayNum,
-          orders: nextDayData.orders,
+          orders: nextOrders,
           references: nextDayData.references
         });
         toast.success(`Advancing to Day ${nextDayNum}`);
@@ -232,9 +241,10 @@ export function JourneyGuide({ currentOrder }: JourneyGuideProps) {
       const startOrder = journeyGuide?.orders[0] ?? 1;
       const target = audioPlayhead > 0 ? audioPlayhead : (firstUnseenOrder ?? startOrder);
       const assignmentPlaylist = journeyGuide?.orders.filter(o => o >= target) || [];
-      if (assignmentPlaylist.length > 0) {
+      const first = assignmentPlaylist[0];
+      if (first !== undefined) {
         setIsJourneyVoiceActive(true);
-        jumpToOrder(assignmentPlaylist[0], assignmentPlaylist);
+        jumpToOrder(first, assignmentPlaylist);
         toast.success("Guided Audio Started");
       }
     }

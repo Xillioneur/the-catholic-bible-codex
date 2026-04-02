@@ -25,7 +25,8 @@ export const readingPlanRouter = createTRPCRouter({
   getPlanDetails: publicProcedure
     .input(z.object({ 
       slug: z.string(),
-      translationSlug: z.string().default("drb")
+      translationSlug: z.string().default("drb"),
+      includeOrders: z.boolean().default(false)
     }))
     .query(async ({ ctx, input }) => {
       if (!input.slug) return null;
@@ -36,6 +37,13 @@ export const readingPlanRouter = createTRPCRouter({
       });
 
       if (!plan) return null;
+
+      if (!input.includeOrders) {
+        return { 
+          ...plan, 
+          days: plan.days.map(d => ({ ...d, orders: [] as number[] })) 
+        };
+      }
 
       const translation = await ctx.db.translation.findUnique({ where: { slug: input.translationSlug } });
       if (!translation) return { ...plan, days: plan.days.map(d => ({ ...d, orders: [] })) };
