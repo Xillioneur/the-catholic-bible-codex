@@ -148,6 +148,11 @@ export function VoiceoverManager() {
     }
   }, [setIsPlaying, stop, skipBackward, skipForward]);
 
+  const cleanText = useCallback((text: string) => {
+    // Replace special markers with spaces to preserve string indices for progress tracking
+    return text.replace(/[*†‡§_]/g, " ");
+  }, []);
+
   const speak = useCallback(async (order: number, forceTitle = false, charOffset = 0) => {
     if (!synthRef.current || !isPlaying) return;
 
@@ -177,10 +182,10 @@ export function VoiceoverManager() {
       if (isReadTitlesEnabled && !forceTitle && !isSpeakingTitleRef.current) {
         const reading = liturgicalReadings.find(r => r.orders[0] === order);
         if (reading) {
-          textToSpeak = `${reading.type}. ${reading.citation}.`;
+          textToSpeak = cleanText(`${reading.type}. ${reading.citation}.`);
           isTitle = true;
         } else if (verse.verse === 1) {
-          textToSpeak = `${verse.book.name}. Chapter ${verse.chapter}.`;
+          textToSpeak = cleanText(`${verse.book.name}. Chapter ${verse.chapter}.`);
           isTitle = true;
         }
       }
@@ -189,7 +194,7 @@ export function VoiceoverManager() {
         isSpeakingTitleRef.current = true;
       } else {
         isSpeakingTitleRef.current = false;
-        textToSpeak = verse.text;
+        textToSpeak = cleanText(verse.text);
         
         // SLICED RESUMPTION: midway verse resume
         if (charOffset > 0 && charOffset < textToSpeak.length) {
@@ -267,7 +272,7 @@ export function VoiceoverManager() {
     } catch (err) {
       console.error("Voiceover engine error:", err);
     }
-  }, [translationSlug, isPlaying, speed, getBestVoice, isReadTitlesEnabled, liturgicalReadings, setCurrentOrder, setScrollToOrder, setVerse, stop, getNextOrder, setIsActive, setVerseProgress]);
+  }, [translationSlug, isPlaying, speed, getBestVoice, isReadTitlesEnabled, liturgicalReadings, setCurrentOrder, setScrollToOrder, setVerse, stop, getNextOrder, setIsActive, setVerseProgress, cleanText]);
 
   // MAIN CONTROL LOOP
   useEffect(() => {
