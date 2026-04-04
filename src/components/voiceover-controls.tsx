@@ -33,9 +33,12 @@ export function VoiceoverControls() {
   const setIsReadTitlesEnabled = useReaderStore((state) => state.setIsReadTitlesEnabled);
   const voiceURI = useReaderStore((state) => state.voiceoverVoiceURI);
   const setVoiceURI = useReaderStore((state) => state.setVoiceoverVoiceURI);
+  const translationSlug = useReaderStore((state) => state.translationSlug);
 
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [menuView, setMenuView] = useState<"main" | "voices">("main");
+
+  const isLatin = translationSlug === "vul";
 
   useEffect(() => {
     const loadVoices = () => {
@@ -119,16 +122,27 @@ export function VoiceoverControls() {
               <DropdownMenuSeparator className="bg-zinc-100 dark:bg-zinc-800 mb-1" />
               
               <button
+                disabled={isLatin}
                 onClick={(e) => { e.preventDefault(); setMenuView("voices"); }}
-                className="w-full flex items-center justify-between px-2.5 py-3 rounded-xl text-xs font-bold hover:bg-primary/5 text-zinc-600 dark:text-zinc-300 group"
+                className={cn(
+                  "w-full flex items-center justify-between px-2.5 py-3 rounded-xl text-xs font-bold text-zinc-600 dark:text-zinc-300 group transition-all",
+                  isLatin ? "opacity-50 cursor-not-allowed bg-zinc-50 dark:bg-zinc-900/50" : "hover:bg-primary/5"
+                )}
               >
                 <div className="flex items-center gap-3">
                   <User className="h-4 w-4 text-zinc-400 group-hover:text-primary" />
                   <span>Voice</span>
                 </div>
-                <span className="text-[9px] font-medium text-zinc-400 group-hover:text-primary max-w-[80px] truncate">
-                  {currentVoice?.name ?? "Default"}
-                </span>
+                <div className="flex items-center gap-2">
+                  {isLatin && (
+                    <span className="text-[7px] font-black uppercase tracking-widest bg-primary/10 text-primary px-1.5 py-0.5 rounded-sm">
+                      Latin Mode
+                    </span>
+                  )}
+                  <span className="text-[9px] font-medium text-zinc-400 group-hover:text-primary max-w-[80px] truncate">
+                    {isLatin ? "Auto-Latin" : (currentVoice?.name ?? "Default")}
+                  </span>
+                </div>
               </button>
 
               <DropdownMenuCheckboxItem

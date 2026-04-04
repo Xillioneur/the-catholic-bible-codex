@@ -59,6 +59,17 @@ export function VoiceoverManager() {
     const voices = synthRef.current.getVoices();
     if (voices.length === 0) return null;
 
+    // LATIN SUPPORT (PRIORITY & LOCK)
+    if (translationSlug === "vul") {
+      const latinVoices = voices.filter(v => v.lang.startsWith("la"));
+      if (latinVoices.length > 0) {
+        return latinVoices.find(v => v.name.includes("Enhanced") || v.name.includes("Premium")) || latinVoices[0] || null;
+      }
+      const romanceVoices = voices.filter(v => v.lang.startsWith("it") || v.lang.startsWith("es"));
+      if (romanceVoices.length > 0) return romanceVoices[0] || null;
+      return voices[0] || null; // Final fallback
+    }
+
     if (selectedVoiceURI) {
       const selected = voices.find(v => v.voiceURI === selectedVoiceURI);
       if (selected) return selected;
@@ -78,7 +89,7 @@ export function VoiceoverManager() {
       voices[0] ||
       null
     );
-  }, [voicesLoaded, selectedVoiceURI]);
+  }, [voicesLoaded, selectedVoiceURI, translationSlug]);
 
   const stop = useCallback(() => {
     isInternalCancelRef.current = true;

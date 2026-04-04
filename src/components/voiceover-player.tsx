@@ -59,6 +59,8 @@ export function VoiceoverPlayer() {
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [menuView, setMenuView] = useState<"main" | "voices">("main");
 
+  const isLatin = translationSlug === "vul";
+
   useEffect(() => {
     const loadVoices = () => {
       let v = window.speechSynthesis.getVoices();
@@ -164,6 +166,11 @@ export function VoiceoverPlayer() {
                   <h3 className="text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] text-primary truncate">
                     {isLiturgical ? "Liturgical Reading" : currentVerse.book.name}
                   </h3>
+                  {isLatin && (
+                    <span className="text-[7px] font-black bg-primary text-white px-1.5 py-0.5 rounded-full tracking-tighter scale-90 origin-left">
+                      LATIN
+                    </span>
+                  )}
                   <div className="h-1 w-1 rounded-full bg-zinc-300 dark:bg-zinc-700 shrink-0" />
                   <span className="text-[10px] sm:text-xs font-bold text-zinc-400 tabular-nums shrink-0">
                     {currentVerse.book.name} {currentVerse.chapter}:{currentVerse.verse}
@@ -269,16 +276,27 @@ export function VoiceoverPlayer() {
                         <DropdownMenuSeparator className="bg-zinc-100 dark:bg-zinc-800 mb-3" />
                         
                         <button
+                          disabled={isLatin}
                           onClick={(e) => { e.preventDefault(); setMenuView("voices"); }}
-                          className="w-full flex items-center justify-between px-3 py-3 rounded-xl text-xs font-bold hover:bg-primary/5 text-zinc-600 dark:text-zinc-300 group"
+                          className={cn(
+                            "w-full flex items-center justify-between px-3 py-3 rounded-xl text-xs font-bold text-zinc-600 dark:text-zinc-300 group transition-all",
+                            isLatin ? "opacity-50 cursor-not-allowed bg-zinc-50 dark:bg-zinc-900/50" : "hover:bg-primary/5"
+                          )}
                         >
                           <div className="flex items-center gap-3">
                             <User className="h-4 w-4 text-zinc-400 group-hover:text-primary" />
                             <span>Voice</span>
                           </div>
-                          <span className="text-[9px] font-medium text-zinc-400 group-hover:text-primary max-w-[80px] truncate">
-                            {currentVoice?.name ?? "Default"}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            {isLatin && (
+                              <span className="text-[7px] font-black uppercase tracking-widest bg-primary/10 text-primary px-1.5 py-0.5 rounded-sm">
+                                Latin Mode
+                              </span>
+                            )}
+                            <span className="text-[9px] font-medium text-zinc-400 group-hover:text-primary max-w-[80px] truncate">
+                              {isLatin ? "Auto-Latin" : (currentVoice?.name ?? "Default")}
+                            </span>
+                          </div>
                         </button>
 
                         <DropdownMenuCheckboxItem
