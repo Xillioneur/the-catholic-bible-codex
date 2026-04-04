@@ -111,7 +111,7 @@ export const bibleRouter = createTRPCRouter({
       // Liturgical citations often list verses like "17-28".
       // If the verses array is just a list of numbers for a SINGLE chapter:
       let chapter = startChapter;
-      if (book.slug.toLowerCase() === "psalms" && input.translationSlug === "drb") {
+      if (book.slug.toLowerCase() === "psalms" && (input.translationSlug === "drb" || input.translationSlug === "vul")) {
         chapter = mapPsalmToVulgate(startChapter);
       }
 
@@ -205,7 +205,7 @@ export const bibleRouter = createTRPCRouter({
             if (!book) return null;
 
             let chapter = startChapter;
-            if (book.slug.toLowerCase() === "psalms" && input.translationSlug === "drb") {
+            if (book.slug.toLowerCase() === "psalms" && (input.translationSlug === "drb" || input.translationSlug === "vul")) {
               chapter = mapPsalmToVulgate(startChapter);
             }
 
@@ -323,7 +323,7 @@ export const bibleRouter = createTRPCRouter({
       if (!translation || !book) return null;
 
       let chapter = input.chapter;
-      if (book.slug.toLowerCase() === "psalms" && input.translationSlug === "drb") {
+      if (book.slug.toLowerCase() === "psalms" && (input.translationSlug === "drb" || input.translationSlug === "vul")) {
         chapter = mapPsalmToVulgate(input.chapter);
       }
 
@@ -365,7 +365,7 @@ export const bibleRouter = createTRPCRouter({
 
       const results = await Promise.all(translations.map(async (t) => {
         let chapter = input.chapter;
-        if (book.slug.toLowerCase() === "psalms" && t.slug === "drb") {
+        if (book.slug.toLowerCase() === "psalms" && (t.slug === "drb" || t.slug === "vul")) {
           chapter = mapPsalmToVulgate(input.chapter);
         }
 

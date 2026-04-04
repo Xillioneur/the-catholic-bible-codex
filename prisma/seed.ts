@@ -118,6 +118,7 @@ async function main() {
   const seedFiles = [
     { slug: "webbe", file: "webbe.json" },
     { slug: "drb", file: "drb.json" },
+    { slug: "vul", file: "vul.json" },
   ];
 
   for (const { slug, file } of seedFiles) {

@@ -65,7 +65,7 @@ export const readingPlanRouter = createTRPCRouter({
             if (!book) continue;
 
             let chapter = startChapter;
-            if (book.slug.toLowerCase() === "psalms" && input.translationSlug === "drb") {
+            if (book.slug.toLowerCase() === "psalms" && (input.translationSlug === "drb" || input.translationSlug === "vul")) {
               chapter = mapPsalmToVulgate(startChapter);
             }
 
@@ -251,7 +251,7 @@ export const readingPlanRouter = createTRPCRouter({
           if (!book) continue;
 
           let chapter = startChapter;
-          if (book.slug.toLowerCase() === "psalms" && input.translationSlug === "drb") {
+          if (book.slug.toLowerCase() === "psalms" && (input.translationSlug === "drb" || input.translationSlug === "vul")) {
             chapter = mapPsalmToVulgate(startChapter);
           }
 
