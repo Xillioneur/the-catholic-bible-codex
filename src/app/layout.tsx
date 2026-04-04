@@ -35,6 +35,9 @@ export const metadata: Metadata = {
     { rel: "icon", url: "/favicon.svg", type: "image/svg+xml" },
     { rel: "apple-touch-icon", url: "/favicon.svg" },
   ],
+  verification: {
+    google: "google8b83b6c38622a440",
+  },
 };
 
 const geist = Geist({
