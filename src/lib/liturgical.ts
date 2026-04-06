@@ -13,15 +13,54 @@ export interface LiturgicalInfo {
   };
 }
 
-export function getLiturgicalColorOklch(color: LiturgicalColor): string {
+export function getLiturgicalColorOklch(color: LiturgicalColor): { 
+  primary: string;
+  foreground: string;
+  surface: string;
+} {
   switch (color) {
-    case "green": return "0.6 0.12 150";
-    case "violet": return "0.45 0.15 285";
-    case "white": return "0.98 0.01 240";
-    case "red": return "0.55 0.2 25";
-    case "rose": return "0.75 0.1 350";
-    case "gold": return "0.8 0.15 85";
-    default: return "0.6 0.12 150";
+    case "green": 
+      return {
+        primary: "0.6 0.12 150", // Vibrant Green
+        foreground: "0.25 0.06 150",
+        surface: "0.97 0.02 150"
+      };
+    case "violet": 
+      return {
+        primary: "0.45 0.15 285", // Deep Violet
+        foreground: "0.2 0.08 285",
+        surface: "0.96 0.02 285"
+      };
+    case "white": 
+      return {
+        primary: "0.75 0.05 85", // Warm Gold/Cream for "White" feast days
+        foreground: "0.3 0.02 85",
+        surface: "0.98 0.01 85"
+      };
+    case "red": 
+      return {
+        primary: "0.55 0.2 25", // Martyr's Red
+        foreground: "0.2 0.1 25",
+        surface: "0.96 0.03 25"
+      };
+    case "rose": 
+      return {
+        primary: "0.7 0.12 350", // Gaudete/Laetare Pink
+        foreground: "0.3 0.08 350",
+        surface: "0.97 0.02 350"
+      };
+    case "gold": 
+      return {
+        primary: "0.8 0.15 85", // Regal Gold
+        foreground: "0.3 0.1 85",
+        surface: "0.97 0.04 85"
+      };
+    default: 
+      return {
+        primary: "0.6 0.12 150",
+        foreground: "0.25 0.06 150",
+        surface: "0.97 0.02 150"
+      };
   }
 }
 

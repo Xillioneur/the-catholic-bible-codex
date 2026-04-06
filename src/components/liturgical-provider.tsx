@@ -17,14 +17,26 @@ const LiturgicalContext = createContext<LiturgicalContextType | undefined>(undef
 export function LiturgicalProvider({ children }: { children: ReactNode }) {
   const { data: info, isLoading, error } = api.bible.getLiturgicalInfo.useQuery({});
   const translationSlug = useReaderStore((state) => state.translationSlug);
+  const theme = useReaderStore((state) => state.theme);
   const setLiturgicalReadings = useReaderStore((state) => state.setLiturgicalReadings);
   const utils = api.useUtils();
 
   useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+  }, [theme]);
+
+  useEffect(() => {
     if (info?.color) {
-      const oklch = getLiturgicalColorOklch(info.color);
-      document.documentElement.style.setProperty("--primary", `oklch(${oklch})`);
-      document.documentElement.style.setProperty("--ring", `oklch(${oklch} / 0.1)`);
+      const palette = getLiturgicalColorOklch(info.color);
+      const root = document.documentElement;
+      
+      root.style.setProperty("--primary", `oklch(${palette.primary})`);
+      root.style.setProperty("--primary-foreground", info.color === "white" || info.color === "gold" ? "oklch(0.2 0.02 85)" : "oklch(0.98 0.01 240)");
+      root.style.setProperty("--ring", `oklch(${palette.primary} / 0.15)`);
+      
+      // Dynamic surface tinting for 'Sanctuary' feel
+      root.style.setProperty("--liturgical-surface", `oklch(${palette.surface})`);
+      root.style.setProperty("--liturgical-foreground", `oklch(${palette.foreground})`);
     }
   }, [info]);
 

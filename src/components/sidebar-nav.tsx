@@ -32,7 +32,9 @@ import {
   MessageSquare,
   Play,
   CheckCircle2,
-  Compass
+  Compass,
+  Type,
+  Moon
 } from "lucide-react";
 import { useReaderStore } from "~/hooks/use-reader-store";
 import { cn } from "~/lib/utils";
@@ -44,6 +46,7 @@ import { toast } from "sonner";
 import { useVoiceover } from "~/hooks/use-voiceover";
 import { useSession, signIn, signOut } from "next-auth/react";
 import { useVirtualizer } from "@tanstack/react-virtual";
+import { useTheme } from "next-themes";
 import type { ReadingPlanDayStatus } from "~/workers/reading-plan-worker";
 
 export function SidebarNav() {
@@ -87,6 +90,9 @@ export function SidebarNav() {
   const setJourneyGuide = useReaderStore((state) => state.setJourneyGuide);
   const clearJourneyProgress = useReaderStore((state) => state.clearJourneyProgress);
   const setIsJourneyVoiceActive = useReaderStore((state) => state.setIsJourneyVoiceActive);
+  const theme = useReaderStore((state) => state.theme);
+  const setTheme = useReaderStore((state) => state.setTheme);
+  const { theme: mode, setTheme: setMode } = useTheme();
 
   const currentUserId = session?.user?.id ?? "guest";
 
@@ -471,11 +477,11 @@ export function SidebarNav() {
           "w-full h-14 items-center justify-around px-2 rounded-full border"
         )}>
           {/* LOGO AREA */}
-          <div className="hidden md:flex w-9 h-9 rounded-xl bg-primary items-center justify-center shadow-lg shadow-primary/20 mb-4 overflow-hidden flex-shrink-0">
-            <svg viewBox="0 0 512 512" fill="none" className="w-6 h-6">
-              <circle cx="256" cy="256" r="240" fill="transparent" stroke="white" strokeWidth="20"/>
-              <path d="M256 120V392" stroke="white" strokeWidth="36" strokeLinecap="round"/>
-              <path d="M160 210H352" stroke="white" strokeWidth="36" strokeLinecap="round"/>
+          <div className="hidden md:flex w-10 h-10 rounded-2xl bg-primary items-center justify-center shadow-2xl shadow-primary/40 mb-4 overflow-hidden flex-shrink-0 group/logo cursor-pointer active:scale-95 transition-all">
+            <svg viewBox="0 0 512 512" fill="none" className="w-6 h-6 transform group-hover/logo:rotate-12 transition-transform duration-500">
+              <circle cx="256" cy="256" r="240" fill="transparent" stroke="white" strokeWidth="20" className="opacity-40"/>
+              <path d="M256 120V392" stroke="white" strokeWidth="40" strokeLinecap="round" className="drop-shadow-sm"/>
+              <path d="M160 210H352" stroke="white" strokeWidth="40" strokeLinecap="round" className="drop-shadow-sm"/>
             </svg>
           </div>
 
@@ -528,7 +534,15 @@ export function SidebarNav() {
           "left-4 right-4 top-[calc(env(safe-area-inset-top)+1rem)] bottom-[calc(env(safe-area-inset-bottom)+5.5rem)] rounded-[2.5rem] slide-in-from-bottom-4"
         )}>
           <div className="p-4 flex items-center justify-between border-b border-zinc-100 dark:border-zinc-800/50">
-            <h2 className="text-[8px] font-black uppercase tracking-[0.4em] text-zinc-400">{activeTab}</h2>
+            <div className="flex flex-col">
+              <h2 className="text-[8px] font-black uppercase tracking-[0.4em] text-zinc-400">{activeTab}</h2>
+              {info && (
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <div className="h-1 w-1 rounded-full bg-primary animate-pulse" />
+                  <span className="text-[7px] font-black uppercase tracking-widest text-primary opacity-70">{info.season}</span>
+                </div>
+              )}
+            </div>
             <button onClick={() => {
               setActiveTab(null);
               setLibrarySelectedBook(null);
@@ -1392,7 +1406,60 @@ export function SidebarNav() {
                   </div>
 
                   <div className="space-y-3">
+                    <span className="text-[9px] font-black uppercase tracking-widest text-zinc-400 block ml-2">Atmosphere</span>
+                    <div className="grid grid-cols-3 gap-2 p-1 bg-zinc-50 dark:bg-zinc-800/30 rounded-[2.5rem] border border-zinc-100/50 dark:border-zinc-800/50">
+                      {[
+                        { id: "sanctuary", label: "Sanctuary", icon: Church },
+                        { id: "traditional", label: "Classic", icon: Type },
+                        { id: "midnight", label: "Midnight", icon: Moon },
+                      ].map((t) => (
+                        <button
+                          key={t.id}
+                          onClick={() => {
+                            setTheme(t.id as any);
+                            if (t.id === "midnight") setMode("dark");
+                          }}
+                          className={cn(
+                            "flex flex-col items-center gap-1.5 py-3 rounded-[2rem] transition-all",
+                            theme === t.id 
+                              ? "bg-white dark:bg-zinc-700 shadow-sm text-primary ring-1 ring-primary/10" 
+                              : "text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
+                          )}
+                        >
+                          <t.icon className="h-4 w-4" />
+                          <span className="text-[8px] font-black uppercase tracking-tighter">{t.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
                     <span className="text-[9px] font-black uppercase tracking-widest text-zinc-400 block ml-2">Appearance</span>
+                    <div className="grid grid-cols-3 gap-2 p-1 bg-zinc-50 dark:bg-zinc-800/30 rounded-[2.5rem] border border-zinc-100/50 dark:border-zinc-800/50">
+                      {[
+                        { id: "light", label: "Light", icon: Sun },
+                        { id: "dark", label: "Dark", icon: Moon },
+                        { id: "system", label: "System", icon: Settings2 },
+                      ].map((m) => (
+                        <button
+                          key={m.id}
+                          onClick={() => setMode(m.id)}
+                          className={cn(
+                            "flex flex-col items-center gap-1.5 py-3 rounded-[2rem] transition-all",
+                            mode === m.id 
+                              ? "bg-white dark:bg-zinc-700 shadow-sm text-primary ring-1 ring-primary/10" 
+                              : "text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200"
+                          )}
+                        >
+                          <m.icon className="h-4 w-4" />
+                          <span className="text-[8px] font-black uppercase tracking-tighter">{m.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <span className="text-[9px] font-black uppercase tracking-widest text-zinc-400 block ml-2">Text Size</span>
                     <div className="p-4 rounded-[2rem] bg-zinc-50 dark:bg-zinc-800/30 flex items-center justify-between border border-zinc-100/50 dark:border-zinc-800/50">
                       <button onClick={() => setFontSize(fontSize - 1)} className="h-8 w-8 flex items-center justify-center rounded-xl bg-white dark:bg-zinc-700 shadow-sm text-zinc-600 hover:text-primary transition-colors"><Minus className="h-3 w-3" /></button>
                       <span className="text-lg font-black tabular-nums text-zinc-900 dark:text-zinc-100">{fontSize}</span>

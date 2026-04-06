@@ -87,26 +87,20 @@ export function LiturgicalCard({ onClose }: LiturgicalCardProps) {
 
   return (
     <>
-      <div className="glass rounded-[2rem] overflow-hidden min-w-[280px] animate-in zoom-in-95 duration-300 shadow-2xl border border-zinc-200 dark:border-zinc-800">
-        <div className={cn(
-          "px-5 py-4 border-b border-zinc-100 dark:border-zinc-800 flex items-center justify-between",
-          info.color === "violet" && "bg-violet-500/5"
-        )}>
+      <div className="glass rounded-[2rem] overflow-hidden min-w-[300px] animate-in zoom-in-95 duration-300 shadow-2xl border-none ring-1 ring-primary/20">
+        <div className="px-6 py-5 border-b border-primary/5 bg-primary/[0.03] flex items-center justify-between">
           <div className="flex flex-col">
-            <div className="flex items-center gap-1.5 mb-0.5">
-              <div className="h-1.5 w-1.5 rounded-full bg-primary" />
-              <span className="text-[8px] font-black uppercase tracking-[0.3em] text-primary">Daily bread</span>
+            <div className="flex items-center gap-2 mb-1">
+              <Calendar className="h-3 w-3 text-primary animate-pulse" />
+              <span className="text-[9px] font-black uppercase tracking-[0.3em] text-primary/70">Sanctuary Today</span>
             </div>
-            <span className="text-[11px] font-black text-zinc-900 dark:text-zinc-100 uppercase tracking-tight line-clamp-1 max-w-[180px]">
+            <span className="text-sm font-serif font-bold italic text-zinc-900 dark:text-zinc-100 tracking-tight line-clamp-1">
               {info.day}
             </span>
           </div>
-          <button 
-            onClick={handleListenAll}
-            className="h-8 w-8 rounded-full bg-primary/10 text-primary flex items-center justify-center hover:bg-primary hover:text-white transition-all active:scale-90"
-          >
-            <Volume2 className="h-3.5 w-3.5" />
-          </button>
+          <div className="flex items-center gap-2">
+            <div className={cn("h-2.5 w-2.5 rounded-full shadow-[0_0_10px_rgba(var(--primary-rgb),0.5)]")} style={{ backgroundColor: "var(--primary)" }} />
+          </div>
         </div>
 
         <div className="p-2 space-y-0.5">

@@ -152,8 +152,8 @@ export function LiturgicalNavigator() {
   return (
     <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[100] animate-in fade-in slide-in-from-bottom-8 duration-700">
       <div className={cn(
-        "bg-white/95 dark:bg-zinc-900/95 border rounded-full shadow-[0_8px_48px_-12px_rgba(var(--primary-rgb),0.5)] p-1.5 flex items-center backdrop-blur-xl ring-1 ring-primary/10 transition-all duration-500",
-        isFar ? "border-primary/40 px-2" : "border-primary/20 px-2"
+        "glass-liturgical rounded-full shadow-liturgical p-1.5 flex items-center transition-all duration-500",
+        isFar ? "ring-2 ring-primary/40 px-2" : "ring-1 ring-primary/10 px-2"
       )}>
         
         {/* Full Close Button */}

@@ -30,7 +30,7 @@ export function VoiceoverControls() {
   const isFollowEnabled = useReaderStore((state) => state.isVoiceoverFollowEnabled);
   const setIsFollowEnabled = useReaderStore((state) => state.setIsVoiceoverFollowEnabled);
   const isReadTitlesEnabled = useReaderStore((state) => state.isVoiceoverReadTitlesEnabled);
-  const setIsReadTitlesEnabled = useReaderStore((state) => state.setIsReadTitlesEnabled);
+  const setIsReadTitlesEnabled = useReaderStore((state) => state.setIsVoiceoverReadTitlesEnabled);
   const voiceURI = useReaderStore((state) => state.voiceoverVoiceURI);
   const setVoiceURI = useReaderStore((state) => state.setVoiceoverVoiceURI);
   const translationSlug = useReaderStore((state) => state.translationSlug);

@@ -6,6 +6,7 @@ import { SessionProvider } from "next-auth/react";
 
 import { TRPCReactProvider } from "~/trpc/react";
 import { LiturgicalProvider } from "~/components/liturgical-provider";
+import { ThemeProvider } from "~/components/theme-provider";
 import { Toaster } from "~/components/ui/sonner";
 import { Analytics } from "@vercel/analytics/next";
 import { ProgressSyncer } from "./_components/progress-syncer";
@@ -58,12 +59,19 @@ export default function RootLayout({
       <body suppressHydrationWarning>
         <SessionProvider>
           <TRPCReactProvider>
-            <LiturgicalProvider>
-              {children}
-              <ProgressSyncer />
-              <Toaster position="top-center" richColors />
-              <Analytics />
-            </LiturgicalProvider>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="system"
+              enableSystem
+              disableTransitionOnChange
+            >
+              <LiturgicalProvider>
+                {children}
+                <ProgressSyncer />
+                <Toaster position="top-center" richColors />
+                <Analytics />
+              </LiturgicalProvider>
+            </ThemeProvider>
           </TRPCReactProvider>
         </SessionProvider>
       </body>

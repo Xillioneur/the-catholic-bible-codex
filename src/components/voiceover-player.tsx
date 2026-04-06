@@ -43,9 +43,9 @@ export function VoiceoverPlayer() {
   const currentVerse = useReaderStore((state) => state.voiceoverCurrentVerse);
   const currentReaderOrder = useReaderStore((state) => state.currentOrder);
   const isFollowEnabled = useReaderStore((state) => state.isVoiceoverFollowEnabled);
-  const setIsFollowEnabled = useReaderStore((state) => state.setIsFollowEnabled);
+  const setIsFollowEnabled = useReaderStore((state) => state.setIsVoiceoverFollowEnabled);
   const isReadTitlesEnabled = useReaderStore((state) => state.isVoiceoverReadTitlesEnabled);
-  const setIsReadTitlesEnabled = useReaderStore((state) => state.setIsReadTitlesEnabled);
+  const setIsReadTitlesEnabled = useReaderStore((state) => state.setIsVoiceoverReadTitlesEnabled);
   const voiceURI = useReaderStore((state) => state.voiceoverVoiceURI);
   const setVoiceURI = useReaderStore((state) => state.setVoiceoverVoiceURI);
   
@@ -124,7 +124,7 @@ export function VoiceoverPlayer() {
           exit={{ y: 100, x: "-50%", opacity: 0 }}
           className="fixed left-1/2 z-[200] w-[95%] max-w-lg sm:bottom-6"
         >
-          <div className="relative group overflow-hidden bg-white/80 dark:bg-zinc-900/80 backdrop-blur-2xl border border-white/20 dark:border-zinc-800 shadow-[0_20px_50px_rgba(0,0,0,0.3)] rounded-[2.5rem] p-2 transition-all duration-500 hover:shadow-primary/20">
+          <div className="relative group overflow-hidden glass-liturgical shadow-liturgical rounded-[2.5rem] p-2 transition-all duration-500">
             {/* Progress Bar (Full Width Top) */}
             <div className="absolute top-0 left-0 right-0 h-1 bg-zinc-100 dark:bg-zinc-800/50">
               <motion.div 

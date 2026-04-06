@@ -141,9 +141,9 @@ const InlineVerse = memo(({
         "text-[0.6em] font-black mr-1 transition-all duration-300 tabular-nums px-1 rounded-sm",
         hasBookmark 
           ? "bg-primary text-white shadow-[0_2px_8px_-2px_rgba(var(--primary-rgb),0.4)] opacity-100 scale-110" 
-          : "text-zinc-400 opacity-60",
+          : "text-primary opacity-40 group-hover:opacity-100",
         isRead && !hasBookmark && "text-emerald-500 opacity-100",
-        isVoiceoverActive && "bg-primary text-white"
+        isVoiceoverActive && "bg-primary text-white scale-110"
       )}>
         {verse.verse}
       </sup>

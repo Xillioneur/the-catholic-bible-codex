@@ -31,7 +31,7 @@ export function ScriptureGuide({ currentOrder }: ScriptureGuideProps) {
 
   return (
     <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="bg-white/90 dark:bg-zinc-900/90 border border-zinc-200 dark:border-zinc-800 rounded-full shadow-xl p-1.5 flex items-center gap-1 backdrop-blur-xl">
+      <div className="glass-liturgical rounded-full shadow-liturgical p-1.5 flex items-center gap-1">
         {/* Compact Close */}
         <button 
           onClick={() => setLiturgicalGuide(null)}
