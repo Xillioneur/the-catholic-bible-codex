@@ -42,6 +42,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "~/lib/db";
 import { useLiturgical } from "./liturgical-provider";
 import { DailyAllView } from "./liturgical-full-view";
+import { LiturgicalCalendar } from "./liturgical-calendar";
 import { toast } from "sonner";
 import { useVoiceover } from "~/hooks/use-voiceover";
 import { useSession, signIn, signOut } from "next-auth/react";
@@ -61,6 +62,7 @@ export function SidebarNav() {
   const [studyFilter, setStudyFilter] = useState<"notes" | "highlights" | "bookmarks" | "plans">("notes");
   const [selectedPlanSlug, setSelectedPlanSlug] = useState<string | null>(null);
   const [showFullLiturgical, setShowFullLiturgical] = useState(false);
+  const [showLiturgicalCalendar, setShowLiturgicalCalendar] = useState(false);
   const [librarySelectedBook, setLibrarySelectedBook] = useState<any | null>(null);
   const [librarySearch, setLibrarySearch] = useState("");
   const [editingNoteId, setEditingNoteId] = useState<string | number | null>(null);
@@ -584,6 +586,13 @@ export function SidebarNav() {
                 </div>
 
                 <div className="flex flex-col gap-2">
+                  <button 
+                    onClick={() => setShowLiturgicalCalendar(true)}
+                    className="w-full py-3 rounded-xl bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100 border border-zinc-100 dark:border-zinc-800 font-black text-[8px] uppercase tracking-[0.2em] hover:border-primary/30 transition-all flex items-center justify-center gap-2 shadow-sm"
+                  >
+                    <CalendarDays className="h-3.5 w-3.5 text-primary" />
+                    Browse Full Calendar
+                  </button>
                   <button 
                     onClick={handleListenAll}
                     className="w-full py-3 rounded-xl bg-primary/10 text-primary border border-primary/20 font-black text-[8px] uppercase tracking-[0.2em] hover:bg-primary hover:text-white transition-all flex items-center justify-center gap-2"
@@ -1516,6 +1525,12 @@ export function SidebarNav() {
           info={info} 
           onClose={() => setShowFullLiturgical(false)} 
           onSelectReading={handleSelectReading} 
+        />
+      )}
+
+      {showLiturgicalCalendar && (
+        <LiturgicalCalendar 
+          onClose={() => setShowLiturgicalCalendar(false)}
         />
       )}
     </>

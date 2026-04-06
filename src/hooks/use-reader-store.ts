@@ -26,6 +26,10 @@ interface ReaderState {
   totalVerseCount: number;
   setTotalVerseCount: (count: number) => void;
 
+  // LITURGICAL DATE
+  liturgicalDate: Date;
+  setLiturgicalDate: (date: Date) => void;
+
   // Navigation
   scrollToOrder: number | null;
   setScrollToOrder: (order: number | null) => void;
@@ -139,6 +143,9 @@ export const useReaderStore = create<ReaderState>()(
       setProgress: (val) => set({ progress: val }),
       totalVerseCount: 0,
       setTotalVerseCount: (count) => set({ totalVerseCount: count }),
+
+      liturgicalDate: new Date(),
+      setLiturgicalDate: (date) => set({ liturgicalDate: date }),
 
       scrollToOrder: null,
       setScrollToOrder: (order) => set({ scrollToOrder: order }),

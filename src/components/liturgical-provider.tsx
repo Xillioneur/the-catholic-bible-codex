@@ -15,7 +15,11 @@ interface LiturgicalContextType {
 const LiturgicalContext = createContext<LiturgicalContextType | undefined>(undefined);
 
 export function LiturgicalProvider({ children }: { children: ReactNode }) {
-  const { data: info, isLoading, error } = api.bible.getLiturgicalInfo.useQuery({});
+  const liturgicalDate = useReaderStore((state) => state.liturgicalDate);
+  const { data: info, isLoading, error } = api.bible.getLiturgicalInfo.useQuery(
+    { date: liturgicalDate },
+    { placeholderData: (prev) => prev } // Keep old data while loading new date
+  );
   const translationSlug = useReaderStore((state) => state.translationSlug);
   const theme = useReaderStore((state) => state.theme);
   const setLiturgicalReadings = useReaderStore((state) => state.setLiturgicalReadings);

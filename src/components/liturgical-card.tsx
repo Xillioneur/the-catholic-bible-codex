@@ -2,11 +2,12 @@
 
 import { useState, useCallback } from "react";
 import { useReaderStore } from "~/hooks/use-reader-store";
-import { Scroll, Music, Church, Loader2, AlertCircle, Calendar, ChevronRight, Volume2 } from "lucide-react";
+import { Scroll, Music, Church, Loader2, AlertCircle, Calendar, ChevronRight, Volume2, Search } from "lucide-react";
 import { useLiturgical } from "./liturgical-provider";
 import { cn } from "~/lib/utils";
 import { toast } from "sonner";
 import { DailyAllView } from "./liturgical-full-view";
+import { LiturgicalCalendar } from "./liturgical-calendar";
 import { useVoiceover } from "~/hooks/use-voiceover";
 
 interface LiturgicalCardProps {
@@ -16,10 +17,18 @@ interface LiturgicalCardProps {
 export function LiturgicalCard({ onClose }: LiturgicalCardProps) {
   const { info, isLoading, error } = useLiturgical();
   const [showFullView, setShowFullView] = useState(false);
+  const [showCalendar, setShowCalendar] = useState(false);
+  const liturgicalDate = useReaderStore((state) => state.liturgicalDate);
   const setScrollToOrder = useReaderStore((state) => state.setScrollToOrder);
   const liturgicalReadings = useReaderStore((state) => state.liturgicalReadings);
   const setIsNavigatorVisible = useReaderStore((state) => state.setIsNavigatorVisible);
   const { jumpToOrder } = useVoiceover();
+
+  const formattedDate = liturgicalDate.toLocaleDateString(undefined, { 
+    month: 'short', 
+    day: 'numeric',
+    year: liturgicalDate.getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined
+  });
 
   const handleSelectReading = (type: string) => {
     const reading = liturgicalReadings.find(r => r.type === type);
@@ -93,15 +102,26 @@ export function LiturgicalCard({ onClose }: LiturgicalCardProps) {
         <div className="px-6 py-5 border-b border-primary/5 bg-primary/[0.03] flex items-center justify-between">
           <div className="flex flex-col">
             <div className="flex items-center gap-2 mb-1">
-              <Calendar className="h-3 w-3 text-primary animate-pulse" />
-              <span className="text-[9px] font-black uppercase tracking-[0.3em] text-primary/70">Sanctuary Today</span>
+              <button 
+                onClick={() => setShowCalendar(true)}
+                className="flex items-center gap-2 px-2 py-0.5 rounded-full bg-primary/10 hover:bg-primary/20 transition-colors active:scale-95 group"
+              >
+                <Calendar className="h-3 w-3 text-primary" />
+                <span className="text-[9px] font-black uppercase tracking-[0.3em] text-primary">{formattedDate}</span>
+              </button>
             </div>
             <span className="text-sm font-serif font-bold italic text-zinc-900 dark:text-zinc-100 tracking-tight line-clamp-1">
               {info.day}
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <div className={cn("h-2.5 w-2.5 rounded-full shadow-[0_0_10px_rgba(var(--primary-rgb),0.5)]")} style={{ backgroundColor: "var(--primary)" }} />
+            <button 
+              onClick={() => setShowCalendar(true)}
+              className="h-8 w-8 rounded-full bg-white dark:bg-zinc-900 border border-primary/10 flex items-center justify-center text-primary shadow-sm hover:scale-110 active:scale-90 transition-all"
+              title="Browse Calendar"
+            >
+              <Search className="h-3.5 w-3.5" />
+            </button>
           </div>
         </div>
 
@@ -142,6 +162,12 @@ export function LiturgicalCard({ onClose }: LiturgicalCardProps) {
           info={info} 
           onClose={() => setShowFullView(false)} 
           onSelectReading={handleSelectReading} 
+        />
+      )}
+
+      {showCalendar && (
+        <LiturgicalCalendar 
+          onClose={() => setShowCalendar(false)}
         />
       )}
     </>
