@@ -578,6 +578,8 @@ export function SidebarNav() {
                   <ReadingRow label="First" citation={info.readings.firstReading ?? ""} icon={Scroll} onSelect={() => handleSelectReading("First Reading")} />
                   {info.readings.psalm && <ReadingRow label="Psalm" citation={info.readings.psalm} icon={Music} onSelect={() => handleSelectReading("Responsorial Psalm")} />}
                   {info.readings.secondReading && <ReadingRow label="Second" citation={info.readings.secondReading} icon={Scroll} onSelect={() => handleSelectReading("Second Reading")} />}
+                  {info.readings.sequence && <ReadingRow label="Sequence" citation={info.readings.sequence} icon={Scroll} onSelect={() => handleSelectReading("Sequence")} />}
+                  {(info.readings.alleluia || info.readings.verseBeforeGospel) && <ReadingRow label="Alleluia" citation={info.readings.alleluia || info.readings.verseBeforeGospel} icon={Music} onSelect={() => handleSelectReading("Alleluia")} />}
                   {info.readings.gospel && <ReadingRow label="Gospel" citation={info.readings.gospel ?? ""} icon={Church} onSelect={() => handleSelectReading("The Holy Gospel")} />}
                 </div>
 
@@ -1532,7 +1534,9 @@ function ReadingRow({ label, citation, icon: Icon, onSelect }: { label: string, 
         </div>
         <div className="flex flex-col items-start text-left overflow-hidden">
           <span className="text-[7px] font-black uppercase tracking-[0.2em] text-zinc-400">{label}</span>
-          <span className="text-[11px] font-bold text-zinc-900 dark:text-zinc-100 truncate w-full">{citation}</span>
+          <span className="text-[11px] font-bold text-zinc-900 dark:text-zinc-100 truncate w-full">
+            {label === "Sequence" ? "Victimae Paschali Laudes" : citation}
+          </span>
         </div>
       </div>
       <ChevronRight className="h-3 w-3 text-zinc-300 opacity-0 group-hover:opacity-100 transition-all" />

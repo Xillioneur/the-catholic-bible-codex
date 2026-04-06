@@ -58,6 +58,7 @@ export function BibleReader() {
                 <LiturgicalReadingHeader 
                   type={row.readingType} 
                   citation={row.citation} 
+                  heading={row.heading}
                 />
               )}
               {row.type === "prose-block" && (

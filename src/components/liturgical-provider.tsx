@@ -49,7 +49,8 @@ export function LiturgicalProvider({ children }: { children: ReactNode }) {
           { type: "First Reading", citation: info.readings.firstReading },
           { type: "Responsorial Psalm", citation: info.readings.psalm },
           { type: "Second Reading", citation: info.readings.secondReading },
-          { type: "Verse Before the Gospel", citation: info.readings.verseBeforeGospel },
+          { type: "Sequence", citation: info.readings.sequence },
+          { type: "Alleluia", citation: info.readings.alleluia || info.readings.verseBeforeGospel },
           { type: "The Holy Gospel", citation: info.readings.gospel }
         ].filter(p => !!p.citation) as { type: string; citation: string }[];
 
@@ -78,9 +79,19 @@ export function LiturgicalProvider({ children }: { children: ReactNode }) {
             .filter(v => resolved.orders.includes(v.globalOrder))
             .sort((a, b) => a.globalOrder - b.globalOrder);
             
+          // Find original reading info to get heading
+          const original = readingPairs.find(rp => rp.type === p.type);
+          const heading = original?.type === "First Reading" ? info.readings.firstReadingHeading :
+                        original?.type === "Second Reading" ? info.readings.secondReadingHeading :
+                        original?.type === "The Holy Gospel" ? info.readings.gospelHeading : undefined;
+
+          const sequenceText = original?.type === "Sequence" ? info.readings.sequenceText : undefined;
+
           return {
             ...resolved,
-            verses: readingVerses
+            verses: readingVerses,
+            heading,
+            sequenceText
           };
         }).filter(Boolean);
 

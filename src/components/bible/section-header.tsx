@@ -41,9 +41,10 @@ ChapterHeader.displayName = "ChapterHeader";
 interface LiturgicalReadingHeaderProps {
   type: string;
   citation: string;
+  heading?: string;
 }
 
-export const LiturgicalReadingHeader = memo(({ type, citation }: LiturgicalReadingHeaderProps) => (
+export const LiturgicalReadingHeader = memo(({ type, citation, heading }: LiturgicalReadingHeaderProps) => (
   <div className="w-full flex flex-col items-center gap-1.5 mt-10 mb-6 animate-in fade-in slide-in-from-bottom-2 duration-700">
     <div className="flex items-center gap-2.5">
       <div className="h-[0.5px] w-6 bg-primary/25" />
@@ -52,9 +53,14 @@ export const LiturgicalReadingHeader = memo(({ type, citation }: LiturgicalReadi
       </span>
       <div className="h-[0.5px] w-6 bg-primary/25" />
     </div>
-    <h3 className="text-xl font-serif italic text-zinc-800 dark:text-zinc-200 tracking-tight">
+    <h3 className="text-xl font-serif italic text-zinc-800 dark:text-zinc-200 tracking-tight text-center max-w-lg">
       {citation}
     </h3>
+    {heading && (
+      <p className="text-[10px] font-serif italic text-zinc-400 dark:text-zinc-500 tracking-tight text-center max-w-md mt-1">
+        "{heading}"
+      </p>
+    )}
   </div>
 ));
 

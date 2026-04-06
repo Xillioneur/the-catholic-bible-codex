@@ -106,6 +106,7 @@ export function DailyAllView({ info, onClose, onSelectReading }: DailyAllViewPro
           <ReadingSection 
             title="First Reading" 
             citation={info.readings.firstReading} 
+            heading={info.readings.firstReadingHeading}
             icon={Scroll}
             orders={liturgicalReadings.find(r => r.type === "First Reading")?.orders ?? []}
             verses={liturgicalReadings.find(r => r.type === "First Reading")?.verses ?? []}
@@ -128,10 +129,35 @@ export function DailyAllView({ info, onClose, onSelectReading }: DailyAllViewPro
             <ReadingSection 
               title="Second Reading" 
               citation={info.readings.secondReading} 
+              heading={info.readings.secondReadingHeading}
               icon={Scroll}
               orders={liturgicalReadings.find(r => r.type === "Second Reading")?.orders ?? []}
               verses={liturgicalReadings.find(r => r.type === "Second Reading")?.verses ?? []}
               onSelect={() => { onSelectReading("Second Reading"); onClose(); }} 
+            />
+          )}
+
+          {info.readings.sequence && (
+            <ReadingSection 
+              title="Sequence" 
+              citation={info.readings.sequence} 
+              sequenceText={liturgicalReadings.find(r => r.type === "Sequence")?.sequenceText ?? info.readings.sequenceText}
+              icon={Scroll}
+              orders={liturgicalReadings.find(r => r.type === "Sequence")?.orders ?? []}
+              verses={liturgicalReadings.find(r => r.type === "Sequence")?.verses ?? []}
+              onSelect={() => { onSelectReading("Sequence"); onClose(); }} 
+            />
+          )}
+
+          {(info.readings.alleluia || info.readings.verseBeforeGospel) && (
+            <ReadingSection 
+              title="Alleluia / Gospel Acclamation" 
+              citation={info.readings.alleluia || info.readings.verseBeforeGospel} 
+              acclamationText={info.readings.alleluiaText}
+              icon={Music}
+              orders={liturgicalReadings.find(r => r.type === "Alleluia")?.orders ?? []}
+              verses={liturgicalReadings.find(r => r.type === "Alleluia")?.verses ?? []}
+              onSelect={() => { onSelectReading("Alleluia"); onClose(); }} 
             />
           )}
           
@@ -139,6 +165,7 @@ export function DailyAllView({ info, onClose, onSelectReading }: DailyAllViewPro
             <ReadingSection 
               title="The Holy Gospel" 
               citation={info.readings.gospel} 
+              heading={info.readings.gospelHeading}
               icon={Church} 
               highlight
               orders={liturgicalReadings.find(r => r.type === "The Holy Gospel")?.orders ?? []}
@@ -184,9 +211,12 @@ export function DailyAllView({ info, onClose, onSelectReading }: DailyAllViewPro
   return createPortal(content, document.body);
 }
 
-function ReadingSection({ title, citation, icon: Icon, highlight, isPsalm, verses, orders, onSelect }: { 
+function ReadingSection({ title, citation, heading, acclamationText, sequenceText, icon: Icon, highlight, isPsalm, verses, orders, onSelect }: { 
   title: string, 
   citation: string, 
+  heading?: string,
+  acclamationText?: string,
+  sequenceText?: string,
   icon: any, 
   highlight?: boolean, 
   isPsalm?: boolean,
@@ -201,6 +231,8 @@ function ReadingSection({ title, citation, icon: Icon, highlight, isPsalm, verse
 
   const isPlayingThisSection = isPlaying && playlist?.some(o => orders.includes(o));
   const isCurrentlyInThisSection = orders.includes(currentOrder ?? -1);
+
+  const isSequence = title === "Sequence" && !!sequenceText;
 
   const handleToggleSection = () => {
     if (isPlayingThisSection) {
@@ -245,33 +277,66 @@ function ReadingSection({ title, citation, icon: Icon, highlight, isPsalm, verse
           </div>
           <div className="flex flex-col">
             <span className={cn("text-[9px] font-black uppercase tracking-[0.2em]", highlight ? "text-primary" : "text-zinc-400")}>{title}</span>
-            <span className="text-[11px] font-serif font-black italic text-zinc-900 dark:text-zinc-100 tracking-tight">{citation}</span>
+            {!isSequence && (
+              <span className="text-[11px] font-serif font-black italic text-zinc-900 dark:text-zinc-100 tracking-tight">{citation}</span>
+            )}
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <button 
-            onClick={handleToggleSection}
-            className={cn(
-              "flex items-center gap-1.5 px-3 py-1 rounded-full transition-all active:scale-95 border",
-              isPlayingThisSection 
-                ? "bg-primary/10 border-primary text-primary" 
-                : "bg-zinc-50 dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 text-zinc-400 hover:text-primary hover:border-primary/20"
-            )}
-          >
-            {isPlayingThisSection ? <Pause className="h-2.5 w-2.5 fill-current" /> : <Play className="h-2.5 w-2.5 fill-current" />}
-            <span className="text-[8px] font-black uppercase tracking-widest">
-              {isPlayingThisSection ? "Pause" : "Listen"}
-            </span>
-          </button>
-          <div className="w-px h-3 bg-zinc-100 dark:bg-zinc-800" />
-          <button onClick={onSelect} className="text-[8px] font-black text-zinc-400 hover:text-primary uppercase tracking-widest transition-all">
-            Reader
-          </button>
+          {!isSequence && (
+            <>
+              <button 
+                onClick={handleToggleSection}
+                disabled={orders.length === 0}
+                className={cn(
+                  "flex items-center gap-1.5 px-3 py-1 rounded-full transition-all active:scale-95 border",
+                  orders.length === 0 ? "opacity-20 grayscale cursor-not-allowed" :
+                  isPlayingThisSection 
+                    ? "bg-primary/10 border-primary text-primary" 
+                    : "bg-zinc-50 dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 text-zinc-400 hover:text-primary hover:border-primary/20"
+                )}
+              >
+                {isPlayingThisSection ? <Pause className="h-2.5 w-2.5 fill-current" /> : <Play className="h-2.5 w-2.5 fill-current" />}
+                <span className="text-[8px] font-black uppercase tracking-widest">
+                  {isPlayingThisSection ? "Pause" : "Listen"}
+                </span>
+              </button>
+              <div className="w-px h-3 bg-zinc-100 dark:bg-zinc-800" />
+              <button 
+                onClick={onSelect} 
+                disabled={orders.length === 0}
+                className="text-[8px] font-black text-zinc-400 disabled:opacity-20 hover:text-primary uppercase tracking-widest transition-all"
+              >
+                Reader
+              </button>
+            </>
+          )}
         </div>
       </div>
+
+      {(heading || acclamationText) && (
+        <div className="flex flex-col gap-2">
+          {heading && (
+            <h2 className="text-xs md:text-sm font-serif font-black italic text-zinc-900 dark:text-zinc-100 tracking-tight text-center max-w-xl mx-auto opacity-60">
+              "{heading}"
+            </h2>
+          )}
+          {acclamationText && (
+            <p className="text-[11px] font-serif font-medium italic text-zinc-500 dark:text-zinc-400 text-center max-w-md mx-auto leading-relaxed">
+              {acclamationText}
+            </p>
+          )}
+        </div>
+      )}
       
       <div className="space-y-6">
-        {verseSegments.length > 0 ? (
+        {isSequence ? (
+          <div className="font-serif text-base md:text-lg leading-relaxed text-zinc-800 dark:text-zinc-200 italic text-center max-w-xl mx-auto space-y-4">
+            {sequenceText!.split('/').map((line, lIdx) => (
+              <p key={lIdx} className="mb-2 last:mb-0">{line.trim()}</p>
+            ))}
+          </div>
+        ) : verseSegments.length > 0 ? (
           <div className={cn(
             "font-serif text-base md:text-lg leading-[1.7] text-zinc-800 dark:text-zinc-200",
             isPsalm && "italic text-center max-w-xl mx-auto"
@@ -301,6 +366,12 @@ function ReadingSection({ title, citation, icon: Icon, highlight, isPsalm, verse
                   </span>
                 ))}
               </div>
+            ))}
+          </div>
+        ) : sequenceText ? (
+          <div className="font-serif text-base md:text-lg leading-relaxed text-zinc-800 dark:text-zinc-200 italic text-center max-w-xl mx-auto space-y-4">
+            {sequenceText.split('/').map((line, lIdx) => (
+              <p key={lIdx} className="mb-2 last:mb-0">{line.trim()}</p>
             ))}
           </div>
         ) : (

@@ -55,7 +55,8 @@ self.onmessage = async (e: MessageEvent) => {
           processedRows.push({ 
             type: "liturgical-header", 
             readingType: reading.type, 
-            citation: reading.citation, 
+            citation: reading.citation,
+            heading: reading.heading,
             firstOrder: v.globalOrder 
           });
         }

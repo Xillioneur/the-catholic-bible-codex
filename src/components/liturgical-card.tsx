@@ -77,7 +77,9 @@ export function LiturgicalCard({ onClose }: LiturgicalCardProps) {
           </div>
           <div className="flex flex-col items-start text-left">
             <span className="text-[7px] font-black uppercase tracking-[0.2em] text-zinc-400 group-hover:text-primary/60">{label}</span>
-            <span className="text-[11px] font-bold text-zinc-900 dark:text-zinc-100 tracking-tight line-clamp-1">{citation}</span>
+            <span className="text-[11px] font-bold text-zinc-900 dark:text-zinc-100 tracking-tight line-clamp-1">
+              {label === "Sequence" ? "Victimae Paschali Laudes" : citation}
+            </span>
           </div>
         </div>
         <ChevronRight className="h-3 w-3 text-zinc-300 opacity-0 group-hover:opacity-100 transition-all transform group-hover:translate-x-0.5" />
@@ -107,6 +109,8 @@ export function LiturgicalCard({ onClose }: LiturgicalCardProps) {
           {info.readings.firstReading && <ReadingRow label="First Reading" typeName="First Reading" citation={info.readings.firstReading} icon={Scroll} />}
           {info.readings.psalm && <ReadingRow label="The Psalm" typeName="Responsorial Psalm" citation={info.readings.psalm} icon={Music} />}
           {info.readings.secondReading && <ReadingRow label="Second Reading" typeName="Second Reading" citation={info.readings.secondReading} icon={Scroll} />}
+          {info.readings.sequence && <ReadingRow label="Sequence" typeName="Sequence" citation={info.readings.sequence} icon={Scroll} />}
+          {(info.readings.alleluia || info.readings.verseBeforeGospel) && <ReadingRow label="Alleluia" typeName="Alleluia" citation={info.readings.alleluia || info.readings.verseBeforeGospel} icon={Music} />}
           {info.readings.gospel && <ReadingRow label="Holy Gospel" typeName="The Holy Gospel" citation={info.readings.gospel} icon={Church} />}
         </div>
 

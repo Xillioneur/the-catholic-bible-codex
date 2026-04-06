@@ -6,10 +6,17 @@ export interface LiturgicalInfo {
   day: string;
   readings: {
     firstReading?: string;
+    firstReadingHeading?: string;
     psalm?: string;
     secondReading?: string;
+    secondReadingHeading?: string;
+    sequence?: string;
+    sequenceText?: string;
+    alleluia?: string;
+    alleluiaText?: string;
     verseBeforeGospel?: string;
     gospel?: string;
+    gospelHeading?: string;
   };
 }
 
