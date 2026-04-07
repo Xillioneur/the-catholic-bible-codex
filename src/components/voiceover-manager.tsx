@@ -15,6 +15,8 @@ export function VoiceoverManager() {
   const currentOrder = useReaderStore((state) => state.voiceoverCurrentOrder);
   const setCurrentOrder = useReaderStore((state) => state.setVoiceoverCurrentOrder);
   const setVerse = useReaderStore((state) => state.setVoiceoverCurrentVerse);
+  const nonBibleText = useReaderStore((state) => state.voiceoverNonBibleText);
+  const setNonBibleText = useReaderStore((state) => state.setVoiceoverNonBibleText);
   const setScrollToOrder = useReaderStore((state) => state.setScrollToOrder);
   const translationSlug = useReaderStore((state) => state.translationSlug);
   const globalCurrentOrder = useReaderStore((state) => state.currentOrder);
@@ -31,12 +33,13 @@ export function VoiceoverManager() {
   
   const sessionRef = useRef<number>(0);
   const speakingOrderRef = useRef<number | null>(null);
+  const speakingTextRef = useRef<string | null>(null);
   const isInternalCancelRef = useRef<boolean>(false);
   const isSpeakingTitleRef = useRef<boolean>(false);
   
-  // PRECISION: Midway resumption playhead
   const lastCharIndexRef = useRef<number>(0);
   const lastOrderRef = useRef<number | null>(null);
+  const lastTextRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -59,7 +62,6 @@ export function VoiceoverManager() {
     const voices = synthRef.current.getVoices();
     if (voices.length === 0) return null;
 
-    // LATIN SUPPORT (PRIORITY & LOCK)
     if (translationSlug === "vul") {
       const latinVoices = voices.filter(v => v.lang.startsWith("la"));
       if (latinVoices.length > 0) {
@@ -67,7 +69,7 @@ export function VoiceoverManager() {
       }
       const romanceVoices = voices.filter(v => v.lang.startsWith("it") || v.lang.startsWith("es"));
       if (romanceVoices.length > 0) return romanceVoices[0] || null;
-      return voices[0] || null; // Final fallback
+      return voices[0] || null;
     }
 
     if (selectedVoiceURI) {
@@ -102,18 +104,20 @@ export function VoiceoverManager() {
     
     sessionRef.current++;
     speakingOrderRef.current = null;
+    speakingTextRef.current = null;
     setIsPlaying(false);
     setIsActive(false);
     setIsMinimized(false);
     setVerse(null);
     setCurrentOrder(null);
+    setNonBibleText(null);
     setPlaylist(null);
     setVerseProgress(0);
 
     if ("mediaSession" in navigator) {
       navigator.mediaSession.playbackState = "none";
     }
-  }, [setIsPlaying, setIsActive, setIsMinimized, setVerse, setCurrentOrder, setPlaylist, setVerseProgress]);
+  }, [setIsPlaying, setIsActive, setIsMinimized, setVerse, setCurrentOrder, setNonBibleText, setPlaylist, setVerseProgress]);
 
   const getNextOrder = useCallback((current: number) => {
     if (playlist && playlist.length > 0) {
@@ -127,15 +131,25 @@ export function VoiceoverManager() {
   }, [playlist]);
 
   const skipForward = useCallback(() => {
+    if (nonBibleText) {
+      setNonBibleText(null);
+      setCurrentOrder(globalCurrentOrder);
+      return;
+    }
     const current = currentOrder ?? globalCurrentOrder;
     const next = getNextOrder(current);
     if (next !== null) {
       lastCharIndexRef.current = 0;
       setCurrentOrder(next);
     }
-  }, [currentOrder, globalCurrentOrder, getNextOrder, setCurrentOrder]);
+  }, [currentOrder, globalCurrentOrder, getNextOrder, setCurrentOrder, nonBibleText, setNonBibleText]);
 
   const skipBackward = useCallback(() => {
+    if (nonBibleText) {
+      setNonBibleText(null);
+      setCurrentOrder(globalCurrentOrder);
+      return;
+    }
     const current = currentOrder ?? globalCurrentOrder;
     lastCharIndexRef.current = 0;
     if (playlist) {
@@ -147,7 +161,7 @@ export function VoiceoverManager() {
     } else {
       setCurrentOrder(Math.max(1, current - 1));
     }
-  }, [currentOrder, globalCurrentOrder, playlist, setCurrentOrder]);
+  }, [currentOrder, globalCurrentOrder, playlist, setCurrentOrder, nonBibleText, setNonBibleText]);
 
   useEffect(() => {
     if ("mediaSession" in navigator) {
@@ -160,20 +174,82 @@ export function VoiceoverManager() {
   }, [setIsPlaying, stop, skipBackward, skipForward]);
 
   const cleanText = useCallback((text: string) => {
-    // Replace special markers with spaces to preserve string indices for progress tracking
     return text.replace(/[*†‡§_]/g, " ");
   }, []);
+
+  const speakText = useCallback(async (text: string, title?: string, charOffset = 0) => {
+    if (!synthRef.current || !isPlaying) return;
+
+    isInternalCancelRef.current = true;
+    if (synthRef.current.paused) synthRef.current.resume();
+    synthRef.current.cancel();
+
+    const currentSession = ++sessionRef.current;
+    speakingTextRef.current = text;
+    speakingOrderRef.current = null;
+    setIsActive(true);
+
+    let textToSpeak = cleanText(text);
+    if (charOffset > 0 && charOffset < textToSpeak.length) {
+      textToSpeak = textToSpeak.slice(charOffset);
+    }
+
+    const utterance = new SpeechSynthesisUtterance(textToSpeak);
+    const voice = getBestVoice();
+    if (voice) utterance.voice = voice;
+    utterance.rate = speed;
+    utterance.volume = 1;
+
+    utterance.onboundary = (event) => {
+      if (currentSession === sessionRef.current) {
+        lastCharIndexRef.current = charOffset + event.charIndex;
+        const progress = (lastCharIndexRef.current / text.length) * 100;
+        setVerseProgress(progress);
+      }
+    };
+
+    utterance.onend = () => {
+      if (isInternalCancelRef.current) {
+        isInternalCancelRef.current = false;
+        return;
+      }
+      if (currentSession === sessionRef.current && useReaderStore.getState().isVoiceoverPlaying) {
+        setVerseProgress(100);
+        lastCharIndexRef.current = 0;
+        // After non-bible text, we might want to continue with the playlist if any
+        if (playlist && playlist.length > 0) {
+          setNonBibleText(null);
+          setCurrentOrder(playlist[0]!);
+        } else {
+          stop();
+        }
+      }
+    };
+
+    isInternalCancelRef.current = false;
+    synthRef.current.speak(utterance);
+
+    if ("mediaSession" in navigator) {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: title ?? "Sanctuary Text",
+        artist: "Catholic Bible Codex",
+        album: "Verbum Domini",
+        artwork: [{ src: "/favicon.svg", sizes: "512x512", type: "image/svg+xml" }]
+      });
+      navigator.mediaSession.playbackState = "playing";
+    }
+  }, [isPlaying, speed, getBestVoice, cleanText, setVerseProgress, setNonBibleText, setCurrentOrder, playlist, stop]);
 
   const speak = useCallback(async (order: number, forceTitle = false, charOffset = 0) => {
     if (!synthRef.current || !isPlaying) return;
 
-    // Safety: ensure engine is clear
     isInternalCancelRef.current = true;
     if (synthRef.current.paused) synthRef.current.resume();
     synthRef.current.cancel();
 
     const currentSession = ++sessionRef.current;
     speakingOrderRef.current = order;
+    speakingTextRef.current = null;
     setIsActive(true);
 
     try {
@@ -206,14 +282,11 @@ export function VoiceoverManager() {
       } else {
         isSpeakingTitleRef.current = false;
         textToSpeak = cleanText(verse.text);
-        
-        // SLICED RESUMPTION: midway verse resume
         if (charOffset > 0 && charOffset < textToSpeak.length) {
           textToSpeak = textToSpeak.slice(charOffset);
         } else {
           lastCharIndexRef.current = 0;
         }
-
         setVerse(verse);
         setVerseProgress(0);
       }
@@ -237,7 +310,6 @@ export function VoiceoverManager() {
           isInternalCancelRef.current = false;
           return;
         }
-
         if (currentSession === sessionRef.current && useReaderStore.getState().isVoiceoverPlaying) {
           if (isTitle) {
             void speak(order, true, 0); 
@@ -255,18 +327,6 @@ export function VoiceoverManager() {
         }
       };
 
-      utterance.onerror = (event) => {
-        if (currentSession === sessionRef.current && event.error !== "interrupted" && event.error !== "canceled") {
-          console.error("Voiceover error:", event.error);
-          setTimeout(() => {
-            if (useReaderStore.getState().isVoiceoverPlaying) {
-              speakingOrderRef.current = null;
-              void speak(order, isTitle, charOffset);
-            }
-          }, 500);
-        }
-      };
-
       isInternalCancelRef.current = false;
       synthRef.current.speak(utterance);
 
@@ -279,47 +339,50 @@ export function VoiceoverManager() {
         });
         navigator.mediaSession.playbackState = "playing";
       }
-
     } catch (err) {
       console.error("Voiceover engine error:", err);
     }
   }, [translationSlug, isPlaying, speed, getBestVoice, isReadTitlesEnabled, liturgicalReadings, setCurrentOrder, setScrollToOrder, setVerse, stop, getNextOrder, setIsActive, setVerseProgress, cleanText]);
 
-  // MAIN CONTROL LOOP
   useEffect(() => {
     if (!synthRef.current) return;
 
+    if (nonBibleText !== lastTextRef.current) {
+      lastCharIndexRef.current = 0;
+      lastTextRef.current = nonBibleText;
+    }
     if (currentOrder !== lastOrderRef.current) {
       lastCharIndexRef.current = 0;
       lastOrderRef.current = currentOrder;
     }
 
     if (isPlaying) {
-      const orderToSpeak = currentOrder ?? globalCurrentOrder;
-      
-      // If engine is already speaking the right thing, don't interrupt
-      if (synthRef.current.speaking && speakingOrderRef.current === orderToSpeak && !isInternalCancelRef.current) {
-        return;
-      }
-
-      if (currentOrder === null) {
-        setCurrentOrder(globalCurrentOrder);
-      } else {
-        // RESUME: Small delay to let cancel settle on Desktop
+      if (nonBibleText) {
+        if (synthRef.current.speaking && speakingTextRef.current === nonBibleText && !isInternalCancelRef.current) return;
         const timer = setTimeout(() => {
-          void speak(orderToSpeak, false, lastCharIndexRef.current);
+          void speakText(nonBibleText, "Liturgical Sequence", lastCharIndexRef.current);
         }, 50);
         return () => clearTimeout(timer);
+      } else {
+        const orderToSpeak = currentOrder ?? globalCurrentOrder;
+        if (synthRef.current.speaking && speakingOrderRef.current === orderToSpeak && !isInternalCancelRef.current) return;
+        if (currentOrder === null) {
+          setCurrentOrder(globalCurrentOrder);
+        } else {
+          const timer = setTimeout(() => {
+            void speak(orderToSpeak, false, lastCharIndexRef.current);
+          }, 50);
+          return () => clearTimeout(timer);
+        }
       }
     } else {
       if (isActive) {
-        // PAUSE: authoritative cancel to prevent desktop "lock"
         isInternalCancelRef.current = true;
         synthRef.current.cancel();
         if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "paused";
       } else {
-        // STOP
         speakingOrderRef.current = null;
+        speakingTextRef.current = null;
         lastCharIndexRef.current = 0;
         isInternalCancelRef.current = true;
         if (synthRef.current.paused) synthRef.current.resume();
@@ -327,7 +390,7 @@ export function VoiceoverManager() {
         if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "none";
       }
     }
-  }, [isPlaying, isActive, currentOrder, globalCurrentOrder, speak, setCurrentOrder]);
+  }, [isPlaying, isActive, currentOrder, globalCurrentOrder, nonBibleText, speak, speakText, setCurrentOrder]);
 
   return null;
 }

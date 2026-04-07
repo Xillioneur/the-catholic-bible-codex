@@ -17,8 +17,9 @@ interface DailyAllViewProps {
 export function DailyAllView({ info, onClose, onSelectReading }: DailyAllViewProps) {
   const [mounted, setMounted] = useState(false);
   const liturgicalReadings = useReaderStore((state) => state.liturgicalReadings);
-  const { jumpToOrder, togglePlay, isPlaying, playlist, unlockAudio } = useVoiceover();
+  const { jumpToOrder, jumpToText, togglePlay, isPlaying, playlist, unlockAudio } = useVoiceover();
   const currentOrder = useReaderStore((state) => state.voiceoverCurrentOrder);
+  const nonBibleText = useReaderStore((state) => state.voiceoverNonBibleText);
   const isFollowEnabled = useReaderStore((state) => state.isVoiceoverFollowEnabled);
 
   useEffect(() => {
@@ -43,14 +44,24 @@ export function DailyAllView({ info, onClose, onSelectReading }: DailyAllViewPro
     return liturgicalReadings.flatMap(r => r.orders);
   }, [liturgicalReadings]);
 
-  const isReadingAll = isPlaying && playlist?.length === allOrders.length && playlist[0] === allOrders[0];
+  const sequenceReading = useMemo(() => {
+    return liturgicalReadings.find(r => r.type === "Sequence" && r.sequenceText);
+  }, [liturgicalReadings]);
+
+  const isReadingAll = isPlaying && (
+    (nonBibleText && nonBibleText === sequenceReading?.sequenceText) ||
+    (playlist?.length === allOrders.length && playlist[0] === allOrders[0])
+  );
 
   const handleReadAll = () => {
     if (isReadingAll) {
       togglePlay();
     } else {
-      if (allOrders.length > 0) {
-        unlockAudio();
+      unlockAudio();
+      if (sequenceReading?.sequenceText) {
+        jumpToText(sequenceReading.sequenceText);
+        useReaderStore.getState().setVoiceoverPlaylist(allOrders);
+      } else if (allOrders.length > 0 && allOrders[0] !== undefined) {
         jumpToOrder(allOrders[0], allOrders);
       }
     }
@@ -224,22 +235,27 @@ function ReadingSection({ title, citation, heading, acclamationText, sequenceTex
   orders: number[],
   onSelect: () => void 
 }) {
-  if (!citation) return null;
+  if (!citation && !sequenceText) return null;
 
-  const { jumpToOrder, togglePlay, isPlaying, playlist, unlockAudio } = useVoiceover();
+  const { jumpToOrder, jumpToText, togglePlay, isPlaying, playlist, unlockAudio } = useVoiceover();
   const currentOrder = useReaderStore((state) => state.voiceoverCurrentOrder);
-
-  const isPlayingThisSection = isPlaying && playlist?.some(o => orders.includes(o));
-  const isCurrentlyInThisSection = orders.includes(currentOrder ?? -1);
+  const nonBibleText = useReaderStore((state) => state.voiceoverNonBibleText);
 
   const isSequence = title === "Sequence" && !!sequenceText;
+  
+  const isPlayingThisSection = isPlaying && (
+    (isSequence && nonBibleText === sequenceText) ||
+    (!isSequence && playlist?.some(o => orders.includes(o)))
+  );
 
   const handleToggleSection = () => {
     if (isPlayingThisSection) {
       togglePlay();
     } else {
-      if (orders.length > 0) {
-        unlockAudio();
+      unlockAudio();
+      if (isSequence && sequenceText) {
+        jumpToText(sequenceText);
+      } else if (orders.length > 0 && orders[0] !== undefined) {
         jumpToOrder(orders[0], orders);
       }
     }
@@ -283,24 +299,24 @@ function ReadingSection({ title, citation, heading, acclamationText, sequenceTex
           </div>
         </div>
         <div className="flex items-center gap-3">
+          <button 
+            onClick={handleToggleSection}
+            disabled={!isSequence && orders.length === 0}
+            className={cn(
+              "flex items-center gap-1.5 px-3 py-1 rounded-full transition-all active:scale-95 border",
+              (!isSequence && orders.length === 0) ? "opacity-20 grayscale cursor-not-allowed" :
+              isPlayingThisSection 
+                ? "bg-primary/10 border-primary text-primary" 
+                : "bg-zinc-50 dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 text-zinc-400 hover:text-primary hover:border-primary/20"
+            )}
+          >
+            {isPlayingThisSection ? <Pause className="h-2.5 w-2.5 fill-current" /> : <Play className="h-2.5 w-2.5 fill-current" />}
+            <span className="text-[8px] font-black uppercase tracking-widest">
+              {isPlayingThisSection ? "Pause" : "Listen"}
+            </span>
+          </button>
           {!isSequence && (
             <>
-              <button 
-                onClick={handleToggleSection}
-                disabled={orders.length === 0}
-                className={cn(
-                  "flex items-center gap-1.5 px-3 py-1 rounded-full transition-all active:scale-95 border",
-                  orders.length === 0 ? "opacity-20 grayscale cursor-not-allowed" :
-                  isPlayingThisSection 
-                    ? "bg-primary/10 border-primary text-primary" 
-                    : "bg-zinc-50 dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 text-zinc-400 hover:text-primary hover:border-primary/20"
-                )}
-              >
-                {isPlayingThisSection ? <Pause className="h-2.5 w-2.5 fill-current" /> : <Play className="h-2.5 w-2.5 fill-current" />}
-                <span className="text-[8px] font-black uppercase tracking-widest">
-                  {isPlayingThisSection ? "Pause" : "Listen"}
-                </span>
-              </button>
               <div className="w-px h-3 bg-zinc-100 dark:bg-zinc-800" />
               <button 
                 onClick={onSelect} 
@@ -366,12 +382,6 @@ function ReadingSection({ title, citation, heading, acclamationText, sequenceTex
                   </span>
                 ))}
               </div>
-            ))}
-          </div>
-        ) : sequenceText ? (
-          <div className="font-serif text-base md:text-lg leading-relaxed text-zinc-800 dark:text-zinc-200 italic text-center max-w-xl mx-auto space-y-4">
-            {sequenceText.split('/').map((line, lIdx) => (
-              <p key={lIdx} className="mb-2 last:mb-0">{line.trim()}</p>
             ))}
           </div>
         ) : (

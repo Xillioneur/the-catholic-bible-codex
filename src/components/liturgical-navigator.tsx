@@ -1,9 +1,10 @@
 "use client";
 
 import { useReaderStore } from "~/hooks/use-reader-store";
-import { ChevronLeft, ChevronRight, BookOpen, X, Sparkles } from "lucide-react";
+import { ChevronLeft, ChevronRight, BookOpen, X, Sparkles, Volume2 } from "lucide-react";
 import { cn } from "~/lib/utils";
 import { useMemo, useState, useEffect } from "react";
+import { useVoiceover } from "~/hooks/use-voiceover";
 
 /**
  * LiturgicalNavigator: A sophisticated control for Daily Mass Readings.
@@ -15,10 +16,10 @@ export function LiturgicalNavigator() {
   const setScrollToOrder = useReaderStore((state) => state.setScrollToOrder);
   const isNavigatorVisible = useReaderStore((state) => state.isNavigatorVisible);
   const setIsNavigatorVisible = useReaderStore((state) => state.setIsNavigatorVisible);
+  const { jumpToText, unlockAudio } = useVoiceover();
 
   const [isDismissed, setIsDismissed] = useState(false);
 
-  // Auto-undismiss if we enter a reading range, but ONLY if the feature is already "on".
   useEffect(() => {
     if (!isNavigatorVisible || !isDismissed) return;
 
@@ -34,11 +35,9 @@ export function LiturgicalNavigator() {
     }
   }, [currentOrder, liturgicalReadings, isDismissed, isNavigatorVisible]);
 
-  // Determine current liturgical context
   const { activeReading, isFar, activeIndex } = useMemo(() => {
     if (!liturgicalReadings.length) return { activeReading: null, isFar: true, activeIndex: -1 };
     
-    // 1. Precise check: Are we inside or near a reading?
     const currentIndex = liturgicalReadings.findIndex(r => {
       const first = r.orders[0];
       const last = r.orders[r.orders.length - 1];
@@ -54,11 +53,8 @@ export function LiturgicalNavigator() {
       };
     }
 
-    // 2. Predictive check: Which reading is "next" or "closest"?
-    // We find the first reading that starts AFTER our current position
     const upcomingIndex = liturgicalReadings.findIndex(r => (r.orders[0] ?? 0) > currentOrder);
     
-    // If we are past everything, use the last one
     if (upcomingIndex === -1) {
       return { 
         activeReading: liturgicalReadings[liturgicalReadings.length - 1], 
@@ -67,7 +63,6 @@ export function LiturgicalNavigator() {
       };
     }
 
-    // If we are before everything, use the first one
     if (upcomingIndex === 0) {
       return { 
         activeReading: liturgicalReadings[0], 
@@ -76,7 +71,6 @@ export function LiturgicalNavigator() {
       };
     }
 
-    // If we are between two, use the closest one for the label
     const prevReading = liturgicalReadings[upcomingIndex - 1];
     const nextReading = liturgicalReadings[upcomingIndex];
     const distPrev = Math.abs(currentOrder - (prevReading?.orders[0] ?? 0));
@@ -91,7 +85,6 @@ export function LiturgicalNavigator() {
     };
   }, [liturgicalReadings, currentOrder]);
 
-  // COMPLETELY HIDE if the feature isn't "on" or no readings available
   if (!isNavigatorVisible || !liturgicalReadings.length || !activeReading) {
     return null;
   }
@@ -102,7 +95,12 @@ export function LiturgicalNavigator() {
   const handlePrev = (e: React.MouseEvent) => {
     e.stopPropagation();
     const prevReading = liturgicalReadings[activeIndex - 1];
-    if (prevReading?.orders[0] !== undefined) {
+    if (!prevReading) return;
+
+    if (prevReading.type === "Sequence" && prevReading.sequenceText) {
+      unlockAudio();
+      jumpToText(prevReading.sequenceText);
+    } else if (prevReading.orders[0] !== undefined) {
       setScrollToOrder(prevReading.orders[0]);
     }
   };
@@ -110,21 +108,30 @@ export function LiturgicalNavigator() {
   const handleNext = (e: React.MouseEvent) => {
     e.stopPropagation();
     const nextReading = liturgicalReadings[activeIndex + 1];
-    if (nextReading?.orders[0] !== undefined) {
+    if (!nextReading) return;
+
+    if (nextReading.type === "Sequence" && nextReading.sequenceText) {
+      unlockAudio();
+      jumpToText(nextReading.sequenceText);
+    } else if (nextReading.orders[0] !== undefined) {
       setScrollToOrder(nextReading.orders[0]);
     }
   };
 
   const handleJumpToActive = (e: React.MouseEvent) => {
     e.stopPropagation();
-    const order = activeReading.orders[0];
-    if (order !== undefined) {
-      setScrollToOrder(order);
-      setIsDismissed(false);
+    if (activeReading.type === "Sequence" && activeReading.sequenceText) {
+      unlockAudio();
+      jumpToText(activeReading.sequenceText);
+    } else {
+      const order = activeReading.orders[0];
+      if (order !== undefined) {
+        setScrollToOrder(order);
+        setIsDismissed(false);
+      }
     }
   };
 
-  // 1. MINIMIZED STATE (Sparkle icon in corner)
   if (isDismissed) {
     return (
       <div className="fixed bottom-24 right-8 z-[100] flex items-center gap-2 animate-in fade-in zoom-in duration-500">
@@ -148,15 +155,12 @@ export function LiturgicalNavigator() {
     );
   }
 
-  // 2. MAIN NAVIGATOR (Unified Navigation)
   return (
     <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[100] animate-in fade-in slide-in-from-bottom-8 duration-700">
       <div className={cn(
         "glass-liturgical rounded-full shadow-liturgical p-1.5 flex items-center transition-all duration-500",
         isFar ? "ring-2 ring-primary/40 px-2" : "ring-1 ring-primary/10 px-2"
       )}>
-        
-        {/* Full Close Button */}
         <button 
           onClick={() => setIsNavigatorVisible(false)}
           className="h-10 w-10 flex items-center justify-center rounded-full text-zinc-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all"
@@ -167,7 +171,6 @@ export function LiturgicalNavigator() {
 
         <div className="h-6 w-px bg-zinc-200 dark:bg-zinc-800 mx-1" />
 
-        {/* Prev Reading */}
         <button 
           onClick={handlePrev}
           disabled={!hasPrev}
@@ -179,29 +182,29 @@ export function LiturgicalNavigator() {
           <ChevronLeft className="h-5 w-5" />
         </button>
 
-        {/* Current Reading Info - Acts as Jump button if far */}
         <button 
-          onClick={isFar ? handleJumpToActive : undefined}
+          onClick={handleJumpToActive}
           className={cn(
             "flex flex-col items-center px-4 min-w-[160px] transition-all rounded-2xl py-1",
-            isFar ? "hover:bg-primary/5 cursor-pointer ring-1 ring-primary/10 bg-primary/[0.02]" : ""
+            isFar || activeReading.type === "Sequence" ? "hover:bg-primary/5 cursor-pointer ring-1 ring-primary/10 bg-primary/[0.02]" : ""
           )}
         >
           <span className="text-[7px] font-black uppercase tracking-[0.3em] text-primary/60 mb-0.5">
-            {isFar ? "Jump To" : "Daily Reading"}
+            {activeReading.type === "Sequence" ? "Listen to Sequence" : isFar ? "Jump To" : "Daily Reading"}
           </span>
           <div className="flex items-center gap-2">
              <span className="text-[11px] font-bold text-zinc-900 dark:text-zinc-50 whitespace-nowrap">
               {activeReading.type}
             </span>
-            {isFar && <BookOpen className="h-3 w-3 text-primary animate-pulse" />}
+            {(isFar || activeReading.type === "Sequence") && (
+              activeReading.type === "Sequence" ? <Volume2 className="h-3 w-3 text-primary animate-pulse" /> : <BookOpen className="h-3 w-3 text-primary animate-pulse" />
+            )}
           </div>
           <span className="text-[9px] font-medium text-zinc-500 italic line-clamp-1 max-w-[140px]">
             {activeReading.citation}
           </span>
         </button>
 
-        {/* Next Reading */}
         <button 
           onClick={handleNext}
           disabled={!hasNext}
@@ -215,15 +218,19 @@ export function LiturgicalNavigator() {
 
         <div className="h-6 w-px bg-zinc-200 dark:bg-zinc-800 mx-1" />
 
-        {/* Quick Select Dots (Improved Click Area) */}
         <div className="flex gap-1 px-2 h-10 items-center">
           {liturgicalReadings.map((r, i) => (
             <button 
               key={r.type}
               onClick={(e) => {
                 e.stopPropagation();
-                const firstOrder = r.orders[0];
-                if (firstOrder !== undefined) setScrollToOrder(firstOrder);
+                if (r.type === "Sequence" && r.sequenceText) {
+                  unlockAudio();
+                  jumpToText(r.sequenceText);
+                } else {
+                  const firstOrder = r.orders[0];
+                  if (firstOrder !== undefined) setScrollToOrder(firstOrder);
+                }
               }}
               title={r.type}
               className="group h-8 w-4 flex items-center justify-center"

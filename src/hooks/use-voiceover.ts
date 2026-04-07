@@ -14,6 +14,7 @@ export function useVoiceover() {
   const currentOrder = useReaderStore((state) => state.voiceoverCurrentOrder);
   const setCurrentOrder = useReaderStore((state) => state.setVoiceoverCurrentOrder);
   const setVerse = useReaderStore((state) => state.setVoiceoverCurrentVerse);
+  const setNonBibleText = useReaderStore((state) => state.setVoiceoverNonBibleText);
   const setScrollToOrder = useReaderStore((state) => state.setScrollToOrder);
   const globalCurrentOrder = useReaderStore((state) => state.currentOrder);
   const playlist = useReaderStore((state) => state.voiceoverPlaylist);
@@ -48,11 +49,26 @@ export function useVoiceover() {
     if (newPlaylist) setPlaylist(newPlaylist);
     if (isFollowEnabled) setScrollToOrder(order);
     
+    setNonBibleText(null);
     setIsActive(true);
     setIsMinimized(false);
     setCurrentOrder(order);
     setIsPlaying(true);
-  }, [setPlaylist, isFollowEnabled, setScrollToOrder, setIsActive, setIsMinimized, setCurrentOrder, setIsPlaying]);
+  }, [setPlaylist, isFollowEnabled, setScrollToOrder, setIsActive, setIsMinimized, setCurrentOrder, setIsPlaying, setNonBibleText]);
+
+  const jumpToText = useCallback((text: string) => {
+    setIsPlaying(false);
+    unlockAudio();
+    
+    setCurrentOrder(null);
+    setVerse(null);
+    setPlaylist(null);
+    setNonBibleText(text);
+    
+    setIsActive(true);
+    setIsMinimized(false);
+    setIsPlaying(true);
+  }, [setIsPlaying, unlockAudio, setCurrentOrder, setVerse, setPlaylist, setNonBibleText, setIsActive, setIsMinimized]);
 
   const togglePlay = useCallback(() => {
     if (isPlaying) {
@@ -78,14 +94,14 @@ export function useVoiceover() {
   const skipForward = useCallback(() => {
     const current = currentOrder ?? globalCurrentOrder;
     const next = getNextOrder(current);
-    if (next !== null) jumpToOrder(next);
+    if (next !== null && next !== undefined) jumpToOrder(next);
   }, [currentOrder, globalCurrentOrder, getNextOrder, jumpToOrder]);
 
   const skipBackward = useCallback(() => {
     const current = currentOrder ?? globalCurrentOrder;
     if (playlist) {
       const idx = playlist.indexOf(current);
-      if (idx > 0) jumpToOrder(playlist[idx - 1]);
+      if (idx > 0 && playlist[idx - 1] !== undefined) jumpToOrder(playlist[idx - 1]!);
     } else {
       jumpToOrder(Math.max(1, current - 1));
     }
@@ -97,6 +113,7 @@ export function useVoiceover() {
     skipForward,
     skipBackward,
     jumpToOrder,
+    jumpToText,
     unlockAudio,
     isPlaying,
     isActive,

@@ -182,7 +182,7 @@ export function SidebarNav() {
   const { data: books = [] } = api.bible.getBooks.useQuery();
   const { data: translations = [] } = api.bible.getTranslations.useQuery();
   const { info } = useLiturgical();
-  const { jumpToOrder, unlockAudio } = useVoiceover();
+  const { jumpToOrder, jumpToText, unlockAudio } = useVoiceover();
 
   const { data: allPlans = [] } = api.readingPlan.getPlans.useQuery();
   const { data: userPlans = [] } = api.readingPlan.getUserPlans.useQuery(undefined, {
@@ -426,13 +426,23 @@ export function SidebarNav() {
 
   const handleSelectReading = (type: string) => {
     const reading = liturgicalReadings.find(r => r.type === type);
-    if (reading && reading.orders.length > 0) {
-      const firstOrder = reading.orders[0];
-      if (firstOrder) {
-        setScrollToOrder(firstOrder);
-        setIsNavigatorVisible(true);
-        toast.success(`${type} Focused`);
+    if (reading) {
+      if (type === "Sequence" && reading.sequenceText) {
+        unlockAudio();
+        jumpToText(reading.sequenceText);
+        toast.success("Sequence: Voiceover Started");
         setActiveTab(null);
+        return;
+      }
+
+      if (reading.orders.length > 0) {
+        const firstOrder = reading.orders[0];
+        if (firstOrder) {
+          setScrollToOrder(firstOrder);
+          setIsNavigatorVisible(true);
+          toast.success(`${type} Focused`);
+          setActiveTab(null);
+        }
       }
     } else {
       toast.error("Reading not found");
@@ -440,9 +450,21 @@ export function SidebarNav() {
   };
 
   const handleListenAll = useCallback(() => {
+    // Find sequence if any
+    const sequenceReading = liturgicalReadings.find(r => r.type === "Sequence" && r.sequenceText);
+    
     const allOrders = liturgicalReadings.flatMap(r => r.orders);
     const firstOrder = allOrders[0];
-    if (firstOrder !== undefined) {
+    
+    if (sequenceReading?.sequenceText) {
+      unlockAudio();
+      // Playlist will continue with allOrders after sequence finishes due to speakText logic
+      jumpToText(sequenceReading.sequenceText);
+      // We set the playlist so it continues with Bible text after Sequence
+      useReaderStore.getState().setVoiceoverPlaylist(allOrders);
+      toast.success("Daily Bread: Starting with Sequence");
+      setActiveTab(null);
+    } else if (firstOrder !== undefined) {
       unlockAudio();
       jumpToOrder(firstOrder, allOrders);
       toast.success("Daily Bread: Voiceover Started");
@@ -450,7 +472,7 @@ export function SidebarNav() {
     } else {
       toast.error("Readings not yet loaded");
     }
-  }, [liturgicalReadings, jumpToOrder, unlockAudio]);
+  }, [liturgicalReadings, jumpToOrder, jumpToText, unlockAudio]);
 
   const handleContinuePlan = async (up: any) => {
     const plan = up.plan ?? (allPlans as any[]).find((p: any) => p.id === up.planId);
@@ -982,8 +1004,8 @@ export function SidebarNav() {
   );
 }
 
-function ReadingRow({ label, citation, icon: Icon, onSelect }: { label: string, citation: string, icon: any, onSelect: () => void }) {
-  return ( <button onClick={onSelect} className="w-full flex items-center justify-between py-2.5 px-3 rounded-xl hover:bg-primary/5 transition-all group active:scale-[0.98]"> <div className="flex items-center gap-3 overflow-hidden"> <div className="h-8 w-8 rounded-lg bg-zinc-50 dark:bg-zinc-800 flex items-center justify-center group-hover:bg-primary/10 transition-colors"> <Icon className="h-4 w-4 text-zinc-400 group-hover:text-primary" /> </div> <div className="flex flex-col items-start text-left overflow-hidden"> <span className="text-[7px] font-black uppercase tracking-[0.2em] text-zinc-400">{label}</span> <span className="text-[11px] font-bold text-zinc-900 dark:text-zinc-100 truncate w-full"> {label === "Sequence" ? "Victimae Paschali Laudes" : citation} </span> </div> </div> <ChevronRight className="h-3 w-3 text-zinc-300 opacity-0 group-hover:opacity-100 transition-all" /> </button> );
+function ReadingRow({ label, citation, icon: Icon, onSelect }: { label: string, citation?: string, icon: any, onSelect: () => void }) {
+  return ( <button onClick={onSelect} className="w-full flex items-center justify-between py-2.5 px-3 rounded-xl hover:bg-primary/5 transition-all group active:scale-[0.98]"> <div className="flex items-center gap-3 overflow-hidden"> <div className="h-8 w-8 rounded-lg bg-zinc-50 dark:bg-zinc-800 flex items-center justify-center group-hover:bg-primary/10 transition-colors"> <Icon className="h-4 w-4 text-zinc-400 group-hover:text-primary" /> </div> <div className="flex flex-col items-start text-left overflow-hidden"> <span className="text-[7px] font-black uppercase tracking-[0.2em] text-zinc-400">{label}</span> <span className="text-[11px] font-bold text-zinc-900 dark:text-zinc-100 truncate w-full"> {label === "Sequence" ? "Victimae Paschali Laudes" : (citation ?? "")} </span> </div> </div> <ChevronRight className="h-3 w-3 text-zinc-300 opacity-0 group-hover:opacity-100 transition-all" /> </button> );
 }
 
 function RailButton({ icon, active, onClick, label }: { icon: React.ReactNode, active?: boolean, onClick: () => void, label: string }) {

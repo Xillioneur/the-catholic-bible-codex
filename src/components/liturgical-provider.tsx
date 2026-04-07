@@ -66,7 +66,7 @@ export function LiturgicalProvider({ children }: { children: ReactNode }) {
 
         // 2. OPTIMIZED DEXIE FETCH
         // Collect all unique globalOrders across all readings to fetch from IndexedDB in one go
-        const allOrders = resolvedOrders.flatMap(r => r.orders);
+        const allOrders = resolvedOrders.filter(Boolean).flatMap(r => r!.orders);
         
         // Use Dexie's 'anyOf' for efficient multi-key lookup
         const allVerses = await db.verses
@@ -76,7 +76,7 @@ export function LiturgicalProvider({ children }: { children: ReactNode }) {
 
         // 3. MAP BACK TO READINGS (and maintain original liturgical order)
         const finalReadings = readingPairs.map(p => {
-          const resolved = resolvedOrders.find(ro => ro.type === p.type);
+          const resolved = resolvedOrders.find(ro => ro?.type === p.type);
           if (!resolved) return null;
 
           const readingVerses = allVerses

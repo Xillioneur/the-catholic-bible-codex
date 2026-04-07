@@ -47,7 +47,7 @@ export function LiturgicalCard({ onClose }: LiturgicalCardProps) {
 
   const handleListenAll = useCallback(() => {
     const allOrders = liturgicalReadings.flatMap(r => r.orders).sort((a, b) => a - b);
-    if (allOrders.length > 0) {
+    if (allOrders.length > 0 && allOrders[0] !== undefined) {
       jumpToOrder(allOrders[0], allOrders);
       toast.success("Daily Bread: Voiceover Started");
       onClose();
@@ -69,7 +69,7 @@ export function LiturgicalCard({ onClose }: LiturgicalCardProps) {
     </div>
   );
 
-  const ReadingRow = ({ label, citation, icon: Icon, typeName }: { label: string, citation: string, icon: any, typeName: string }) => {
+  const ReadingRow = ({ label, citation, icon: Icon, typeName }: { label: string, citation?: string, icon: any, typeName: string }) => {
     const isResolved = liturgicalReadings.some(r => r.type === typeName);
     return (
       <button 
@@ -87,7 +87,7 @@ export function LiturgicalCard({ onClose }: LiturgicalCardProps) {
           <div className="flex flex-col items-start text-left">
             <span className="text-[7px] font-black uppercase tracking-[0.2em] text-zinc-400 group-hover:text-primary/60">{label}</span>
             <span className="text-[11px] font-bold text-zinc-900 dark:text-zinc-100 tracking-tight line-clamp-1">
-              {label === "Sequence" ? "Victimae Paschali Laudes" : citation}
+              {label === "Sequence" ? "Victimae Paschali Laudes" : (citation ?? "")}
             </span>
           </div>
         </div>

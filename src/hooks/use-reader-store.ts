@@ -5,6 +5,7 @@ interface Reading {
   type: string;
   citation: string;
   orders: number[];
+  sequenceText?: string; // For non-scripture text like liturgical Sequences
   verses?: any[]; // Full cached verse data for instant loading
 }
 
@@ -120,6 +121,8 @@ interface ReaderState {
   setVoiceoverCurrentOrder: (order: number | null) => void;
   voiceoverCurrentVerse: any | null;
   setVoiceoverCurrentVerse: (verse: any | null) => void;
+  voiceoverNonBibleText: string | null;
+  setVoiceoverNonBibleText: (text: string | null) => void;
   voiceoverProgress: number;
   setVoiceoverProgress: (progress: number) => void;
   isVoiceoverFollowEnabled: boolean;
@@ -260,6 +263,8 @@ export const useReaderStore = create<ReaderState>()(
       setVoiceoverCurrentOrder: (order) => set({ voiceoverCurrentOrder: order }),
       voiceoverCurrentVerse: null,
       setVoiceoverCurrentVerse: (verse) => set({ voiceoverCurrentVerse: verse }),
+      voiceoverNonBibleText: null,
+      setVoiceoverNonBibleText: (text) => set({ voiceoverNonBibleText: text }),
       voiceoverProgress: 0,
       setVoiceoverProgress: (progress) => set({ voiceoverProgress: progress }),
       isVoiceoverFollowEnabled: true,
@@ -276,6 +281,7 @@ export const useReaderStore = create<ReaderState>()(
         isVoiceoverMinimized: false,
         voiceoverCurrentVerse: null,
         voiceoverCurrentOrder: null,
+        voiceoverNonBibleText: null,
         voiceoverPlaylist: null,
         voiceoverProgress: 0,
       }),
