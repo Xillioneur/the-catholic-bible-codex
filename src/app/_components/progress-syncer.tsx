@@ -18,28 +18,56 @@ export function ProgressSyncer() {
   const setCurrentOrder = useReaderStore((state) => state.setCurrentOrder);
   const setTranslationSlug = useReaderStore((state) => state.setTranslationSlug);
   
+  const setLastSync = useReaderStore((state) => state.setLastSync);
+  const setIsSyncing = useReaderStore((state) => state.setIsSyncing);
+  
   const updateProgress = api.user.updateProgress.useMutation({
-    onSuccess: () => console.log("[SYNC] Progress saved to cloud"),
+    onMutate: () => setIsSyncing(true),
+    onSuccess: () => {
+      console.log("[SYNC] Progress saved to cloud");
+      setLastSync(Date.now());
+    },
+    onSettled: () => setIsSyncing(false),
     onError: (e) => console.error("[SYNC] Progress save failed", e),
   });
   
   const syncHighlights = api.user.syncHighlights.useMutation({
-    onSuccess: () => console.log("[SYNC] Highlights saved to cloud"),
+    onMutate: () => setIsSyncing(true),
+    onSuccess: () => {
+      console.log("[SYNC] Highlights saved to cloud");
+      setLastSync(Date.now());
+    },
+    onSettled: () => setIsSyncing(false),
     onError: (e) => console.error("[SYNC] Highlights save failed", e),
   });
   
   const syncNotes = api.user.syncNotes.useMutation({
-    onSuccess: () => console.log("[SYNC] Notes saved to cloud"),
+    onMutate: () => setIsSyncing(true),
+    onSuccess: () => {
+      console.log("[SYNC] Notes saved to cloud");
+      setLastSync(Date.now());
+    },
+    onSettled: () => setIsSyncing(false),
     onError: (e) => console.error("[SYNC] Notes save failed", e),
   });
   
   const syncBookmarks = api.user.syncBookmarks.useMutation({
-    onSuccess: () => console.log("[SYNC] Bookmarks saved to cloud"),
+    onMutate: () => setIsSyncing(true),
+    onSuccess: () => {
+      console.log("[SYNC] Bookmarks saved to cloud");
+      setLastSync(Date.now());
+    },
+    onSettled: () => setIsSyncing(false),
     onError: (e) => console.error("[SYNC] Bookmarks save failed", e),
   });
   
   const syncVerseStatuses = api.user.syncVerseStatuses.useMutation({
-    onSuccess: () => console.log("[SYNC] Verse progress saved to cloud"),
+    onMutate: () => setIsSyncing(true),
+    onSuccess: () => {
+      console.log("[SYNC] Verse progress saved to cloud");
+      setLastSync(Date.now());
+    },
+    onSettled: () => setIsSyncing(false),
     onError: (e) => console.error("[SYNC] Verse progress save failed", e),
   });
   

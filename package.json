@@ -39,6 +39,7 @@
     "axios": "^1.13.6",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
     "dexie": "^4.0.11",
     "dexie-react-hooks": "^1.1.7",
     "esbuild-wasm": "^0.27.3",

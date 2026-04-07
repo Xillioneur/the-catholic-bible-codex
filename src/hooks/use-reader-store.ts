@@ -99,6 +99,14 @@ interface ReaderState {
   theme: "sanctuary" | "traditional" | "midnight";
   setTheme: (theme: "sanctuary" | "traditional" | "midnight") => void;
 
+  // SYNC STATUS
+  lastSync: number | null;
+  setLastSync: (time: number) => void;
+  isSyncing: boolean;
+  setIsSyncing: (syncing: boolean) => void;
+  isSyncStatusMinimized: boolean;
+  setIsSyncStatusMinimized: (minimized: boolean) => void;
+
   // VOICEOVER
   isVoiceoverPlaying: boolean;
   setIsVoiceoverPlaying: (playing: boolean) => void;
@@ -232,6 +240,13 @@ export const useReaderStore = create<ReaderState>()(
       theme: "sanctuary",
       setTheme: (theme) => set({ theme }),
 
+      lastSync: null,
+      setLastSync: (time) => set({ lastSync: time }),
+      isSyncing: false,
+      setIsSyncing: (syncing) => set({ isSyncing: syncing }),
+      isSyncStatusMinimized: false,
+      setIsSyncStatusMinimized: (minimized) => set({ isSyncStatusMinimized: minimized }),
+
       // VOICEOVER
       isVoiceoverPlaying: false,
       setIsVoiceoverPlaying: (playing) => set({ isVoiceoverPlaying: playing }),
@@ -280,6 +295,8 @@ export const useReaderStore = create<ReaderState>()(
         autoAdvanceJourney: state.autoAdvanceJourney,
         theme: state.theme,
         isSidebarCollapsed: state.isSidebarCollapsed,
+        lastSync: state.lastSync,
+        isSyncStatusMinimized: state.isSyncStatusMinimized,
       }),
     }
   )
