@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { X, Scroll, Music, Church, Volume2, Play, Pause, Target } from "lucide-react";
 import { cn } from "~/lib/utils";
-import { useReaderStore } from "~/hooks/use-reader-store";
+import { useReaderStore, type VoiceoverQueueItem } from "~/hooks/use-reader-store";
 import { useVoiceover } from "~/hooks/use-voiceover";
 import { VoiceoverControls } from "./voiceover-controls";
 
@@ -17,9 +17,8 @@ interface DailyAllViewProps {
 export function DailyAllView({ info, onClose, onSelectReading }: DailyAllViewProps) {
   const [mounted, setMounted] = useState(false);
   const liturgicalReadings = useReaderStore((state) => state.liturgicalReadings);
-  const { jumpToOrder, jumpToText, togglePlay, isPlaying, playlist, unlockAudio } = useVoiceover();
+  const { jumpToQueue, togglePlay, isPlaying, queue, unlockAudio } = useVoiceover();
   const currentOrder = useReaderStore((state) => state.voiceoverCurrentOrder);
-  const nonBibleText = useReaderStore((state) => state.voiceoverNonBibleText);
   const isFollowEnabled = useReaderStore((state) => state.isVoiceoverFollowEnabled);
 
   useEffect(() => {
@@ -40,29 +39,26 @@ export function DailyAllView({ info, onClose, onSelectReading }: DailyAllViewPro
     }
   }, [currentOrder, isPlaying, isFollowEnabled]);
 
-  const allOrders = useMemo(() => {
-    return liturgicalReadings.flatMap(r => r.orders);
-  }, [liturgicalReadings]);
-
-  const sequenceReading = useMemo(() => {
-    return liturgicalReadings.find(r => r.type === "Sequence" && r.sequenceText);
-  }, [liturgicalReadings]);
-
-  const isReadingAll = isPlaying && (
-    (nonBibleText && nonBibleText === sequenceReading?.sequenceText) ||
-    (playlist?.length === allOrders.length && playlist[0] === allOrders[0])
-  );
+  const isReadingAll = isPlaying && !!queue;
 
   const handleReadAll = () => {
     if (isReadingAll) {
       togglePlay();
     } else {
-      unlockAudio();
-      if (sequenceReading?.sequenceText) {
-        jumpToText(sequenceReading.sequenceText);
-        useReaderStore.getState().setVoiceoverPlaylist(allOrders);
-      } else if (allOrders.length > 0 && allOrders[0] !== undefined) {
-        jumpToOrder(allOrders[0], allOrders);
+      const liturgicalQueue: VoiceoverQueueItem[] = [];
+      for (const reading of liturgicalReadings) {
+        if (reading.type === "Sequence" && reading.sequenceText) {
+          liturgicalQueue.push({ type: "text", text: reading.sequenceText, title: "Liturgical Sequence" });
+        } else {
+          for (const order of reading.orders) {
+            liturgicalQueue.push({ type: "verse", order });
+          }
+        }
+      }
+
+      if (liturgicalQueue.length > 0) {
+        unlockAudio();
+        jumpToQueue(liturgicalQueue);
       }
     }
   };
@@ -237,7 +233,7 @@ function ReadingSection({ title, citation, heading, acclamationText, sequenceTex
 }) {
   if (!citation && !sequenceText) return null;
 
-  const { jumpToOrder, jumpToText, togglePlay, isPlaying, playlist, unlockAudio } = useVoiceover();
+  const { jumpToOrder, jumpToText, togglePlay, isPlaying, playlist, queue, unlockAudio, verseProgress } = useVoiceover();
   const currentOrder = useReaderStore((state) => state.voiceoverCurrentOrder);
   const nonBibleText = useReaderStore((state) => state.voiceoverNonBibleText);
 
@@ -245,7 +241,7 @@ function ReadingSection({ title, citation, heading, acclamationText, sequenceTex
   
   const isPlayingThisSection = isPlaying && (
     (isSequence && nonBibleText === sequenceText) ||
-    (!isSequence && playlist?.some(o => orders.includes(o)))
+    (!isSequence && (playlist?.some(o => orders.includes(o)) || queue?.some(i => i.type === "verse" && orders.includes(i.order))))
   );
 
   const handleToggleSection = () => {
@@ -348,9 +344,27 @@ function ReadingSection({ title, citation, heading, acclamationText, sequenceTex
       <div className="space-y-6">
         {isSequence ? (
           <div className="font-serif text-base md:text-lg leading-relaxed text-zinc-800 dark:text-zinc-200 italic text-center max-w-xl mx-auto space-y-4">
-            {sequenceText!.split('/').map((line, lIdx) => (
-              <p key={lIdx} className="mb-2 last:mb-0">{line.trim()}</p>
-            ))}
+            {sequenceText!.split('/').map((line, lIdx, lines) => {
+              const lineClean = line.trim();
+              if (!lineClean) return null;
+              
+              const totalLines = lines.length;
+              const lineProgressStart = (lIdx / totalLines) * 100;
+              const lineProgressEnd = ((lIdx + 1) / totalLines) * 100;
+              const isCurrentLine = isPlayingThisSection && verseProgress >= lineProgressStart && verseProgress < lineProgressEnd;
+
+              return (
+                <p 
+                  key={lIdx} 
+                  className={cn(
+                    "mb-2 last:mb-0 transition-all duration-500 rounded px-2 py-1",
+                    isCurrentLine && "bg-primary/10 ring-1 ring-primary/20 text-primary not-italic font-bold scale-105"
+                  )}
+                >
+                  {lineClean}
+                </p>
+              );
+            })}
           </div>
         ) : verseSegments.length > 0 ? (
           <div className={cn(

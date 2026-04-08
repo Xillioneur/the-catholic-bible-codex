@@ -130,7 +130,7 @@ export function LiturgicalCard({ onClose }: LiturgicalCardProps) {
           {info.readings.psalm && <ReadingRow label="The Psalm" typeName="Responsorial Psalm" citation={info.readings.psalm} icon={Music} />}
           {info.readings.secondReading && <ReadingRow label="Second Reading" typeName="Second Reading" citation={info.readings.secondReading} icon={Scroll} />}
           {info.readings.sequence && <ReadingRow label="Sequence" typeName="Sequence" citation={info.readings.sequence} icon={Scroll} />}
-          {(info.readings.alleluia || info.readings.verseBeforeGospel) && <ReadingRow label="Alleluia" typeName="Alleluia" citation={info.readings.alleluia || info.readings.verseBeforeGospel} icon={Music} />}
+          {(info.readings.alleluia || info.readings.verseBeforeGospel) && <ReadingRow label="Alleluia" typeName="Alleluia" citation={(info.readings.alleluia || info.readings.verseBeforeGospel) ?? undefined} icon={Music} />}
           {info.readings.gospel && <ReadingRow label="Holy Gospel" typeName="The Holy Gospel" citation={info.readings.gospel} icon={Church} />}
         </div>
 

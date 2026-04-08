@@ -40,7 +40,7 @@ import {
   ShieldCheck,
   RefreshCw
 } from "lucide-react";
-import { useReaderStore } from "~/hooks/use-reader-store";
+import { useReaderStore, type VoiceoverQueueItem } from "~/hooks/use-reader-store";
 import { cn } from "~/lib/utils";
 import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "~/lib/db";
@@ -120,48 +120,56 @@ export function SidebarNav() {
 
     const checkBible = async () => {
       try {
+        // Only count if not already loaded to save CPU
+        if (isBibleLoaded) return;
         const count = await db.verses.count();
         if (count > 30000) setIsBibleLoaded(true);
       } catch (e) {
         console.error("Bible check failed", e);
       }
     };
-    void checkBible();
 
     const checkSW = async () => {
-      if ("serviceWorker" in navigator) {
-        const registration = await navigator.serviceWorker.getRegistration();
-        
-        if (registration) {
-          if (registration.active) {
-            setIsCached(true);
-          } else if (registration.installing || registration.waiting) {
-            setIsCached(false); 
-          }
-        } else {
-          setIsCached(false);
-        }
+      if (!("serviceWorker" in navigator)) return;
+      const registration = await navigator.serviceWorker.getRegistration();
+      if (registration?.active) {
+        setIsCached(true);
+      } else {
+        setIsCached(false);
       }
     };
     
+    // Initial check
     void checkSW();
-    const interval = setInterval(() => {
-      void checkSW();
-      void checkBible();
-    }, 5000);
+    void checkBible();
+
+    // Only poll when the sanctuary tab is actually open to save CPU
+    let interval: NodeJS.Timeout | null = null;
+    if (activeTab === "sanctuary") {
+      interval = setInterval(() => {
+        if (document.visibilityState === "visible") {
+          void checkSW();
+        }
+      }, 10000); // Relaxed to 10s
+    }
 
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.addEventListener("controllerchange", () => {
-        setIsCached(true);
-      });
+      const handleControllerChange = () => setIsCached(true);
+      navigator.serviceWorker.addEventListener("controllerchange", handleControllerChange);
+      return () => {
+        window.removeEventListener("online", handleOnline);
+        window.removeEventListener("offline", handleOffline);
+        if (interval) clearInterval(interval);
+        navigator.serviceWorker.removeEventListener("controllerchange", handleControllerChange);
+      };
     }
 
     return () => {
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
-      clearInterval(interval);
+      if (interval) clearInterval(interval);
     };
-  }, []);
+  }, [activeTab, isBibleLoaded]);
 
   const handleClearCache = async () => {
     if ("serviceWorker" in navigator) {
@@ -182,7 +190,7 @@ export function SidebarNav() {
   const { data: books = [] } = api.bible.getBooks.useQuery();
   const { data: translations = [] } = api.bible.getTranslations.useQuery();
   const { info } = useLiturgical();
-  const { jumpToOrder, jumpToText, unlockAudio } = useVoiceover();
+  const { jumpToText, jumpToQueue, unlockAudio } = useVoiceover();
 
   const { data: allPlans = [] } = api.readingPlan.getPlans.useQuery();
   const { data: userPlans = [] } = api.readingPlan.getUserPlans.useQuery(undefined, {
@@ -204,15 +212,9 @@ export function SidebarNav() {
   const bookmarks = useLiveQuery(() => db.bookmarks.where("userId").equals(currentUserId).reverse().limit(10).toArray(), [currentUserId]) ?? [];
   const localNotesRaw = useLiveQuery(() => db.notes.where("userId").equals(currentUserId).reverse().toArray(), [currentUserId]) ?? [];
   const localHighlightsRaw = useLiveQuery(() => db.highlights.where("userId").equals(currentUserId).reverse().toArray(), [currentUserId]) ?? [];
-  const localVerseStatuses = useLiveQuery(() => db.verseStatuses.where("userId").equals(currentUserId).toArray(), [currentUserId]) ?? [];
   const localUserPlans = useLiveQuery(() => db.userReadingPlans.where("userId").equals(currentUserId).toArray(), [currentUserId]) ?? [];
 
   // 4. MEMOS & HELPERS
-  const readOrdersSet = useMemo(() => {
-    const set = new Set(localVerseStatuses.filter(s => s.isRead).map(s => s.globalOrder));
-    return set;
-  }, [localVerseStatuses]);
-
   const categories = useMemo(() => {
     const cats = ["Pentateuch", "History", "Wisdom", "Prophets", "Gospels", "Acts", "Epistles", "Revelation"];
     const filtered = books.filter(b => 
@@ -283,8 +285,7 @@ export function SidebarNav() {
       await db.userReadingPlans.where("userId").equals(currentUserId).modify({
         completedDays: [],
         currentDay: 1,
-        isCompleted: false,
-        completedAt: undefined
+        isCompleted: false
       });
       setIsJourneyVoiceActive(false);
       clearJourneyProgress();
@@ -314,11 +315,14 @@ export function SidebarNav() {
           newCompletedDays = newCompletedDays.filter(d => d !== dayNumber);
         }
         const isAllFinished = newCompletedDays.length >= (planDetails?.totalDays || 0);
-        await db.userReadingPlans.update(up.id, { 
+        const updates: any = {
           completedDays: newCompletedDays,
           isCompleted: isAllFinished,
-          completedAt: isAllFinished ? Date.now() : undefined
-        });
+        };
+        if (isAllFinished) {
+          updates.completedAt = Date.now();
+        }
+        await db.userReadingPlans.update(up.id, updates);
       }
       if (completed) {
         toast.success(`Day ${dayNumber} Sealed`);
@@ -437,7 +441,7 @@ export function SidebarNav() {
 
       if (reading.orders.length > 0) {
         const firstOrder = reading.orders[0];
-        if (firstOrder) {
+        if (firstOrder !== undefined) {
           setScrollToOrder(firstOrder);
           setIsNavigatorVisible(true);
           toast.success(`${type} Focused`);
@@ -450,29 +454,28 @@ export function SidebarNav() {
   };
 
   const handleListenAll = useCallback(() => {
-    // Find sequence if any
-    const sequenceReading = liturgicalReadings.find(r => r.type === "Sequence" && r.sequenceText);
+    // Build a unified liturgical queue
+    const queue: VoiceoverQueueItem[] = [];
     
-    const allOrders = liturgicalReadings.flatMap(r => r.orders);
-    const firstOrder = allOrders[0];
+    for (const reading of liturgicalReadings) {
+      if (reading.type === "Sequence" && reading.sequenceText) {
+        queue.push({ type: "text", text: reading.sequenceText, title: "Liturgical Sequence" });
+      } else {
+        for (const order of reading.orders) {
+          queue.push({ type: "verse", order });
+        }
+      }
+    }
     
-    if (sequenceReading?.sequenceText) {
+    if (queue.length > 0) {
       unlockAudio();
-      // Playlist will continue with allOrders after sequence finishes due to speakText logic
-      jumpToText(sequenceReading.sequenceText);
-      // We set the playlist so it continues with Bible text after Sequence
-      useReaderStore.getState().setVoiceoverPlaylist(allOrders);
-      toast.success("Daily Bread: Starting with Sequence");
-      setActiveTab(null);
-    } else if (firstOrder !== undefined) {
-      unlockAudio();
-      jumpToOrder(firstOrder, allOrders);
-      toast.success("Daily Bread: Voiceover Started");
+      jumpToQueue(queue);
+      toast.success("Daily Bread: Starting Liturgical Journey");
       setActiveTab(null);
     } else {
       toast.error("Readings not yet loaded");
     }
-  }, [liturgicalReadings, jumpToOrder, jumpToText, unlockAudio]);
+  }, [liturgicalReadings, jumpToQueue, unlockAudio]);
 
   const handleContinuePlan = async (up: any) => {
     const plan = up.plan ?? (allPlans as any[]).find((p: any) => p.id === up.planId);
@@ -623,7 +626,7 @@ export function SidebarNav() {
                   {info.readings.psalm && <ReadingRow label="Psalm" citation={info.readings.psalm} icon={Music} onSelect={() => handleSelectReading("Responsorial Psalm")} />}
                   {info.readings.secondReading && <ReadingRow label="Second" citation={info.readings.secondReading} icon={Scroll} onSelect={() => handleSelectReading("Second Reading")} />}
                   {info.readings.sequence && <ReadingRow label="Sequence" citation={info.readings.sequence} icon={Scroll} onSelect={() => handleSelectReading("Sequence")} />}
-                  {(info.readings.alleluia || info.readings.verseBeforeGospel) && <ReadingRow label="Alleluia" citation={info.readings.alleluia || info.readings.verseBeforeGospel} icon={Music} onSelect={() => handleSelectReading("Alleluia")} />}
+                  {(info.readings.alleluia || info.readings.verseBeforeGospel) && <ReadingRow label="Alleluia" citation={(info.readings.alleluia || info.readings.verseBeforeGospel) ?? undefined} icon={Music} onSelect={() => handleSelectReading("Alleluia")} />}
                   {info.readings.gospel && <ReadingRow label="Gospel" citation={info.readings.gospel ?? ""} icon={Church} onSelect={() => handleSelectReading("The Holy Gospel")} />}
                 </div>
                 <div className="flex flex-col gap-2">
@@ -902,7 +905,7 @@ export function SidebarNav() {
                             <Database className={cn("h-3 w-3", isCached ? "text-emerald-500" : "text-zinc-500")} />
                             <span className="text-[9px] font-bold uppercase text-zinc-500">Storage</span>
                           </div>
-                          <span className="text-[10px] font-medium">{isCached ? "Encrypted" : "Syncing..."}</span>
+                          <span className="text-[10px] font-medium">{isBibleLoaded ? "Fully Loaded" : isCached ? "Encrypted" : "Syncing..."}</span>
                         </div>
                       </div>
 

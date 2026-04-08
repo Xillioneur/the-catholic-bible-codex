@@ -1,17 +1,15 @@
 "use client";
 
-import { useState, useCallback, useEffect, useMemo, useRef } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { api } from "~/trpc/react";
 import { useReaderStore } from "~/hooks/use-reader-store";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { bibleService } from "~/lib/bible-service";
-import { useLiveQuery } from "dexie-react-hooks";
-import { db } from "~/lib/db";
 
 export type BibleRow = 
-  | { type: "book-header"; book: any; firstOrder: number }
-  | { type: "chapter-header"; book: any; chapter: number; firstOrder: number }
-  | { type: "liturgical-header"; readingType: string; citation: string; firstOrder: number }
+  | { type: "book-header"; book: any; firstOrder: number; lastOrder?: number }
+  | { type: "chapter-header"; book: any; chapter: number; firstOrder: number; lastOrder?: number }
+  | { type: "liturgical-header"; readingType: string; citation: string; firstOrder: number; lastOrder?: number; heading?: string }
   | { type: "prose-block"; book: any; chapter: number; verses: any[]; firstOrder: number; lastOrder: number };
 
 export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>) {

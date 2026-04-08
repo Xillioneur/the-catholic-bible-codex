@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, ReactNode } from "react";
+import { createContext, useContext, useEffect, type ReactNode } from "react";
 import { api } from "~/trpc/react";
 import { type LiturgicalInfo, getLiturgicalColorOklch } from "~/lib/liturgical";
 import { useReaderStore } from "~/hooks/use-reader-store";
@@ -106,7 +106,7 @@ export function LiturgicalProvider({ children }: { children: ReactNode }) {
     };
 
     void resolveAll();
-  }, [info, translationSlug, utils, setLiturgicalReadings]);
+  }, [info?.day, info?.season, translationSlug, setLiturgicalReadings]);
 
   return (
     <LiturgicalContext.Provider value={{ info: info ?? null, isLoading, error }}>

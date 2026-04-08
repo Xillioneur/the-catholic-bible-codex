@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, memo } from "react";
+import { useRef, useState, memo, useMemo } from "react";
 import { useReaderStore } from "~/hooks/use-reader-store";
 import { VerseOverlay } from "./verse-overlay";
 import { db } from "~/lib/db";
@@ -21,6 +21,10 @@ export function BibleReader() {
 
   const bookmarks = useLiveQuery(() => db.bookmarks.where("userId").equals(currentUserId).toArray(), [currentUserId]) ?? [];
   const highlights = useLiveQuery(() => db.highlights.where("userId").equals(currentUserId).toArray(), [currentUserId]) ?? [];
+  
+  const bookmarkIds = useMemo(() => new Set(bookmarks.map(b => b.verseId)), [bookmarks]);
+  const highlightIds = useMemo(() => new Set(highlights.map(h => h.verseId)), [highlights]);
+
   const readVerseIds = useLiveQuery(async () => {
     const statuses = await db.verseStatuses.where("userId").equals(currentUserId).toArray();
     return new Set(statuses.filter(s => s.isRead).map(s => s.verseId));
@@ -28,6 +32,16 @@ export function BibleReader() {
   const liturgicalReadings = useReaderStore((state) => state.liturgicalReadings);
   const searchHighlight = useReaderStore((state) => state.searchHighlight);
   const voiceoverCurrentOrder = useReaderStore((state) => state.voiceoverCurrentOrder);
+
+  const liturgicalOrders = useMemo(() => {
+    const set = new Set<number>();
+    for (const r of liturgicalReadings) {
+      for (const o of r.orders) {
+        set.add(o);
+      }
+    }
+    return set;
+  }, [liturgicalReadings]);
 
   if (isLoading) return <LoadingScreen />;
 
@@ -58,7 +72,7 @@ export function BibleReader() {
                 <LiturgicalReadingHeader 
                   type={row.readingType} 
                   citation={row.citation} 
-                  heading={row.heading}
+                  heading={row.heading ?? undefined}
                 />
               )}
               {row.type === "prose-block" && (
@@ -68,10 +82,10 @@ export function BibleReader() {
                       <div key={v.id} className="contents">
                         <InlineVerse 
                           verse={v}
-                          hasBookmark={bookmarks.some(b => b.verseId === v.id)}
-                          hasHighlight={highlights.some(h => h.verseId === v.id)}
+                          hasBookmark={bookmarkIds.has(v.id)}
+                          hasHighlight={highlightIds.has(v.id)}
                           isRead={readVerseIds.has(v.id)}
-                          isLiturgical={liturgicalReadings.some(r => r.orders.includes(v.globalOrder))}
+                          isLiturgical={liturgicalOrders.has(v.globalOrder)}
                           isSearchTarget={searchHighlight?.targetOrder === v.globalOrder}
                           isVoiceoverActive={voiceoverCurrentOrder === v.globalOrder}
                           onClick={() => setActiveVerse(v)}

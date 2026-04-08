@@ -8,6 +8,9 @@ interface Reading {
   sequenceText?: string; // For non-scripture text like liturgical Sequences
   verses?: any[]; // Full cached verse data for instant loading
 }
+export type VoiceoverQueueItem = 
+  | { type: "verse"; order: number }
+  | { type: "text"; text: string; title: string };
 
 interface ReaderState {
   translationSlug: string;
@@ -133,6 +136,8 @@ interface ReaderState {
   setVoiceoverVoiceURI: (uri: string | null) => void;
   voiceoverPlaylist: number[] | null;
   setVoiceoverPlaylist: (playlist: number[] | null) => void;
+  voiceoverQueue: VoiceoverQueueItem[] | null;
+  setVoiceoverQueue: (queue: VoiceoverQueueItem[] | null) => void;
   resetVoiceover: () => void;
 }
 
@@ -275,6 +280,8 @@ export const useReaderStore = create<ReaderState>()(
       setVoiceoverVoiceURI: (uri) => set({ voiceoverVoiceURI: uri }),
       voiceoverPlaylist: null,
       setVoiceoverPlaylist: (playlist) => set({ voiceoverPlaylist: playlist }),
+      voiceoverQueue: null,
+      setVoiceoverQueue: (queue) => set({ voiceoverQueue: queue }),
       resetVoiceover: () => set({
         isVoiceoverPlaying: false,
         isVoiceoverActive: false,
@@ -283,6 +290,7 @@ export const useReaderStore = create<ReaderState>()(
         voiceoverCurrentOrder: null,
         voiceoverNonBibleText: null,
         voiceoverPlaylist: null,
+        voiceoverQueue: null,
         voiceoverProgress: 0,
       }),
     }),

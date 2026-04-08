@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useReaderStore } from "~/hooks/use-reader-store";
+import { useReaderStore, type VoiceoverQueueItem } from "~/hooks/use-reader-store";
 import { db } from "~/lib/db";
 
 export function VoiceoverManager() {
@@ -22,6 +22,8 @@ export function VoiceoverManager() {
   const globalCurrentOrder = useReaderStore((state) => state.currentOrder);
   const playlist = useReaderStore((state) => state.voiceoverPlaylist);
   const setPlaylist = useReaderStore((state) => state.setVoiceoverPlaylist);
+  const queue = useReaderStore((state) => state.voiceoverQueue);
+  const setQueue = useReaderStore((state) => state.setVoiceoverQueue);
   
   const setVerseProgress = useReaderStore((state) => state.setVoiceoverProgress);
   const isReadTitlesEnabled = useReaderStore((state) => state.isVoiceoverReadTitlesEnabled);
@@ -112,12 +114,29 @@ export function VoiceoverManager() {
     setCurrentOrder(null);
     setNonBibleText(null);
     setPlaylist(null);
+    setQueue(null);
     setVerseProgress(0);
 
     if ("mediaSession" in navigator) {
       navigator.mediaSession.playbackState = "none";
     }
-  }, [setIsPlaying, setIsActive, setIsMinimized, setVerse, setCurrentOrder, setNonBibleText, setPlaylist, setVerseProgress]);
+  }, [setIsPlaying, setIsActive, setIsMinimized, setVerse, setCurrentOrder, setNonBibleText, setPlaylist, setQueue, setVerseProgress]);
+
+  const getNextQueueItem = useCallback((): VoiceoverQueueItem | null => {
+    if (!queue || queue.length === 0) return null;
+    
+    let currentIndex = -1;
+    if (nonBibleText) {
+      currentIndex = queue.findIndex(item => item.type === "text" && item.text === nonBibleText);
+    } else if (currentOrder !== null) {
+      currentIndex = queue.findIndex(item => item.type === "verse" && item.order === currentOrder);
+    }
+    
+    if (currentIndex !== -1 && currentIndex < queue.length - 1) {
+      return queue[currentIndex + 1] ?? null;
+    }
+    return null;
+  }, [queue, nonBibleText, currentOrder]);
 
   const getNextOrder = useCallback((current: number) => {
     if (playlist && playlist.length > 0) {
@@ -131,6 +150,20 @@ export function VoiceoverManager() {
   }, [playlist]);
 
   const skipForward = useCallback(() => {
+    const nextItem = getNextQueueItem();
+    if (nextItem) {
+      lastCharIndexRef.current = 0;
+      if (nextItem.type === "verse") {
+        setNonBibleText(null);
+        setCurrentOrder(nextItem.order);
+      } else {
+        setCurrentOrder(null);
+        setVerse(null);
+        setNonBibleText(nextItem.text);
+      }
+      return;
+    }
+
     if (nonBibleText) {
       setNonBibleText(null);
       setCurrentOrder(globalCurrentOrder);
@@ -142,9 +175,32 @@ export function VoiceoverManager() {
       lastCharIndexRef.current = 0;
       setCurrentOrder(next);
     }
-  }, [currentOrder, globalCurrentOrder, getNextOrder, setCurrentOrder, nonBibleText, setNonBibleText]);
+  }, [currentOrder, globalCurrentOrder, getNextOrder, getNextQueueItem, setCurrentOrder, nonBibleText, setNonBibleText, setVerse]);
 
   const skipBackward = useCallback(() => {
+    if (queue && queue.length > 0) {
+      let currentIndex = -1;
+      if (nonBibleText) {
+        currentIndex = queue.findIndex(item => item.type === "text" && item.text === nonBibleText);
+      } else if (currentOrder !== null) {
+        currentIndex = queue.findIndex(item => item.type === "verse" && item.order === currentOrder);
+      }
+      
+      if (currentIndex > 0) {
+        const prevItem = queue[currentIndex - 1]!;
+        lastCharIndexRef.current = 0;
+        if (prevItem.type === "verse") {
+          setNonBibleText(null);
+          setCurrentOrder(prevItem.order);
+        } else {
+          setCurrentOrder(null);
+          setVerse(null);
+          setNonBibleText(prevItem.text);
+        }
+        return;
+      }
+    }
+
     if (nonBibleText) {
       setNonBibleText(null);
       setCurrentOrder(globalCurrentOrder);
@@ -161,7 +217,7 @@ export function VoiceoverManager() {
     } else {
       setCurrentOrder(Math.max(1, current - 1));
     }
-  }, [currentOrder, globalCurrentOrder, playlist, setCurrentOrder, nonBibleText, setNonBibleText]);
+  }, [currentOrder, globalCurrentOrder, playlist, queue, setCurrentOrder, nonBibleText, setNonBibleText, setVerse]);
 
   useEffect(() => {
     if ("mediaSession" in navigator) {
@@ -172,6 +228,18 @@ export function VoiceoverManager() {
       navigator.mediaSession.setActionHandler("nexttrack", skipForward);
     }
   }, [setIsPlaying, stop, skipBackward, skipForward]);
+
+  // Listen for custom skip events from useVoiceover hook
+  useEffect(() => {
+    const handleSkipFwd = () => skipForward();
+    const handleSkipBwd = () => skipBackward();
+    window.addEventListener("voiceover-skip-forward", handleSkipFwd);
+    window.addEventListener("voiceover-skip-backward", handleSkipBwd);
+    return () => {
+      window.removeEventListener("voiceover-skip-forward", handleSkipFwd);
+      window.removeEventListener("voiceover-skip-backward", handleSkipBwd);
+    };
+  }, [skipForward, skipBackward]);
 
   const cleanText = useCallback((text: string) => {
     return text.replace(/[*†‡§_]/g, " ");
@@ -216,8 +284,16 @@ export function VoiceoverManager() {
       if (currentSession === sessionRef.current && useReaderStore.getState().isVoiceoverPlaying) {
         setVerseProgress(100);
         lastCharIndexRef.current = 0;
-        // After non-bible text, we might want to continue with the playlist if any
-        if (playlist && playlist.length > 0) {
+        
+        const nextItem = getNextQueueItem();
+        if (nextItem) {
+          if (nextItem.type === "verse") {
+            setNonBibleText(null);
+            setCurrentOrder(nextItem.order);
+          } else {
+            setNonBibleText(nextItem.text);
+          }
+        } else if (playlist && playlist.length > 0) {
           setNonBibleText(null);
           setCurrentOrder(playlist[0]!);
         } else {
@@ -238,7 +314,7 @@ export function VoiceoverManager() {
       });
       navigator.mediaSession.playbackState = "playing";
     }
-  }, [isPlaying, speed, getBestVoice, cleanText, setVerseProgress, setNonBibleText, setCurrentOrder, playlist, stop]);
+  }, [isPlaying, speed, getBestVoice, cleanText, setVerseProgress, setNonBibleText, setCurrentOrder, playlist, stop, getNextQueueItem]);
 
   const speak = useCallback(async (order: number, forceTitle = false, charOffset = 0) => {
     if (!synthRef.current || !isPlaying) return;
@@ -316,12 +392,23 @@ export function VoiceoverManager() {
           } else {
             setVerseProgress(100);
             lastCharIndexRef.current = 0;
-            const next = getNextOrder(order);
-            if (next !== null) {
-              setCurrentOrder(next);
-              if (useReaderStore.getState().isVoiceoverFollowEnabled) setScrollToOrder(next);
+            
+            const nextItem = getNextQueueItem();
+            if (nextItem) {
+              if (nextItem.type === "verse") {
+                setCurrentOrder(nextItem.order);
+                if (useReaderStore.getState().isVoiceoverFollowEnabled) setScrollToOrder(nextItem.order);
+              } else {
+                setNonBibleText(nextItem.text);
+              }
             } else {
-              stop();
+              const next = getNextOrder(order);
+              if (next !== null) {
+                setCurrentOrder(next);
+                if (useReaderStore.getState().isVoiceoverFollowEnabled) setScrollToOrder(next);
+              } else {
+                stop();
+              }
             }
           }
         }
@@ -342,7 +429,7 @@ export function VoiceoverManager() {
     } catch (err) {
       console.error("Voiceover engine error:", err);
     }
-  }, [translationSlug, isPlaying, speed, getBestVoice, isReadTitlesEnabled, liturgicalReadings, setCurrentOrder, setScrollToOrder, setVerse, stop, getNextOrder, setIsActive, setVerseProgress, cleanText]);
+  }, [translationSlug, isPlaying, speed, getBestVoice, isReadTitlesEnabled, liturgicalReadings, setCurrentOrder, setScrollToOrder, setVerse, stop, getNextOrder, getNextQueueItem, setIsActive, setVerseProgress, cleanText, setNonBibleText]);
 
   useEffect(() => {
     if (!synthRef.current) return;
@@ -366,14 +453,12 @@ export function VoiceoverManager() {
       } else {
         const orderToSpeak = currentOrder ?? globalCurrentOrder;
         if (synthRef.current.speaking && speakingOrderRef.current === orderToSpeak && !isInternalCancelRef.current) return;
-        if (currentOrder === null) {
-          setCurrentOrder(globalCurrentOrder);
-        } else {
-          const timer = setTimeout(() => {
-            void speak(orderToSpeak, false, lastCharIndexRef.current);
-          }, 50);
-          return () => clearTimeout(timer);
-        }
+        
+        // Only trigger speak if we have a valid order and it's not already speaking it
+        const timer = setTimeout(() => {
+          void speak(orderToSpeak, false, lastCharIndexRef.current);
+        }, 50);
+        return () => clearTimeout(timer);
       }
     } else {
       if (isActive) {
@@ -390,7 +475,7 @@ export function VoiceoverManager() {
         if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "none";
       }
     }
-  }, [isPlaying, isActive, currentOrder, globalCurrentOrder, nonBibleText, speak, speakText, setCurrentOrder]);
+  }, [isPlaying, isActive, currentOrder, globalCurrentOrder, nonBibleText, speak, speakText]);
 
   return null;
 }

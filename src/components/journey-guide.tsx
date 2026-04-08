@@ -5,12 +5,10 @@ import {
   X, 
   Play, 
   Pause,
-  CheckCircle2, 
   MapPin, 
   ArrowUp, 
   ArrowDown, 
   Scroll,
-  ChevronRight,
   Compass,
   RotateCcw,
   Sparkles,
@@ -102,7 +100,6 @@ export function JourneyGuide({ currentOrder }: JourneyGuideProps) {
     jumpToOrder, 
     togglePlay, 
     stop, 
-    playlist,
     skipForward,
     skipBackward,
     speed,
@@ -115,11 +112,6 @@ export function JourneyGuide({ currentOrder }: JourneyGuideProps) {
       utils.readingPlan.getPlanDetails.invalidate();
     }
   });
-
-  const localVerseStatuses = useLiveQuery(
-    () => db.verseStatuses.where("userId").equals(currentUserId).toArray(),
-    [currentUserId]
-  ) ?? [];
 
   const { readCount, totalCount, firstUnseenOrder, isFullyRead } = useMemo(() => {
     if (!journeyGuide) return { readCount: 0, totalCount: 0, firstUnseenOrder: null, isFullyRead: false };

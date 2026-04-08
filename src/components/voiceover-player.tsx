@@ -16,7 +16,8 @@ import {
   Church,
   Type,
   User,
-  ChevronLeft
+  ChevronLeft,
+  Music
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { 
@@ -39,8 +40,9 @@ import { toast } from "sonner";
 import { api } from "~/trpc/react";
 
 export function VoiceoverPlayer() {
-  const { togglePlay, skipForward, skipBackward, jumpToOrder, stop, isPlaying, isActive, speed, verseProgress, playlist } = useVoiceover();
+  const { togglePlay, skipForward, skipBackward, jumpToOrder, stop, isPlaying, isActive, speed, verseProgress, playlist, queue } = useVoiceover();
   const currentVerse = useReaderStore((state) => state.voiceoverCurrentVerse);
+  const nonBibleText = useReaderStore((state) => state.voiceoverNonBibleText);
   const currentReaderOrder = useReaderStore((state) => state.currentOrder);
   const isFollowEnabled = useReaderStore((state) => state.isVoiceoverFollowEnabled);
   const setIsFollowEnabled = useReaderStore((state) => state.setIsVoiceoverFollowEnabled);
@@ -82,12 +84,14 @@ export function VoiceoverPlayer() {
   const utils = api.useUtils();
 
   const isLiturgical = useMemo(() => {
+    if (!!queue) return true;
     if (!playlist || !liturgicalReadings.length) return false;
     const allLiturgicalOrders = liturgicalReadings.flatMap(r => r.orders);
     return playlist.every(o => allLiturgicalOrders.includes(o));
-  }, [playlist, liturgicalReadings]);
+  }, [playlist, liturgicalReadings, queue]);
 
   const handleJumpToChapter = async () => {
+    if (nonBibleText) return;
     if (!currentVerse) return;
     const order = await utils.bible.getVerseOrder.fetch({
       translationSlug,
@@ -109,9 +113,11 @@ export function VoiceoverPlayer() {
 
   if (isJourneyVoiceActive) return null;
 
+  const showPlayer = isActive && !isMinimized && (!!currentVerse || !!nonBibleText);
+
   return (
     <AnimatePresence>
-      {isActive && !isMinimized && currentVerse && (
+      {showPlayer && (
         <motion.div 
           initial={{ y: 100, x: "-50%", opacity: 0 }}
           animate={{ 
@@ -136,26 +142,31 @@ export function VoiceoverPlayer() {
             </div>
 
             <div className="flex items-center gap-2 sm:gap-3 px-2 py-1">
-              {/* Verse Badge - Now a Jump Button */}
+              {/* Badge Button */}
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <button 
                       onClick={handleJumpToChapter}
-                      className="flex flex-col items-center justify-center h-10 w-10 sm:h-12 sm:w-12 rounded-xl sm:rounded-[1.5rem] bg-zinc-50 dark:bg-zinc-800 border border-zinc-100 dark:border-zinc-700/50 shrink-0 hover:bg-primary/5 hover:border-primary/20 transition-all active:scale-90 group/ch"
+                      disabled={!!nonBibleText}
+                      className="flex flex-col items-center justify-center h-10 w-10 sm:h-12 sm:w-12 rounded-xl sm:rounded-[1.5rem] bg-zinc-50 dark:bg-zinc-800 border border-zinc-100 dark:border-zinc-700/50 shrink-0 hover:bg-primary/5 hover:border-primary/20 transition-all active:scale-90 group/ch disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      {isLiturgical ? (
+                      {nonBibleText ? (
+                        <Music className="h-4 w-4 sm:h-5 sm:w-5 text-primary animate-pulse" />
+                      ) : isLiturgical ? (
                         <Church className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
-                      ) : (
+                      ) : currentVerse ? (
                         <>
                           <span className="text-[6px] sm:text-[8px] font-black leading-none text-zinc-400 mb-0.5 group-hover/ch:text-primary transition-colors">CH</span>
                           <span className="text-xs sm:text-sm font-black text-zinc-900 dark:text-zinc-100 group-hover/ch:text-primary transition-colors">{currentVerse.chapter}</span>
                         </>
+                      ) : (
+                        <Type className="h-4 w-4 sm:h-5 sm:w-5 text-zinc-400" />
                       )}
                     </button>
                   </TooltipTrigger>
                   <TooltipContent side="top" sideOffset={10} className="text-[10px] font-black uppercase tracking-widest bg-zinc-900 text-white border-none py-2 px-3 rounded-full">
-                    {isLiturgical ? "Daily Readings Mode" : "Restart Chapter"}
+                    {nonBibleText ? "Liturgical Sequence" : isLiturgical ? "Daily Readings Mode" : "Restart Chapter"}
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -164,7 +175,7 @@ export function VoiceoverPlayer() {
               <div className="flex-1 min-w-0 px-2 flex flex-col justify-center">
                 <div className="flex items-center gap-2">
                   <h3 className="text-[10px] sm:text-xs font-black uppercase tracking-[0.2em] text-primary truncate">
-                    {isLiturgical ? "Liturgical Reading" : currentVerse.book.name}
+                    {nonBibleText ? "Liturgical Sequence" : isLiturgical ? "Liturgical Reading" : currentVerse?.book.name}
                   </h3>
                   {isLatin && (
                     <span className="text-[7px] font-black bg-primary text-white px-1.5 py-0.5 rounded-full tracking-tighter scale-90 origin-left">
@@ -173,19 +184,19 @@ export function VoiceoverPlayer() {
                   )}
                   <div className="h-1 w-1 rounded-full bg-zinc-300 dark:bg-zinc-700 shrink-0" />
                   <span className="text-[10px] sm:text-xs font-bold text-zinc-400 tabular-nums shrink-0">
-                    {currentVerse.book.name} {currentVerse.chapter}:{currentVerse.verse}
+                    {nonBibleText ? "Sequence" : currentVerse ? `${currentVerse.book.name} ${currentVerse.chapter}:${currentVerse.verse}` : ""}
                   </span>
                 </div>
                 <div className="mt-1 relative h-4 overflow-hidden">
                   <AnimatePresence mode="wait">
                     <motion.p 
-                      key={currentVerse.id}
+                      key={nonBibleText ? "sequence" : currentVerse?.id}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
                       className="text-[11px] font-serif italic text-zinc-500 dark:text-zinc-400 line-clamp-1 leading-none"
                     >
-                      {currentVerse.text}
+                      {nonBibleText ? nonBibleText : currentVerse?.text}
                     </motion.p>
                   </AnimatePresence>
                 </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
-import { useReaderStore } from "./use-reader-store";
+import { useReaderStore, type VoiceoverQueueItem } from "./use-reader-store";
 
 export function useVoiceover() {
   const isPlaying = useReaderStore((state) => state.isVoiceoverPlaying);
@@ -13,16 +13,15 @@ export function useVoiceover() {
   const speed = useReaderStore((state) => state.voiceoverSpeed);
   const currentOrder = useReaderStore((state) => state.voiceoverCurrentOrder);
   const setCurrentOrder = useReaderStore((state) => state.setVoiceoverCurrentOrder);
-  const setVerse = useReaderStore((state) => state.setVoiceoverCurrentVerse);
   const setNonBibleText = useReaderStore((state) => state.setVoiceoverNonBibleText);
   const setScrollToOrder = useReaderStore((state) => state.setScrollToOrder);
-  const globalCurrentOrder = useReaderStore((state) => state.currentOrder);
   const playlist = useReaderStore((state) => state.voiceoverPlaylist);
   const setPlaylist = useReaderStore((state) => state.setVoiceoverPlaylist);
+  const queue = useReaderStore((state) => state.voiceoverQueue);
+  const setQueue = useReaderStore((state) => state.setVoiceoverQueue);
   const isFollowEnabled = useReaderStore((state) => state.isVoiceoverFollowEnabled);
   
   const verseProgress = useReaderStore((state) => state.voiceoverProgress);
-  const setVerseProgress = useReaderStore((state) => state.setVoiceoverProgress);
   const resetVoiceover = useReaderStore((state) => state.resetVoiceover);
 
   const unlockAudio = useCallback(() => {
@@ -35,18 +34,15 @@ export function useVoiceover() {
   }, []);
 
   const stop = useCallback(() => {
-    // Atomic reset to prevent intermediate "paused" state
     resetVoiceover();
   }, [resetVoiceover]);
 
   const jumpToOrder = useCallback((order: number, newPlaylist?: number[]) => {
-    // Reset state for a new jump
     setIsPlaying(false);
-    
-    // Warm up engine for iOS
     unlockAudio();
     
     if (newPlaylist) setPlaylist(newPlaylist);
+    setQueue(null);
     if (isFollowEnabled) setScrollToOrder(order);
     
     setNonBibleText(null);
@@ -54,21 +50,43 @@ export function useVoiceover() {
     setIsMinimized(false);
     setCurrentOrder(order);
     setIsPlaying(true);
-  }, [setPlaylist, isFollowEnabled, setScrollToOrder, setIsActive, setIsMinimized, setCurrentOrder, setIsPlaying, setNonBibleText]);
+  }, [setPlaylist, isFollowEnabled, setScrollToOrder, setIsActive, setIsMinimized, setCurrentOrder, setIsPlaying, setNonBibleText, setQueue, unlockAudio]);
 
   const jumpToText = useCallback((text: string) => {
     setIsPlaying(false);
     unlockAudio();
     
     setCurrentOrder(null);
-    setVerse(null);
+    setQueue(null);
     setPlaylist(null);
     setNonBibleText(text);
     
     setIsActive(true);
     setIsMinimized(false);
     setIsPlaying(true);
-  }, [setIsPlaying, unlockAudio, setCurrentOrder, setVerse, setPlaylist, setNonBibleText, setIsActive, setIsMinimized]);
+  }, [setIsPlaying, unlockAudio, setCurrentOrder, setPlaylist, setNonBibleText, setIsActive, setIsMinimized, setQueue]);
+
+  const jumpToQueue = useCallback((newQueue: VoiceoverQueueItem[]) => {
+    setIsPlaying(false);
+    unlockAudio();
+    
+    setPlaylist(null);
+    setQueue(newQueue);
+    
+    const first = newQueue[0];
+    if (first?.type === "verse") {
+      setNonBibleText(null);
+      setCurrentOrder(first.order);
+      if (isFollowEnabled) setScrollToOrder(first.order);
+    } else if (first?.type === "text") {
+      setCurrentOrder(null);
+      setNonBibleText(first.text);
+    }
+    
+    setIsActive(true);
+    setIsMinimized(false);
+    setIsPlaying(true);
+  }, [setIsPlaying, unlockAudio, setPlaylist, setQueue, setCurrentOrder, setNonBibleText, setIsActive, setIsMinimized, isFollowEnabled, setScrollToOrder]);
 
   const togglePlay = useCallback(() => {
     if (isPlaying) {
@@ -80,32 +98,18 @@ export function useVoiceover() {
     }
   }, [isPlaying, setIsActive, setIsMinimized, setIsPlaying]);
 
-  const getNextOrder = useCallback((current: number) => {
-    if (playlist && playlist.length > 0) {
-      const idx = playlist.indexOf(current);
-      if (idx !== -1 && idx < playlist.length - 1) {
-        return playlist[idx + 1];
-      }
-      return null;
-    }
-    return current + 1;
-  }, [playlist]);
-
   const skipForward = useCallback(() => {
-    const current = currentOrder ?? globalCurrentOrder;
-    const next = getNextOrder(current);
-    if (next !== null && next !== undefined) jumpToOrder(next);
-  }, [currentOrder, globalCurrentOrder, getNextOrder, jumpToOrder]);
+    // This will be handled by VoiceoverManager's loop logic for queue/playlist
+    // For now we just trigger a skip event or let the manager handle it.
+    // To make skip button work manually:
+    const event = new CustomEvent("voiceover-skip-forward");
+    window.dispatchEvent(event);
+  }, []);
 
   const skipBackward = useCallback(() => {
-    const current = currentOrder ?? globalCurrentOrder;
-    if (playlist) {
-      const idx = playlist.indexOf(current);
-      if (idx > 0 && playlist[idx - 1] !== undefined) jumpToOrder(playlist[idx - 1]!);
-    } else {
-      jumpToOrder(Math.max(1, current - 1));
-    }
-  }, [currentOrder, globalCurrentOrder, playlist, jumpToOrder]);
+    const event = new CustomEvent("voiceover-skip-backward");
+    window.dispatchEvent(event);
+  }, []);
 
   return {
     togglePlay,
@@ -114,6 +118,7 @@ export function useVoiceover() {
     skipBackward,
     jumpToOrder,
     jumpToText,
+    jumpToQueue,
     unlockAudio,
     isPlaying,
     isActive,
@@ -121,5 +126,6 @@ export function useVoiceover() {
     speed,
     verseProgress,
     playlist,
+    queue,
   };
 }

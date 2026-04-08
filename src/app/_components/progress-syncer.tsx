@@ -12,7 +12,6 @@ export function ProgressSyncer() {
   const currentUserId = session?.user?.id ?? "guest";
   
   const currentOrder = useReaderStore((state) => state.currentOrder);
-  const lastVisibleOrder = useReaderStore((state) => state.lastVisibleOrder);
   const translationSlug = useReaderStore((state) => state.translationSlug);
   const setScrollToOrder = useReaderStore((state) => state.setScrollToOrder);
   const setCurrentOrder = useReaderStore((state) => state.setCurrentOrder);
@@ -87,28 +86,35 @@ export function ProgressSyncer() {
   const autoProgress = useReaderStore((state) => state.autoProgress);
   const hasInitialSync = useRef(false);
   const hasPulledCloudData = useRef(false);
+  const hasMigrated = useRef(false);
 
   // Reset sync flags when user changes
   useEffect(() => {
     hasInitialSync.current = false;
     hasPulledCloudData.current = false;
+    hasMigrated.current = false;
   }, [currentUserId]);
 
   // Data Migration: Ensure old records have globalOrder and translationSlug
   useEffect(() => {
-    if (!localVerseStatuses) return;
+    if (!localVerseStatuses || hasMigrated.current) return;
     const migrate = async () => {
-      for (const s of localVerseStatuses) {
-        if (!s.globalOrder || !s.translationSlug) {
-          const verse = await db.verses.get(s.verseId);
-          if (verse) {
-            await db.verseStatuses.update(s.id!, {
-              globalOrder: verse.globalOrder,
-              translationSlug: verse.translationId
-            });
-          }
+      const toMigrate = localVerseStatuses.filter(s => !s.globalOrder || !s.translationSlug);
+      if (toMigrate.length === 0) {
+        hasMigrated.current = true;
+        return;
+      }
+
+      for (const s of toMigrate) {
+        const verse = await db.verses.get(s.verseId);
+        if (verse) {
+          await db.verseStatuses.update(s.id!, {
+            globalOrder: verse.globalOrder,
+            translationSlug: verse.translationId
+          });
         }
       }
+      hasMigrated.current = true;
     };
     void migrate();
   }, [localVerseStatuses]);
@@ -258,12 +264,13 @@ export function ProgressSyncer() {
     if (!session || !hasInitialSync.current || !autoProgress) return;
 
     const timer = setTimeout(() => {
+      if (document.visibilityState !== "visible") return;
       console.log("[SYNC] Saving progress...", currentOrder);
       updateProgress.mutate({
         lastReadOrder: currentOrder,
         lastReadTranslation: translationSlug,
       });
-    }, 5000);
+    }, 10000); // 10s
 
     return () => clearTimeout(timer);
   }, [currentOrder, translationSlug, session, autoProgress]);
@@ -273,6 +280,7 @@ export function ProgressSyncer() {
     if (!session || !localHighlights || localHighlights.length === 0 || !hasInitialSync.current) return;
 
     const timer = setTimeout(() => {
+      if (document.visibilityState !== "visible") return;
       const payload = localHighlights
         .filter(h => h.globalOrder && h.translationSlug) // Ensure stable refs exist
         .map(h => ({
@@ -286,7 +294,7 @@ export function ProgressSyncer() {
         console.log("[SYNC] Syncing highlights...");
         syncHighlights.mutate(payload);
       }
-    }, 15000);
+    }, 30000); // 30s
 
     return () => clearTimeout(timer);
   }, [localHighlights, session]);
@@ -296,6 +304,7 @@ export function ProgressSyncer() {
     if (!session || !localNotes || localNotes.length === 0 || !hasInitialSync.current) return;
 
     const timer = setTimeout(() => {
+      if (document.visibilityState !== "visible") return;
       const payload = localNotes
         .filter(n => n.globalOrder && n.translationSlug)
         .map(n => ({
@@ -310,7 +319,7 @@ export function ProgressSyncer() {
         console.log("[SYNC] Syncing notes...");
         syncNotes.mutate(payload);
       }
-    }, 15000);
+    }, 30000); // 30s
 
     return () => clearTimeout(timer);
   }, [localNotes, session]);
@@ -320,6 +329,7 @@ export function ProgressSyncer() {
     if (!session || !localBookmarks || localBookmarks.length === 0 || !hasInitialSync.current) return;
 
     const timer = setTimeout(() => {
+      if (document.visibilityState !== "visible") return;
       const payload = localBookmarks
         .filter(b => b.globalOrder && b.translationSlug)
         .map(b => ({
@@ -332,7 +342,7 @@ export function ProgressSyncer() {
         console.log("[SYNC] Syncing bookmarks...");
         syncBookmarks.mutate(payload);
       }
-    }, 15000);
+    }, 30000); // 30s
 
     return () => clearTimeout(timer);
   }, [localBookmarks, session]);
@@ -342,6 +352,7 @@ export function ProgressSyncer() {
     if (!session || !localVerseStatuses || localVerseStatuses.length === 0 || !hasInitialSync.current) return;
 
     const timer = setTimeout(async () => {
+      if (document.visibilityState !== "visible") return;
       // We need to join with verses to get globalOrder/translationSlug for stable sync
       const payload = [];
       for (const s of localVerseStatuses) {
@@ -360,7 +371,7 @@ export function ProgressSyncer() {
         console.log("[SYNC] Syncing verse progress...");
         syncVerseStatuses.mutate(payload);
       }
-    }, 15000);
+    }, 30000); // 30s
 
     return () => clearTimeout(timer);
   }, [localVerseStatuses, session]);
