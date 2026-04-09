@@ -44,6 +44,7 @@ export const userRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
       
+      const verseIds: string[] = [];
       for (const h of input) {
         const verse = await ctx.db.verse.findFirst({
           where: { 
@@ -53,6 +54,7 @@ export const userRouter = createTRPCRouter({
         });
         
         if (!verse) continue;
+        verseIds.push(verse.id);
 
         await ctx.db.highlight.upsert({
           where: { userId_verseId: { userId, verseId: verse.id } },
@@ -60,6 +62,15 @@ export const userRouter = createTRPCRouter({
           create: { userId, verseId: verse.id, color: h.color, createdAt: new Date(h.createdAt) }
         });
       }
+
+      // Reconciliation: Remove any highlights for this user that were NOT in the sync payload
+      await ctx.db.highlight.deleteMany({
+        where: {
+          userId,
+          verseId: { notIn: verseIds }
+        }
+      });
+
       return { success: true };
     }),
 
@@ -74,6 +85,7 @@ export const userRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
       
+      const verseIds: string[] = [];
       for (const n of input) {
         const verse = await ctx.db.verse.findFirst({
           where: { 
@@ -83,6 +95,7 @@ export const userRouter = createTRPCRouter({
         });
         
         if (!verse) continue;
+        verseIds.push(verse.id);
 
         await ctx.db.note.upsert({
           where: { userId_verseId: { userId, verseId: verse.id } },
@@ -96,6 +109,15 @@ export const userRouter = createTRPCRouter({
           }
         });
       }
+
+      // Reconciliation
+      await ctx.db.note.deleteMany({
+        where: {
+          userId,
+          verseId: { notIn: verseIds }
+        }
+      });
+
       return { success: true };
     }),
 
@@ -108,6 +130,7 @@ export const userRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
       
+      const verseIds: string[] = [];
       for (const b of input) {
         const verse = await ctx.db.verse.findFirst({
           where: { 
@@ -117,6 +140,7 @@ export const userRouter = createTRPCRouter({
         });
         
         if (!verse) continue;
+        verseIds.push(verse.id);
 
         await ctx.db.bookmark.upsert({
           where: { userId_verseId: { userId, verseId: verse.id } },
@@ -124,6 +148,15 @@ export const userRouter = createTRPCRouter({
           create: { userId, verseId: verse.id, createdAt: new Date(b.createdAt) }
         });
       }
+
+      // Reconciliation
+      await ctx.db.bookmark.deleteMany({
+        where: {
+          userId,
+          verseId: { notIn: verseIds }
+        }
+      });
+
       return { success: true };
     }),
 
@@ -184,6 +217,7 @@ export const userRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
       
+      const verseIds: string[] = [];
       for (const s of input) {
         const verse = await ctx.db.verse.findFirst({
           where: { 
@@ -193,6 +227,7 @@ export const userRouter = createTRPCRouter({
         });
         
         if (!verse) continue;
+        verseIds.push(verse.id);
 
         await ctx.db.verseStatus.upsert({
           where: { userId_verseId: { userId, verseId: verse.id } },
@@ -200,6 +235,15 @@ export const userRouter = createTRPCRouter({
           create: { userId, verseId: verse.id, isRead: s.isRead, readAt: new Date(s.readAt) }
         });
       }
+
+      // Reconciliation: Remove isRead status for anything not in the payload
+      await ctx.db.verseStatus.deleteMany({
+        where: {
+          userId,
+          verseId: { notIn: verseIds }
+        }
+      });
+
       return { success: true };
     }),
 
@@ -250,8 +294,8 @@ export const userRouter = createTRPCRouter({
         }
       });
       if (!verse) return { success: false };
-      await ctx.db.note.delete({
-        where: { userId_verseId: { userId: ctx.session.user.id, verseId: verse.id } }
+      await ctx.db.note.deleteMany({
+        where: { userId: ctx.session.user.id, verseId: verse.id }
       });
       return { success: true };
     }),
@@ -269,8 +313,8 @@ export const userRouter = createTRPCRouter({
         }
       });
       if (!verse) return { success: false };
-      await ctx.db.highlight.delete({
-        where: { userId_verseId: { userId: ctx.session.user.id, verseId: verse.id } }
+      await ctx.db.highlight.deleteMany({
+        where: { userId: ctx.session.user.id, verseId: verse.id }
       });
       return { success: true };
     }),
@@ -288,8 +332,8 @@ export const userRouter = createTRPCRouter({
         }
       });
       if (!verse) return { success: false };
-      await ctx.db.bookmark.delete({
-        where: { userId_verseId: { userId: ctx.session.user.id, verseId: verse.id } }
+      await ctx.db.bookmark.deleteMany({
+        where: { userId: ctx.session.user.id, verseId: verse.id }
       });
       return { success: true };
     }),

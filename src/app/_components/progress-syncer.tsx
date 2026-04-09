@@ -277,7 +277,7 @@ export function ProgressSyncer() {
 
   // Sync Highlights to Server (Stable Ref)
   useEffect(() => {
-    if (!session || !localHighlights || localHighlights.length === 0 || !hasInitialSync.current) return;
+    if (!session || !localHighlights || !hasInitialSync.current) return;
 
     const timer = setTimeout(() => {
       if (document.visibilityState !== "visible") return;
@@ -290,10 +290,8 @@ export function ProgressSyncer() {
           createdAt: h.createdAt,
         }));
       
-      if (payload.length > 0) {
-        console.log("[SYNC] Syncing highlights...");
-        syncHighlights.mutate(payload);
-      }
+      console.log("[SYNC] Syncing highlights...", payload.length);
+      syncHighlights.mutate(payload);
     }, 30000); // 30s
 
     return () => clearTimeout(timer);
@@ -301,7 +299,7 @@ export function ProgressSyncer() {
 
   // Sync Notes to Server (Stable Ref)
   useEffect(() => {
-    if (!session || !localNotes || localNotes.length === 0 || !hasInitialSync.current) return;
+    if (!session || !localNotes || !hasInitialSync.current) return;
 
     const timer = setTimeout(() => {
       if (document.visibilityState !== "visible") return;
@@ -315,10 +313,8 @@ export function ProgressSyncer() {
           updatedAt: n.updatedAt,
         }));
 
-      if (payload.length > 0) {
-        console.log("[SYNC] Syncing notes...");
-        syncNotes.mutate(payload);
-      }
+      console.log("[SYNC] Syncing notes...", payload.length);
+      syncNotes.mutate(payload);
     }, 30000); // 30s
 
     return () => clearTimeout(timer);
@@ -326,7 +322,7 @@ export function ProgressSyncer() {
 
   // Sync Bookmarks to Server (Stable Ref)
   useEffect(() => {
-    if (!session || !localBookmarks || localBookmarks.length === 0 || !hasInitialSync.current) return;
+    if (!session || !localBookmarks || !hasInitialSync.current) return;
 
     const timer = setTimeout(() => {
       if (document.visibilityState !== "visible") return;
@@ -338,10 +334,8 @@ export function ProgressSyncer() {
           createdAt: b.createdAt,
         }));
 
-      if (payload.length > 0) {
-        console.log("[SYNC] Syncing bookmarks...");
-        syncBookmarks.mutate(payload);
-      }
+      console.log("[SYNC] Syncing bookmarks...", payload.length);
+      syncBookmarks.mutate(payload);
     }, 30000); // 30s
 
     return () => clearTimeout(timer);
@@ -349,11 +343,11 @@ export function ProgressSyncer() {
 
   // Sync Verse Statuses to Server (Manual Progress)
   useEffect(() => {
-    if (!session || !localVerseStatuses || localVerseStatuses.length === 0 || !hasInitialSync.current) return;
+    if (!session || !localVerseStatuses || !hasInitialSync.current) return;
 
     const timer = setTimeout(async () => {
       if (document.visibilityState !== "visible") return;
-      // We need to join with verses to get globalOrder/translationSlug for stable sync
+
       const payload = [];
       for (const s of localVerseStatuses) {
         if (!s.isRead) continue;
@@ -367,11 +361,9 @@ export function ProgressSyncer() {
         }
       }
 
-      if (payload.length > 0) {
-        console.log("[SYNC] Syncing verse progress...");
-        syncVerseStatuses.mutate(payload);
-      }
-    }, 30000); // 30s
+      console.log("[SYNC] Syncing verse progress...", payload.length);
+      syncVerseStatuses.mutate(payload);
+    }, 30000); // Relaxed to 30s
 
     return () => clearTimeout(timer);
   }, [localVerseStatuses, session]);

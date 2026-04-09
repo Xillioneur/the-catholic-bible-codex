@@ -784,7 +784,20 @@ export function SidebarNav() {
                             <span className="text-[9px] font-black uppercase text-primary tracking-widest block mb-1">{books?.find(bk => bk.id === b.bookId)?.abbreviation} {b.chapter}:{b.verse}</span>
                             <p className="text-[11px] font-serif italic text-zinc-500 truncate pr-8">Saved verse</p>
                           </button>
-                          <button onClick={(e) => { e.stopPropagation(); if (!b.id) return; void db.bookmarks.delete(b.id!); if (session) { deleteBookmarkCloud.mutate({ globalOrder: b.globalOrder, translationSlug: b.translationSlug }); } toast.success("Bookmark removed"); }} className="absolute right-3 top-1/2 -translate-y-1/2 h-8 w-8 flex items-center justify-center rounded-full text-zinc-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all md:opacity-0 md:group-hover:opacity-100"> <Trash2 className="h-3.5 w-3.5" /> </button>
+                          <button 
+                            onClick={async (e) => { 
+                              e.stopPropagation(); 
+                              if (!b.id) return; 
+                              await db.bookmarks.delete(b.id); 
+                              if (session) { 
+                                deleteBookmarkCloud.mutate({ globalOrder: b.globalOrder!, translationSlug: b.translationSlug }); 
+                              } 
+                              toast.success("Bookmark removed"); 
+                            }} 
+                            className="absolute right-3 top-1/2 -translate-y-1/2 h-8 w-8 flex items-center justify-center rounded-full text-zinc-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all md:opacity-0 md:group-hover:opacity-100"
+                          > 
+                            <Trash2 className="h-3.5 w-3.5" /> 
+                          </button>
                         </div>
                       ))
                     )}
