@@ -109,33 +109,49 @@ export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>
   }, [translationSlug, liturgicalReadings]);
 
   // 3. Background Sync (Fallback/Hydration)
-  const { data: serverVerseCount, isSuccess: isCountLoaded } = api.bible.getVerseCount.useQuery(
+  const { data: serverVerseCount } = api.bible.getVerseCount.useQuery(
     { translationSlug },
     { staleTime: Infinity }
   );
 
   useEffect(() => {
-    // Reset state when translation changes to prevent "stuck" UI
-    setIsHydrated(false);
-    setIsWorkerReady(false);
-    setRows([]);
+    let isMounted = true;
 
-    // If server has data, use that count. Otherwise, use an approximate count for 73-book canon to trigger JSON fallback.
-    const totalCount = serverVerseCount || 35809;
-    
-    void bibleService.syncBible(
-      translationSlug, 
-      totalCount, 
-      (input) => utils.bible.getVersesByOrderRange.fetch(input)
-    ).then(() => {
+    async function hydrate() {
+      // 1. Check if we already have this translation loaded locally
+      const localCount = await db.verses.where("translationId").equals(translationSlug).count();
+      const totalCount = serverVerseCount || 35809;
+
+      // 2. ONLY reset UI state if we actually need to load or if the worker isn't ready for THIS slug
+      // This prevents the "twice as long" lag by avoiding redundant loading screens
+      if (localCount < totalCount) {
+        if (isMounted) {
+          setIsHydrated(false);
+          setIsWorkerReady(false);
+          setRows([]);
+        }
+        await bibleService.syncBible(
+          translationSlug, 
+          totalCount, 
+          (input) => utils.bible.getVersesByOrderRange.fetch(input)
+        );
+      }
+
+      if (!isMounted) return;
+
       setIsHydrated(true);
-      // Re-init worker once hydrated
+      
+      // 3. Initialize/Switch worker context
       workerRef.current?.postMessage({ 
         type: "INITIALIZE", 
         payload: { slug: translationSlug, liturgicalReadings } 
       });
-    });
-  }, [serverVerseCount, isCountLoaded, translationSlug, utils, liturgicalReadings]);
+    }
+
+    void hydrate();
+
+    return () => { isMounted = false; };
+  }, [translationSlug, serverVerseCount, utils, liturgicalReadings]);
 
   const virtualItems = rowVirtualizer.getVirtualItems();
 
