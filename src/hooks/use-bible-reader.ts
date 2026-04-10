@@ -5,6 +5,7 @@ import { api } from "~/trpc/react";
 import { useReaderStore } from "~/hooks/use-reader-store";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { bibleService } from "~/lib/bible-service";
+import { db } from "~/lib/db";
 
 export type BibleRow = 
   | { type: "book-header"; book: any; firstOrder: number; lastOrder?: number }
@@ -71,6 +72,8 @@ export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>
       } else if (type === "ROWS_DATA") {
         const { startIndex, items } = payload;
         setRows(prev => {
+          // If we just reset, start fresh
+          if (startIndex === 0 && prev.length === 0) return items;
           const next = [...prev];
           for (let i = 0; i < items.length; i++) {
             next[startIndex + i] = items[i];
@@ -80,8 +83,6 @@ export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>
       } else if (type === "ORDER_INDEX") {
         const { index } = payload;
         if (index !== -1) {
-          // IMPORTANT: Use a small timeout to allow React to process any row updates
-          // and the virtualizer to have the latest heights.
           requestAnimationFrame(() => {
             rowVirtualizer.scrollToIndex(index, { align: "start", behavior: "auto" });
           });
@@ -94,21 +95,7 @@ export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>
     return () => workerRef.current?.terminate();
   }, [rowVirtualizer]);
 
-  // 2. Worker Initialization
-  useEffect(() => {
-    if (workerRef.current) {
-      setIsWorkerReady(false);
-      workerRef.current.postMessage({ 
-        type: "INITIALIZE", 
-        payload: { 
-          slug: translationSlug,
-          liturgicalReadings
-        } 
-      });
-    }
-  }, [translationSlug, liturgicalReadings]);
-
-  // 3. Background Sync (Fallback/Hydration)
+  // 2. Background Sync & Context Switching (The Unified Lifecycle)
   const { data: serverVerseCount } = api.bible.getVerseCount.useQuery(
     { translationSlug },
     { staleTime: Infinity }
@@ -117,18 +104,19 @@ export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>
   useEffect(() => {
     let isMounted = true;
 
-    async function hydrate() {
-      // 1. Check if we already have this translation loaded locally
+    async function initializeContext() {
+      if (!workerRef.current) return;
+
       const localCount = await db.verses.where("translationId").equals(translationSlug).count();
       const totalCount = serverVerseCount || 35809;
 
-      // 2. ONLY reset UI state if we actually need to load or if the worker isn't ready for THIS slug
-      // This prevents the "twice as long" lag by avoiding redundant loading screens
+      // 1. If not hydrated, enter loading state
       if (localCount < totalCount) {
         if (isMounted) {
           setIsHydrated(false);
           setIsWorkerReady(false);
           setRows([]);
+          setRowCount(0);
         }
         await bibleService.syncBible(
           translationSlug, 
@@ -139,16 +127,21 @@ export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>
 
       if (!isMounted) return;
 
+      // 2. Clear old rows and set worker to non-ready before switching slug
+      // This prevents seeing old translation text during the switch
+      setIsWorkerReady(false);
+      setRows([]);
+      setRowCount(0);
       setIsHydrated(true);
       
-      // 3. Initialize/Switch worker context
-      workerRef.current?.postMessage({ 
+      // 3. Command the worker to switch to the new translation
+      workerRef.current.postMessage({ 
         type: "INITIALIZE", 
         payload: { slug: translationSlug, liturgicalReadings } 
       });
     }
 
-    void hydrate();
+    void initializeContext();
 
     return () => { isMounted = false; };
   }, [translationSlug, serverVerseCount, utils, liturgicalReadings]);
