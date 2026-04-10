@@ -1,19 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { api } from "~/trpc/react";
 import { LiturgicalCard } from "./liturgical-card";
 import { CalendarDays, ChevronDown, Search, Volume2 } from "lucide-react";
 import { useReaderStore } from "~/hooks/use-reader-store";
 import { cn } from "~/lib/utils";
+import { TranslationSwitcher } from "./translation-switcher";
 
 export function ReaderHeader() {
   const { data: books } = api.bible.getBooks.useQuery();
-  const { data: translations } = api.bible.getTranslations.useQuery();
   const [showDaily, setShowDaily] = useState(false);
 
   const translationSlug = useReaderStore((state) => state.translationSlug);
-  const setTranslationSlug = useReaderStore((state) => state.setTranslationSlug);
   const setScrollToOrder = useReaderStore((state) => state.setScrollToOrder);
   const currentBookId = useReaderStore((state) => state.currentBookId);
   const currentChapter = useReaderStore((state) => state.currentChapter);
@@ -93,19 +92,7 @@ export function ReaderHeader() {
 
           <div className="h-4 w-px bg-zinc-200 dark:bg-zinc-800 mx-1" />
 
-          <div className="flex items-center bg-zinc-100 dark:bg-zinc-900 rounded-lg p-0.5">
-             <select 
-              value={translationSlug}
-              onChange={(e) => setTranslationSlug(e.target.value)}
-              className="appearance-none bg-transparent px-2.5 py-1 text-[9px] font-black uppercase tracking-widest focus:outline-none cursor-pointer text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
-            >
-              {translations?.map((t) => (
-                <option key={t.id} value={t.slug}>
-                  {t.abbreviation}
-                </option>
-              ))}
-            </select>
-          </div>
+          <TranslationSwitcher />
 
           <div className="h-4 w-px bg-zinc-200 dark:bg-zinc-800 mx-1" />
 

@@ -54,6 +54,7 @@ import { useVirtualizer } from "@tanstack/react-virtual";
 import { useTheme } from "next-themes";
 import { formatDistanceToNow } from "date-fns";
 import type { ReadingPlanDayStatus } from "~/workers/reading-plan-worker";
+import { TranslationSwitcher } from "./translation-switcher";
 
 export function SidebarNav() {
   const { data: session } = useSession();
@@ -645,6 +646,9 @@ export function SidebarNav() {
 
             {activeTab === "library" && (
               <div className="mt-4 animate-in fade-in duration-300">
+                <div className="mb-6 px-1">
+                  <TranslationSwitcher />
+                </div>
                 <div className="mb-6">
                   <button onClick={() => { setIsSearchOpen(true); setActiveTab(null); }} className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-primary/5 border border-primary/10 hover:border-primary/30 transition-all group">
                     <Search className="h-4 w-4 text-primary opacity-60 group-hover:opacity-100" />
@@ -652,13 +656,6 @@ export function SidebarNav() {
                   </button>
                 </div>
                 <div className="flex flex-col gap-3 mb-5">
-                  <div className="flex bg-zinc-100/50 dark:bg-zinc-800/50 p-0.5 rounded-full border border-zinc-200/20">
-                    {translations?.map((t) => (
-                      <button key={t.id} onClick={() => setTranslationSlug(t.slug)} className={cn("flex-1 py-1 rounded-full text-[8px] font-black uppercase transition-all", translationSlug === t.slug ? "bg-white dark:bg-zinc-700 text-primary shadow-sm" : "text-zinc-400 hover:text-zinc-600")}>
-                        {t.abbreviation}
-                      </button>
-                    ))}
-                  </div>
                   {!librarySelectedBook ? (
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3 w-3 text-zinc-400" />

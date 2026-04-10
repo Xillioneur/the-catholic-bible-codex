@@ -109,24 +109,33 @@ export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>
   }, [translationSlug, liturgicalReadings]);
 
   // 3. Background Sync (Fallback/Hydration)
-  const { data: totalVerseCount } = api.bible.getVerseCount.useQuery(
+  const { data: serverVerseCount, isSuccess: isCountLoaded } = api.bible.getVerseCount.useQuery(
     { translationSlug },
     { staleTime: Infinity }
   );
 
   useEffect(() => {
-    if (totalVerseCount) {
-      void bibleService.syncBible(
-        translationSlug, 
-        totalVerseCount, 
-        (input) => utils.bible.getVersesByOrderRange.fetch(input)
-      ).then(() => {
-        setIsHydrated(true);
-        // Re-init worker once hydrated
-        workerRef.current?.postMessage({ type: "INITIALIZE", payload: { slug: translationSlug } });
+    // Reset state when translation changes to prevent "stuck" UI
+    setIsHydrated(false);
+    setIsWorkerReady(false);
+    setRows([]);
+
+    // If server has data, use that count. Otherwise, use an approximate count for 73-book canon to trigger JSON fallback.
+    const totalCount = serverVerseCount || 35809;
+    
+    void bibleService.syncBible(
+      translationSlug, 
+      totalCount, 
+      (input) => utils.bible.getVersesByOrderRange.fetch(input)
+    ).then(() => {
+      setIsHydrated(true);
+      // Re-init worker once hydrated
+      workerRef.current?.postMessage({ 
+        type: "INITIALIZE", 
+        payload: { slug: translationSlug, liturgicalReadings } 
       });
-    }
-  }, [totalVerseCount, translationSlug, utils]);
+    });
+  }, [serverVerseCount, isCountLoaded, translationSlug, utils, liturgicalReadings]);
 
   const virtualItems = rowVirtualizer.getVirtualItems();
 

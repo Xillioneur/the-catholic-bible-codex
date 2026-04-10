@@ -8,6 +8,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { useBibleReader } from "~/hooks/use-bible-reader";
 import { BookHeader, ChapterHeader, LiturgicalReadingHeader } from "./bible/section-header";
 import { LoadingScreen } from "./bible/loading-screen";
+import { TranslationSwitcher } from "./translation-switcher";
 import { cn } from "~/lib/utils";
 import { useSession } from "next-auth/react";
 
@@ -46,73 +47,75 @@ export function BibleReader() {
   if (isLoading) return <LoadingScreen />;
 
   return (
-    <div 
-      ref={containerRef} 
-      className="h-full overflow-y-auto scrollbar-none bg-white dark:bg-zinc-950 selection:bg-primary/20 selection:text-primary pb-20 md:pb-0"
-    >
-      <div
-        className="w-full relative"
-        style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
+    <div className="h-full relative bg-white dark:bg-zinc-950">
+      <div 
+        ref={containerRef} 
+        className="h-full overflow-y-auto scrollbar-none selection:bg-primary/20 selection:text-primary pb-20 md:pb-0"
       >
-        {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-          const row = rows[virtualRow.index];
-          if (!row) return null;
+        <div
+          className="w-full relative"
+          style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
+        >
+          {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+            const row = rows[virtualRow.index];
+            if (!row) return null;
 
-          return (
-            <div
-              key={virtualRow.key}
-              data-index={virtualRow.index}
-              ref={rowVirtualizer.measureElement}
-              className="absolute top-0 left-0 w-full"
-              style={{ transform: `translateY(${virtualRow.start}px)` }}
-            >
-              {row.type === "book-header" && <BookHeader book={row.book} />}
-              {row.type === "chapter-header" && <ChapterHeader chapter={row.chapter} />}
-              {row.type === "liturgical-header" && (
-                <LiturgicalReadingHeader 
-                  type={row.readingType} 
-                  citation={row.citation} 
-                  heading={row.heading ?? undefined}
-                />
-              )}
-              {row.type === "prose-block" && (
-                <div className="max-w-4xl mx-auto px-6 sm:px-12 md:px-16 py-4 flex flex-wrap items-baseline gap-x-1.5 leading-[1.8]">
-                  {row.verses.map((v) => {
-                    return (
-                      <div key={v.id} className="contents">
-                        <InlineVerse 
-                          verse={v}
-                          hasBookmark={bookmarkIds.has(v.id)}
-                          hasHighlight={highlightIds.has(v.id)}
-                          isRead={readVerseIds.has(v.id)}
-                          isLiturgical={liturgicalOrders.has(v.globalOrder)}
-                          isSearchTarget={searchHighlight?.targetOrder === v.globalOrder}
-                          isVoiceoverActive={voiceoverCurrentOrder === v.globalOrder}
-                          onClick={() => setActiveVerse(v)}
-                        />
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          );
-        })}
+            return (
+              <div
+                key={virtualRow.key}
+                data-index={virtualRow.index}
+                ref={rowVirtualizer.measureElement}
+                className="absolute top-0 left-0 w-full"
+                style={{ transform: `translateY(${virtualRow.start}px)` }}
+              >
+                {row.type === "book-header" && <BookHeader book={row.book} />}
+                {row.type === "chapter-header" && <ChapterHeader chapter={row.chapter} />}
+                {row.type === "liturgical-header" && (
+                  <LiturgicalReadingHeader 
+                    type={row.readingType} 
+                    citation={row.citation} 
+                    heading={row.heading ?? undefined}
+                  />
+                )}
+                {row.type === "prose-block" && (
+                  <div className="max-w-4xl mx-auto px-6 sm:px-12 md:px-16 py-4 flex flex-wrap items-baseline gap-x-1.5 leading-[1.8]">
+                    {row.verses.map((v: any) => {
+                      return (
+                        <div key={v.id} className="contents">
+                          <InlineVerse 
+                            verse={v}
+                            hasBookmark={bookmarkIds.has(v.id)}
+                            hasHighlight={highlightIds.has(v.id)}
+                            isRead={readVerseIds.has(v.id)}
+                            isLiturgical={liturgicalOrders.has(v.globalOrder)}
+                            isSearchTarget={searchHighlight?.targetOrder === v.globalOrder}
+                            isVoiceoverActive={voiceoverCurrentOrder === v.globalOrder}
+                            onClick={() => setActiveVerse(v)}
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {activeVerse && (
+          <VerseOverlay 
+            verseId={activeVerse.id} 
+            bookId={activeVerse.bookId} 
+            bookName={activeVerse.book.name}
+            bookSlug={activeVerse.book.slug}
+            chapter={activeVerse.chapter} 
+            verse={activeVerse.verse} 
+            text={activeVerse.text}
+            globalOrder={activeVerse.globalOrder}
+            onClose={() => setActiveVerse(null)}
+          />
+        )}
       </div>
-
-      {activeVerse && (
-        <VerseOverlay 
-          verseId={activeVerse.id} 
-          bookId={activeVerse.bookId} 
-          bookName={activeVerse.book.name}
-          bookSlug={activeVerse.book.slug}
-          chapter={activeVerse.chapter} 
-          verse={activeVerse.verse} 
-          text={activeVerse.text}
-          globalOrder={activeVerse.globalOrder}
-          onClose={() => setActiveVerse(null)}
-        />
-      )}
     </div>
   );
 }
