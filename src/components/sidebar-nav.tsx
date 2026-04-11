@@ -674,21 +674,27 @@ export function SidebarNav() {
 
                 {/* 3. DENSE BOOK/CHAPTER LIST */}
                 {!librarySelectedBook ? (
-                  <div className="space-y-4 pb-4">
+                  <div className="space-y-5 pb-6">
                     {categories.map((cat) => (
-                      <div key={cat.name} className="space-y-0.5">
-                        <div className="flex items-center gap-2 px-1 mb-1">
-                          <span className="text-[7px] font-black uppercase tracking-[0.2em] text-zinc-300">{cat.name}</span>
+                      <div key={cat.name} className="space-y-1.5">
+                        <div className="flex items-center gap-2 px-1 mb-2">
+                          <span className="text-[8px] font-black uppercase tracking-[0.25em] text-zinc-300">{cat.name}</span>
                           <div className="h-px flex-1 bg-zinc-100 dark:bg-zinc-800/50 opacity-50" />
                         </div>
-                        <div className="grid grid-cols-1">
+                        <div className="grid grid-cols-1 gap-0.5">
                           {cat.books.map(book => (
-                            <button key={book.id} onClick={() => setLibrarySelectedBook(book)} className={cn("w-full text-left px-2 py-1.5 rounded-lg transition-all flex items-center justify-between group", currentBookId === book.id ? "bg-primary/5 text-primary font-bold" : "hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-500 dark:text-zinc-400")}>
-                              <span className="font-serif italic text-xs tracking-tight">{book.name}</span>
-                              <div className="flex items-center gap-2">
-                                <span className="text-[8px] font-black opacity-0 group-hover:opacity-30 transition-all">{book.abbreviation}</span>
-                                <ChevronRight className="h-2.5 w-2.5 opacity-0 group-hover:opacity-40 transition-all" />
-                              </div>
+                            <button 
+                              key={book.id} 
+                              onClick={() => setLibrarySelectedBook(book)} 
+                              className={cn(
+                                "w-full text-left px-3 py-2 rounded-xl transition-all duration-200 flex items-center justify-between group border border-transparent", 
+                                currentBookId === book.id 
+                                  ? "bg-primary/10 text-primary border-primary/10" 
+                                  : "hover:bg-zinc-100/60 dark:hover:bg-zinc-800/60 text-zinc-600 dark:text-zinc-300"
+                              )}
+                            >
+                              <span className="font-serif italic text-sm tracking-tight group-hover:translate-x-0.5 transition-transform duration-300">{book.name}</span>
+                              <ChevronRight className="h-3 w-3 opacity-0 group-hover:opacity-30 -translate-x-1 group-hover:translate-x-0 transition-all duration-300" />
                             </button>
                           ))}
                         </div>
@@ -696,18 +702,28 @@ export function SidebarNav() {
                     ))}
                   </div>
                 ) : (
-                  <div className="animate-in fade-in slide-in-from-right-2 duration-300 space-y-3 pb-4">
-                    <div className="px-1">
-                      <h3 className="font-serif font-black italic text-lg text-zinc-900 dark:text-zinc-100 leading-none">{librarySelectedBook.name}</h3>
+                  <div className="animate-in fade-in slide-in-from-right-2 duration-300 space-y-4 pb-6">
+                    <div className="px-1 flex flex-col gap-1">
+                      <span className="text-[8px] font-black uppercase tracking-[0.3em] text-primary opacity-60">Select Chapter</span>
+                      <h3 className="font-serif font-black italic text-2xl text-zinc-900 dark:text-zinc-100 leading-none">{librarySelectedBook.name}</h3>
                     </div>
                     {isLoadingLibraryChapters ? (
-                      <div className="grid grid-cols-7 gap-1">
-                        {Array.from({ length: 21 }).map((_, i) => ( <div key={i} className="aspect-square rounded-md bg-zinc-50 dark:bg-zinc-800 animate-pulse" /> ))}
+                      <div className="grid grid-cols-5 gap-2">
+                        {Array.from({ length: 20 }).map((_, i) => ( <div key={i} className="aspect-square rounded-xl bg-zinc-50 dark:bg-zinc-800 animate-pulse" /> ))}
                       </div>
                     ) : (
-                      <div className="grid grid-cols-7 gap-1">
+                      <div className="grid grid-cols-5 gap-2">
                         {libraryChapters.map((chapter) => (
-                          <button key={chapter} onClick={() => handleBookSelect(librarySelectedBook.slug, chapter)} className={cn("aspect-square rounded-md flex items-center justify-center text-[9px] font-black transition-all border", currentBookId === librarySelectedBook.id && currentChapter === chapter ? "bg-primary text-white border-primary shadow-sm" : "bg-white dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 text-zinc-400 hover:text-primary hover:border-primary/30 hover:scale-105")}>
+                          <button 
+                            key={chapter} 
+                            onClick={() => handleBookSelect(librarySelectedBook.slug, chapter)} 
+                            className={cn(
+                              "aspect-square rounded-xl flex items-center justify-center text-xs font-black transition-all border shadow-sm", 
+                              currentBookId === librarySelectedBook.id && currentChapter === chapter 
+                                ? "bg-primary text-white border-primary shadow-lg shadow-primary/20 scale-105" 
+                                : "bg-white dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 text-zinc-400 hover:text-primary hover:border-primary/30 hover:bg-primary/[0.02] hover:scale-110 active:scale-95"
+                            )}
+                          >
                             {chapter}
                           </button>
                         ))}
