@@ -645,41 +645,50 @@ export function SidebarNav() {
             )}
 
             {activeTab === "library" && (
-              <div className="mt-4 animate-in fade-in duration-300">
-                <div className="mb-6 px-1">
+              <div className="mt-2 animate-in fade-in duration-300 space-y-4">
+                {/* 1. COMPACT TRANSLATION SWITCHER */}
+                <div className="px-0.5">
                   <TranslationSwitcher />
                 </div>
-                <div className="mb-6">
-                  <button onClick={() => { setIsSearchOpen(true); setActiveTab(null); }} className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl bg-primary/5 border border-primary/10 hover:border-primary/30 transition-all group">
-                    <Search className="h-4 w-4 text-primary opacity-60 group-hover:opacity-100" />
-                    <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary/60 group-hover:text-primary">Search the Word...</span>
+
+                {/* 2. MINIMALIST SEARCH & NAV */}
+                <div className="space-y-2">
+                  <button onClick={() => { setIsSearchOpen(true); setActiveTab(null); }} className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-100 dark:border-zinc-800 hover:border-primary/30 transition-all group">
+                    <Search className="h-3.5 w-3.5 text-zinc-400 group-hover:text-primary transition-colors" />
+                    <span className="text-[9px] font-black uppercase tracking-widest text-zinc-400 group-hover:text-primary">Search Codex...</span>
                   </button>
+
+                  <div className="px-0.5">
+                    {!librarySelectedBook ? (
+                      <div className="relative">
+                        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-zinc-300" />
+                        <input value={librarySearch} onChange={(e) => setLibrarySearch(e.target.value)} placeholder="Filter 73 Books..." className="w-full h-7 pl-7 pr-3 rounded-lg bg-transparent border border-zinc-100 dark:border-zinc-800 focus:border-primary/20 focus:outline-none text-[9px] font-serif italic" />
+                      </div>
+                    ) : (
+                      <button onClick={() => setLibrarySelectedBook(null)} className="flex items-center gap-1.5 text-primary hover:opacity-70 transition-all group py-0.5">
+                        <ChevronLeft className="h-3 w-3" /> <span className="text-[9px] font-black uppercase tracking-widest">Return to Books</span>
+                      </button>
+                    )}
+                  </div>
                 </div>
-                <div className="flex flex-col gap-3 mb-5">
-                  {!librarySelectedBook ? (
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3 w-3 text-zinc-400" />
-                      <input value={librarySearch} onChange={(e) => setLibrarySearch(e.target.value)} placeholder="Filter 73 Books..." className="w-full h-8 pl-8 pr-3 rounded-lg bg-zinc-100/50 dark:bg-zinc-800/50 border border-zinc-200/20 focus:outline-none focus:ring-1 focus:ring-primary/20 text-[10px] font-serif italic" />
-                    </div>
-                  ) : (
-                    <button onClick={() => setLibrarySelectedBook(null)} className="flex items-center gap-2 text-primary hover:opacity-70 transition-all group py-1">
-                      <ChevronLeft className="h-3.5 w-3.5" /> <span className="text-[10px] font-black uppercase tracking-widest">Back to Books</span>
-                    </button>
-                  )}
-                </div>
+
+                {/* 3. DENSE BOOK/CHAPTER LIST */}
                 {!librarySelectedBook ? (
-                  <div className="space-y-6">
+                  <div className="space-y-4 pb-4">
                     {categories.map((cat) => (
-                      <div key={cat.name} className="space-y-1">
-                        <div className="flex items-center gap-2 px-1 mb-2">
-                          <span className="text-[7px] font-black uppercase tracking-[0.3em] text-zinc-300">{cat.name}</span>
-                          <div className="h-[0.5px] flex-1 bg-zinc-100 dark:bg-zinc-800/50" />
+                      <div key={cat.name} className="space-y-0.5">
+                        <div className="flex items-center gap-2 px-1 mb-1">
+                          <span className="text-[7px] font-black uppercase tracking-[0.2em] text-zinc-300">{cat.name}</span>
+                          <div className="h-px flex-1 bg-zinc-100 dark:bg-zinc-800/50 opacity-50" />
                         </div>
-                        <div className="grid gap-px">
+                        <div className="grid grid-cols-1">
                           {cat.books.map(book => (
-                            <button key={book.id} onClick={() => setLibrarySelectedBook(book)} className={cn("w-full text-left px-3 py-2 rounded-lg transition-all flex items-center justify-between group", currentBookId === book.id ? "bg-primary/5 text-primary" : "hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-500 dark:text-zinc-400")}>
-                              <span className="font-serif italic text-sm tracking-tight">{book.name}</span>
-                              <ChevronRight className="h-3 w-3 opacity-0 group-hover:opacity-40 transition-all" />
+                            <button key={book.id} onClick={() => setLibrarySelectedBook(book)} className={cn("w-full text-left px-2 py-1.5 rounded-lg transition-all flex items-center justify-between group", currentBookId === book.id ? "bg-primary/5 text-primary font-bold" : "hover:bg-zinc-50 dark:hover:bg-zinc-800 text-zinc-500 dark:text-zinc-400")}>
+                              <span className="font-serif italic text-xs tracking-tight">{book.name}</span>
+                              <div className="flex items-center gap-2">
+                                <span className="text-[8px] font-black opacity-0 group-hover:opacity-30 transition-all">{book.abbreviation}</span>
+                                <ChevronRight className="h-2.5 w-2.5 opacity-0 group-hover:opacity-40 transition-all" />
+                              </div>
                             </button>
                           ))}
                         </div>
@@ -687,18 +696,18 @@ export function SidebarNav() {
                     ))}
                   </div>
                 ) : (
-                  <div className="animate-in fade-in slide-in-from-right-4 duration-300">
-                    <div className="px-1 mb-5">
-                      <h3 className="font-serif font-black italic text-xl text-zinc-900 dark:text-zinc-100 leading-tight">{librarySelectedBook.name}</h3>
+                  <div className="animate-in fade-in slide-in-from-right-2 duration-300 space-y-3 pb-4">
+                    <div className="px-1">
+                      <h3 className="font-serif font-black italic text-lg text-zinc-900 dark:text-zinc-100 leading-none">{librarySelectedBook.name}</h3>
                     </div>
                     {isLoadingLibraryChapters ? (
-                      <div className="grid grid-cols-6 gap-1.5">
-                        {Array.from({ length: 24 }).map((_, i) => ( <div key={i} className="aspect-square rounded-lg bg-zinc-50 dark:bg-zinc-800/50 animate-pulse" /> ))}
+                      <div className="grid grid-cols-7 gap-1">
+                        {Array.from({ length: 21 }).map((_, i) => ( <div key={i} className="aspect-square rounded-md bg-zinc-50 dark:bg-zinc-800 animate-pulse" /> ))}
                       </div>
                     ) : (
-                      <div className="grid grid-cols-6 gap-1.5 pb-4">
+                      <div className="grid grid-cols-7 gap-1">
                         {libraryChapters.map((chapter) => (
-                          <button key={chapter} onClick={() => handleBookSelect(librarySelectedBook.slug, chapter)} className={cn("aspect-square rounded-lg flex items-center justify-center text-[10px] font-black transition-all border shadow-sm", currentBookId === librarySelectedBook.id && currentChapter === chapter ? "bg-primary text-white border-primary shadow-primary/20" : "bg-white dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 text-zinc-400 hover:text-primary hover:border-primary/40 hover:scale-105 active:scale-95")}>
+                          <button key={chapter} onClick={() => handleBookSelect(librarySelectedBook.slug, chapter)} className={cn("aspect-square rounded-md flex items-center justify-center text-[9px] font-black transition-all border", currentBookId === librarySelectedBook.id && currentChapter === chapter ? "bg-primary text-white border-primary shadow-sm" : "bg-white dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800 text-zinc-400 hover:text-primary hover:border-primary/30 hover:scale-105")}>
                             {chapter}
                           </button>
                         ))}
