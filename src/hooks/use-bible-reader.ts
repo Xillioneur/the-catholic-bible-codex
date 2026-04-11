@@ -38,41 +38,20 @@ export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>
   const lastSyncTime = useRef(0);
   const initialScrollDone = useRef(false);
 
-  // 4. Minecraft-like Chunk Loading
-  const rowVirtualizer = useVirtualizer({
-    count: rowCount,
-    getScrollElement: () => parentRef.current,
-    estimateSize: useCallback((index) => {
-      const row = rows[index];
-      if (row?.type === "book-header") return 400;
-      if (row?.type === "chapter-header") return 150;
-      if (row?.type === "liturgical-header") return 120;
-      if (row?.type === "prose-block") {
-        // Average verse height is roughly 1.8 * fontSize * (line length estimation)
-        // A prose block has 5 verses. 
-        return (fontSize * 1.8 * 2.5) * row.verses.length; 
-      }
-      return 200;
-    }, [rows, fontSize]),
-    overscan: 20,
-    paddingEnd: 100,
-  });
-
-  // 1. Multithreaded Worker Lifecycle
+  // 1. STABLE WORKER LIFECYCLE (Fool-proof: Only starts once)
   useEffect(() => {
-    workerRef.current = new Worker(new URL("../workers/bible-worker.ts", import.meta.url));
+    const worker = new Worker(new URL("../workers/bible-worker.ts", import.meta.url));
+    workerRef.current = worker;
     
-    workerRef.current.onmessage = (e) => {
+    worker.onmessage = (e) => {
       const { type, payload } = e.data;
       if (type === "READY") {
         setRowCount(payload.count);
         setIsWorkerReady(true);
-        // Pre-fetch initial chunk
-        workerRef.current?.postMessage({ type: "GET_ROWS", payload: { startIndex: 0, limit: 100 } });
+        worker.postMessage({ type: "GET_ROWS", payload: { startIndex: 0, limit: 100 } });
       } else if (type === "ROWS_DATA") {
         const { startIndex, items } = payload;
         setRows(prev => {
-          // If we just reset, start fresh
           if (startIndex === 0 && prev.length === 0) return items;
           const next = [...prev];
           for (let i = 0; i < items.length; i++) {
@@ -92,10 +71,30 @@ export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>
       }
     };
 
-    return () => workerRef.current?.terminate();
-  }, [rowVirtualizer]);
+    return () => {
+      worker.terminate();
+      workerRef.current = null;
+    };
+  }, []); // EMPTY DEPENDENCY ARRAY IS CRITICAL FOR STABILITY
 
-  // 2. Background Sync & Context Switching (The Unified Lifecycle)
+  const rowVirtualizer = useVirtualizer({
+    count: rowCount,
+    getScrollElement: () => parentRef.current,
+    estimateSize: useCallback((index) => {
+      const row = rows[index];
+      if (row?.type === "book-header") return 400;
+      if (row?.type === "chapter-header") return 150;
+      if (row?.type === "liturgical-header") return 120;
+      if (row?.type === "prose-block") {
+        return (fontSize * 1.8 * 2.5) * row.verses.length; 
+      }
+      return 200;
+    }, [rows, fontSize]),
+    overscan: 20,
+    paddingEnd: 100,
+  });
+
+  // 2. UNIFIED INITIALIZATION & CONTEXT SWITCHING
   const { data: serverVerseCount } = api.bible.getVerseCount.useQuery(
     { translationSlug },
     { staleTime: Infinity }
@@ -105,19 +104,27 @@ export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>
     let isMounted = true;
 
     async function initializeContext() {
-      if (!workerRef.current) return;
+      // 1. Wait for worker to exist (future-proof against race conditions)
+      if (!workerRef.current) {
+        let attempts = 0;
+        while (!workerRef.current && attempts < 20) {
+          await new Promise(r => setTimeout(r, 50));
+          attempts++;
+        }
+      }
+      if (!workerRef.current || !isMounted) return;
 
       const localCount = await db.verses.where("translationId").equals(translationSlug).count();
       const totalCount = serverVerseCount || 35809;
 
-      // 1. If not hydrated, enter loading state
+      // 2. Enter clean state for the new translation
+      setIsWorkerReady(false);
+      setRows([]);
+      setRowCount(0);
+
+      // 3. Hydrate if missing
       if (localCount < totalCount) {
-        if (isMounted) {
-          setIsHydrated(false);
-          setIsWorkerReady(false);
-          setRows([]);
-          setRowCount(0);
-        }
+        setIsHydrated(false);
         await bibleService.syncBible(
           translationSlug, 
           totalCount, 
@@ -126,15 +133,9 @@ export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>
       }
 
       if (!isMounted) return;
-
-      // 2. Clear old rows and set worker to non-ready before switching slug
-      // This prevents seeing old translation text during the switch
-      setIsWorkerReady(false);
-      setRows([]);
-      setRowCount(0);
       setIsHydrated(true);
       
-      // 3. Command the worker to switch to the new translation
+      // 4. Command the worker to switch to the new translation
       workerRef.current.postMessage({ 
         type: "INITIALIZE", 
         payload: { slug: translationSlug, liturgicalReadings } 
@@ -148,28 +149,21 @@ export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>
 
   const virtualItems = rowVirtualizer.getVirtualItems();
 
-  // Load missing chunks as we scroll
+  // 3. CHUNK LOADING
   useEffect(() => {
-    if (virtualItems.length > 0 && isWorkerReady) {
-      const firstItem = virtualItems[0];
-      const lastItem = virtualItems[virtualItems.length - 1];
-      if (!firstItem || !lastItem) return;
-
-      const firstIndex = firstItem.index;
-      const lastIndex = lastItem.index;
+    if (virtualItems.length > 0 && isWorkerReady && workerRef.current) {
+      const firstIndex = virtualItems[0].index;
+      const lastIndex = virtualItems[virtualItems.length - 1].index;
       
-      // Check if we need to fetch data for these indices
       const missingIndices: number[] = [];
       for (let i = firstIndex; i <= lastIndex; i++) {
-        if (!rows[i]) {
-          missingIndices.push(i);
-        }
+        if (!rows[i]) missingIndices.push(i);
       }
 
       if (missingIndices.length > 0) {
         const start = Math.min(...missingIndices);
         const limit = Math.max(...missingIndices) - start + 1;
-        workerRef.current?.postMessage({ 
+        workerRef.current.postMessage({ 
           type: "GET_ROWS", 
           payload: { startIndex: start, limit: Math.max(limit, 50) } 
         });
@@ -177,46 +171,40 @@ export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>
     }
   }, [virtualItems, rows, isWorkerReady]);
 
-  // 5. Initial Scroll
+  // 4. INITIAL SCROLL & PERSISTENCE
   useEffect(() => {
-    if (!initialScrollDone.current && isWorkerReady && rowCount > 0) {
-      // 1. Prioritize Persisted Position (if not at the very beginning)
+    if (!initialScrollDone.current && isWorkerReady && rowCount > 0 && workerRef.current) {
       if (currentOrderStore > 1) {
-        console.log("[READER] Initial scroll to persisted position:", currentOrderStore);
-        workerRef.current?.postMessage({ type: "FIND_ORDER", payload: { order: currentOrderStore } });
+        workerRef.current.postMessage({ type: "FIND_ORDER", payload: { order: currentOrderStore } });
         initialScrollDone.current = true;
         return;
       }
 
-      // 2. Fallback to Daily Reading
       if (liturgicalReadings.length > 0) {
         const firstReading = liturgicalReadings.find(r => r.type === "First Reading");
         if (firstReading && firstReading.orders.length > 0) {
-          console.log("[READER] Initial scroll to daily reading");
-          workerRef.current?.postMessage({ type: "FIND_ORDER", payload: { order: firstReading.orders[0] } });
+          workerRef.current.postMessage({ type: "FIND_ORDER", payload: { order: firstReading.orders[0] } });
           initialScrollDone.current = true;
         }
       }
     }
   }, [liturgicalReadings, isWorkerReady, rowCount, currentOrderStore]);
 
-  // 6. Navigation
+  // 5. NAVIGATION
   useEffect(() => {
-    if (scrollToOrder !== null && isWorkerReady) {
-      // Hybrid Scroll: Try to find the specific verse element first
+    if (scrollToOrder !== null && isWorkerReady && workerRef.current) {
       const element = document.getElementById(`verse-${scrollToOrder}`);
       if (element) {
         element.scrollIntoView({ behavior: "smooth", block: "center" });
         setScrollToOrder(null);
       } else {
-        // Fallback to Worker/Virtualizer if verse is off-screen (not rendered)
-        workerRef.current?.postMessage({ type: "FIND_ORDER", payload: { order: scrollToOrder } });
+        workerRef.current.postMessage({ type: "FIND_ORDER", payload: { order: scrollToOrder } });
         setScrollToOrder(null);
       }
     }
   }, [scrollToOrder, isWorkerReady, setScrollToOrder]);
 
-  // 7. Sync Store
+  // 6. SYNC STORE (Visibility Tracking)
   useEffect(() => {
     if (virtualItems.length === 0 || !parentRef.current || rowCount === 0) return;
     const now = Date.now();
@@ -232,24 +220,14 @@ export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>
     const state = useReaderStore.getState();
     if (state.totalVerseCount !== rowCount) setTotalVerseCount(rowCount);
     
-    // SYNC GLOBAL ORDER (Precise Visibility Calculation)
     const scrollTop = parentRef.current.scrollTop;
-    const viewportHeight = parentRef.current.clientHeight;
-    const scrollBottom = scrollTop + viewportHeight;
+    const scrollBottom = scrollTop + parentRef.current.clientHeight;
     
     let currentGlobalOrder = state.currentOrder;
     let lastGlobalOrder = state.lastVisibleOrder;
     
-    // Find the first item that is actually visible (crosses scrollTop)
-    const topVisibleItem = virtualItems.find(item => {
-      const itemEnd = item.start + item.size;
-      return itemEnd > scrollTop;
-    });
-
-    // Find the last item that is actually visible (crosses scrollBottom)
-    const bottomVisibleItem = [...virtualItems].reverse().find(item => {
-      return item.start < scrollBottom;
-    });
+    const topVisibleItem = virtualItems.find(item => (item.start + item.size) > scrollTop);
+    const bottomVisibleItem = [...virtualItems].reverse().find(item => item.start < scrollBottom);
 
     if (topVisibleItem) {
       const row = rows[topVisibleItem.index];
@@ -279,14 +257,9 @@ export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>
       }
     }
     
-    if (state.currentOrder !== currentGlobalOrder) {
-      setCurrentOrderStore(currentGlobalOrder);
-    }
-    if (state.lastVisibleOrder !== lastGlobalOrder) {
-      setLastVisibleOrderStore(lastGlobalOrder);
-    }
+    if (state.currentOrder !== currentGlobalOrder) setCurrentOrderStore(currentGlobalOrder);
+    if (state.lastVisibleOrder !== lastGlobalOrder) setLastVisibleOrderStore(lastGlobalOrder);
 
-    // Sync Book/Chapter based on the same precise row
     if (topVisibleItem) {
       const row = rows[topVisibleItem.index];
       if (row) {
@@ -306,7 +279,6 @@ export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>
   return {
     rows,
     isLoading: !isWorkerReady && !isHydrated,
-    rowVirtualizer,
-    currentOrder: 0 // handled by store now
+    rowVirtualizer
   };
 }
