@@ -329,13 +329,55 @@ export function VoiceoverManager() {
     setIsActive(true);
 
     try {
-      const verse = await db.verses
+      // 1. ATTEMPT TO FIND VERSE IN CURRENT TRANSLATION
+      let verse = await db.verses
         .where("[translationId+globalOrder]")
         .equals([translationSlug, order])
         .first();
 
+      // 2. ROBUST REMAPPING & FALLBACK (The "Dauntless" Engine)
+      // If not found in current translation (e.g. WEB-CE missing books, or VUL numbering differs)
+      if (!verse) {
+        // Try to find the verse metadata from any translation to know what book/chapter/verse we are at
+        const metadata = await db.verses.where("globalOrder").equals(order).first();
+        
+        if (metadata) {
+          // A. Try to find the SAME verse in the current translation by B/C/V 
+          // (Handles different globalOrder mapping like in VUL)
+          verse = await db.verses
+            .where({ 
+              translationId: translationSlug, 
+              bookId: metadata.bookId, 
+              chapter: metadata.chapter, 
+              verse: metadata.verse 
+            })
+            .first();
+          
+          // B. Still not found? Fallback to DRB (The reliable English source)
+          if (!verse && translationSlug !== "drb") {
+            console.log(`[VOICEOVER] Fallback to DRB for order ${order} (${metadata.book.name})`);
+            verse = await db.verses
+              .where({ 
+                translationId: "drb", 
+                bookId: metadata.bookId, 
+                chapter: metadata.chapter, 
+                verse: metadata.verse 
+              })
+              .first();
+          }
+        }
+      }
+
       if (!verse || !isPlaying || currentSession !== sessionRef.current) {
-        if (!verse && isPlaying) stop();
+        if (!verse && isPlaying) {
+          // Final attempt: just try the next order if this one is a gap
+          const next = getNextOrder(order);
+          if (next !== null && next !== order) {
+            void speak(next, false, 0);
+          } else {
+            stop();
+          }
+        }
         return;
       }
 
@@ -370,13 +412,22 @@ export function VoiceoverManager() {
       const utterance = new SpeechSynthesisUtterance(textToSpeak);
       const voice = getBestVoice();
       if (voice) utterance.voice = voice;
+      
+      // Auto-detect language if we are in fallback or Latin
+      if (verse.translationId === "vul") {
+        utterance.lang = "la-IT"; // Default to Ecclesiastical Latin if possible
+      } else if (translationSlug === "vul" && verse.translationId !== "vul") {
+        // We are in fallback mode (Latin text missing, using English audio)
+        utterance.lang = "en-US";
+      }
+
       utterance.rate = speed;
       utterance.volume = 1;
 
       utterance.onboundary = (event) => {
         if (currentSession === sessionRef.current && !isTitle) {
           lastCharIndexRef.current = charOffset + event.charIndex;
-          const progress = (lastCharIndexRef.current / verse.text.length) * 100;
+          const progress = (lastCharIndexRef.current / verse!.text.length) * 100;
           setVerseProgress(progress);
         }
       };
@@ -420,7 +471,7 @@ export function VoiceoverManager() {
       if ("mediaSession" in navigator) {
         navigator.mediaSession.metadata = new MediaMetadata({
           title: isTitle ? `Title: ${textToSpeak}` : `${verse.book.name} ${verse.chapter}:${verse.verse}`,
-          artist: "Catholic Bible Codex",
+          artist: verse.translationId === "drb" && translationSlug !== "drb" ? "Fallback: Douay-Rheims" : "Catholic Bible Codex",
           album: "Verbum Domini",
           artwork: [{ src: "/favicon.svg", sizes: "512x512", type: "image/svg+xml" }]
         });

@@ -43,13 +43,15 @@ export function VoiceoverControls() {
   useEffect(() => {
     const loadVoices = () => {
       let v = window.speechSynthesis.getVoices();
+      const filterLang = translationSlug === "vul" ? "la" : "en";
+      
       if (v.length === 0) {
         setTimeout(() => {
           v = window.speechSynthesis.getVoices();
-          setVoices(v.filter(voice => voice.lang.startsWith("en")));
+          setVoices(v.filter(voice => voice.lang.startsWith(filterLang) || voice.lang.startsWith("en")));
         }, 100);
       } else {
-        setVoices(v.filter(voice => voice.lang.startsWith("en")));
+        setVoices(v.filter(voice => voice.lang.startsWith(filterLang) || voice.lang.startsWith("en")));
       }
     };
 
@@ -57,7 +59,7 @@ export function VoiceoverControls() {
     if (window.speechSynthesis.onvoiceschanged !== undefined) {
       window.speechSynthesis.onvoiceschanged = loadVoices;
     }
-  }, []);
+  }, [translationSlug]);
 
   const speeds = [0.5, 0.75, 1.0, 1.25, 1.5, 2.0];
   const currentVoice = voices.find(v => v.voiceURI === voiceURI);

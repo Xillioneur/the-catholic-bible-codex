@@ -66,20 +66,22 @@ export function VoiceoverPlayer() {
   useEffect(() => {
     const loadVoices = () => {
       let v = window.speechSynthesis.getVoices();
+      const filterLang = translationSlug === "vul" ? "la" : "en";
+      
       if (v.length === 0) {
         setTimeout(() => {
           v = window.speechSynthesis.getVoices();
-          setVoices(v.filter(voice => voice.lang.startsWith("en")));
+          setVoices(v.filter(voice => voice.lang.startsWith(filterLang) || voice.lang.startsWith("en")));
         }, 100);
       } else {
-        setVoices(v.filter(voice => voice.lang.startsWith("en")));
+        setVoices(v.filter(voice => voice.lang.startsWith(filterLang) || voice.lang.startsWith("en")));
       }
     };
     loadVoices();
     if (window.speechSynthesis.onvoiceschanged !== undefined) {
       window.speechSynthesis.onvoiceschanged = loadVoices;
     }
-  }, []);
+  }, [translationSlug]);
 
   const utils = api.useUtils();
 
