@@ -27,6 +27,8 @@ function decodeHtmlEntities(text: string): string {
     .replace(/&rdquo;/g, '"')
     .replace(/&amp;/g, "&")
     .replace(/&#38;/g, "&")
+    .replace(/&#x211f;/g, "℞")
+    .replace(/&#8478;/g, "℞")
     .replace(/\s+/g, " ") // Collapse multiple spaces
     .trim();
 }
@@ -51,36 +53,41 @@ function normalizePsalmCitation(citation: string): string {
 
   // Basic Vulgate -> Hebrew mapping
   if (vNum >= 10 && vNum <= 112) hNum = vNum + 1;
-  else if (vNum === 113) hNum = 114; // Could be 115, 114 is safer
+  else if (vNum === 113) hNum = 114; 
   else if (vNum === 114 || vNum === 115) hNum = 116;
   else if (vNum >= 116 && vNum <= 145) hNum = vNum + 1;
   else if (vNum === 146 || vNum === 147) hNum = 147;
 
-  if (hNum !== vNum) {
-    return citation.replace(match[1]!, `${vNum}(${hNum})`);
-  }
-
-  return citation;
+  // Always return the dual format so the parser can extract the second number (Hebrew)
+  return citation.replace(match[1]!, `${vNum}(${hNum})`);
 }
 
 /**
  * Manually injects sequence citations and texts for major feast days if they are missing.
  * Sequences are poetic hymns but have strong scriptural foundations.
  */
-function getSequenceCitation(dayTitle: string, season: string): { citation: string; text: string } | undefined {
+function getSequenceCitation(dayTitle: string, season: string): { citation: string; text: string; name: string } | undefined {
   const title = dayTitle.toLowerCase();
   
   // Easter Sequence: Victimae Paschali Laudes
-  if (title.includes("easter") && (title.includes("sunday") || title.includes("monday") || title.includes("tuesday") || title.includes("wednesday") || title.includes("thursday") || title.includes("friday") || title.includes("saturday"))) {
+  // Mandatory: Easter Sunday. 
+  // Recommended: Monday through Saturday of the Octave of Easter ONLY.
+  const isEasterDay = title.includes("easter sunday");
+  const isEasterOctave = title.includes("octave of easter") || 
+                        (title.includes("in the octave") && title.includes("easter"));
+
+  if (isEasterDay || isEasterOctave) {
     return {
+      name: "Victimae Paschali Laudes",
       citation: "1 Corinthians 5:7-8",
       text: "Christians, to the Paschal Victim / offer sacrifice and praise. / The sheep are ransomed by the Lamb; / and Christ, the undefiled, / hath sinners to his Father reconciled. / Death with life contended: / combat strangely ended! / Life’s own Champion, slain, / yet lives to reign. / Tell us, Mary: / say what thou didst see / upon the way. / The tomb the Living did enclose; / I saw Christ’s glory as he rose! / The angels there attesting; / shroud with grave-clothes resting. / Christ, my hope, has risen: / he goes before you into Galilee. / That Christ is truly risen / from the dead we know. / Victorious king, thy mercy show! / Amen. Alleluia."
     };
   }
 
   // Pentecost Sequence: Veni Sancte Spiritus
-  if (title.includes("pentecost")) {
+  if (title.includes("pentecost sunday")) {
     return {
+      name: "Veni Sancte Spiritus",
       citation: "Romans 8:8-17",
       text: "Holy Spirit, Lord of light, / From the clear celestial height / Thy pure beaming radiance give. / Come, Thou Father of the poor, / Come with treasures which endure; / Come, Thou light of all that live! / Thou, of all consolers best, / Thou, the soul's delightsome guest, / Dost refreshing peace bestow; / Thou in toil art comfort sweet; / Pleasant coolness in the heat; / Solace in the midst of woe. / Light immortal, light divine, / Visit Thou these hearts of Thine, / And our inmost being fill: / If Thou take Thy grace away, / Nothing pure in man will stay; / All his good is turned to ill. / Heal our wounds, our strength renew; / On our dryness pour Thy dew; / Wash the stains of guilt away: / Bend the stubborn heart and will; / Melt the frozen, warm the chill; / Guide the steps that go astray. / Thou, on us who evermore / Thee confess and Thee adore, / With Thy sevenfold gifts descend: / Give us comfort when we die; / Give us life with Thee on high; / Give us joys that never end. / Amen. Alleluia."
     };
@@ -89,6 +96,7 @@ function getSequenceCitation(dayTitle: string, season: string): { citation: stri
   // Corpus Christi Sequence: Lauda Sion
   if (title.includes("corpus christi") || title.includes("body and blood of christ")) {
     return {
+      name: "Lauda Sion",
       citation: "1 Corinthians 10:16-17",
       text: "Laud, O Sion, thy salvation, / Laud with hymns of exultation, / Christ, thy king and shepherd true: / Bring him all the praise thou knowest, / He is more than thou bestowest, / Never canst thou reach his due. / Special theme for glad thanksgiving / Is the quick'ning and the living / Bread today before thee set: / From his hands of old partaken, / As we know, by faith unshaken, / Where the Twelve at supper met."
     };
@@ -97,6 +105,7 @@ function getSequenceCitation(dayTitle: string, season: string): { citation: stri
   // Our Lady of Sorrows (Sept 15): Stabat Mater
   if (title.includes("sorrows") && title.includes("mary")) {
     return {
+      name: "Stabat Mater",
       citation: "Luke 2:33-35",
       text: "At the Cross her station keeping, / stood the mournful Mother weeping, / close to her Son to the last. / Through her heart, His sorrow sharing, / all His bitter anguish bearing, / now at length the sword has passed. / O how sad and sore distressed / was that Mother, highly blest, / of the sole-begotten One. / Christ above in torment hangs, / she beneath beholds the pangs / of her dying glorious Son."
     };
@@ -114,8 +123,9 @@ export async function getLiturgicalInfoServer(dateInput: Date = new Date()): Pro
   
   try {
     // 1. ATTEMPT LIVE API (Universalis)
+    // Using Europe.England region as it often provides more 'Proper' acclamations than the General feed
     console.log(`[LITURGICAL] Fetching live data from Universalis for ${dateStr}`);
-    const response = await fetch(`https://universalis.com/${universalsDateStr}/jsonpmass.js`, {
+    const response = await fetch(`https://universalis.com/Europe.England/${universalsDateStr}/jsonpmass.js`, {
       next: { revalidate: 3600 } // Cache for 1 hour
     });
 
@@ -130,6 +140,7 @@ export async function getLiturgicalInfoServer(dateInput: Date = new Date()): Pro
       const jsonStr = text.substring(startIdx + 1, endIdx).trim();
       const data = JSON.parse(jsonStr);
 
+      // DECODE EARLY for reliable matching
       const dayTitle = decodeHtmlEntities(data.day);
       let season = "Ordinary Time";
       let liturgicalColor: LiturgicalColor = "green";
@@ -148,7 +159,9 @@ export async function getLiturgicalInfoServer(dateInput: Date = new Date()): Pro
         liturgicalColor = "white";
       }
 
+      // Manual Sequence logic (Only for specific mandatory/recommended days)
       const manualSeq = getSequenceCitation(dayTitle, season);
+      
       const readings: any = {
         firstReading: normalizePsalmCitation(decodeHtmlEntities(data.Mass_R1?.source)),
         firstReadingHeading: decodeHtmlEntities(data.Mass_R1?.heading),
@@ -156,6 +169,7 @@ export async function getLiturgicalInfoServer(dateInput: Date = new Date()): Pro
         secondReading: normalizePsalmCitation(decodeHtmlEntities(data.Mass_R2?.source)),
         secondReadingHeading: decodeHtmlEntities(data.Mass_R2?.heading),
         sequence: normalizePsalmCitation(decodeHtmlEntities(data.Mass_S?.source || data.Mass_Seq?.source)) || manualSeq?.citation,
+        sequenceName: decodeHtmlEntities(data.Mass_S?.name || data.Mass_Seq?.name) || manualSeq?.name,
         sequenceText: decodeHtmlEntities(data.Mass_S?.text || data.Mass_Seq?.text) || manualSeq?.text,
         alleluia: normalizePsalmCitation(decodeHtmlEntities(data.Mass_GA?.source || data.Mass_V?.source)),
         alleluiaText: decodeHtmlEntities(data.Mass_GA?.text || data.Mass_V?.text),
@@ -164,7 +178,7 @@ export async function getLiturgicalInfoServer(dateInput: Date = new Date()): Pro
         gospelHeading: decodeHtmlEntities(data.Mass_G?.heading)
       };
 
-      console.log(`[LITURGICAL] Live data success for ${dateStr}`);
+      console.log(`[LITURGICAL] Live data success for ${dateStr} (${dayTitle})`);
       return {
         season,
         color: liturgicalColor,
@@ -229,6 +243,7 @@ export async function getLiturgicalInfoServer(dateInput: Date = new Date()): Pro
         psalm: Array.isArray(dayInfo.psalm) ? dayInfo.psalm[0] : dayInfo.psalm,
         secondReading: Array.isArray(dayInfo.secondReading) ? dayInfo.secondReading[0] : dayInfo.secondReading,
         sequence: manualSeq?.citation,
+        sequenceName: manualSeq?.name,
         sequenceText: manualSeq?.text,
         alleluia: dayInfo.verseBeforeGospel || (Array.isArray(dayInfo.gospelAcclamation) ? dayInfo.gospelAcclamation[0] : dayInfo.gospelAcclamation),
         gospel: Array.isArray(dayInfo.gospel) ? dayInfo.gospel[0] : dayInfo.gospel,

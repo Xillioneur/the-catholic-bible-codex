@@ -87,7 +87,7 @@ export function LiturgicalCard({ onClose }: LiturgicalCardProps) {
           <div className="flex flex-col items-start text-left">
             <span className="text-[7px] font-black uppercase tracking-[0.2em] text-zinc-400 group-hover:text-primary/60">{label}</span>
             <span className="text-[11px] font-bold text-zinc-900 dark:text-zinc-100 tracking-tight line-clamp-1">
-              {label === "Sequence" ? "Victimae Paschali Laudes" : (citation ?? "")}
+              {label === "Sequence" ? (info.readings.sequenceName || "Sacred Sequence") : (citation ?? "")}
             </span>
           </div>
         </div>

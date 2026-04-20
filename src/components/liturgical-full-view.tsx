@@ -147,6 +147,7 @@ export function DailyAllView({ info, onClose, onSelectReading }: DailyAllViewPro
           {info.readings.sequence && (
             <ReadingSection 
               title="Sequence" 
+              sequenceName={info.readings.sequenceName}
               citation={info.readings.sequence} 
               sequenceText={liturgicalReadings.find(r => r.type === "Sequence")?.sequenceText ?? info.readings.sequenceText}
               icon={Scroll}
@@ -218,12 +219,13 @@ export function DailyAllView({ info, onClose, onSelectReading }: DailyAllViewPro
   return createPortal(content, document.body);
 }
 
-function ReadingSection({ title, citation, heading, acclamationText, sequenceText, icon: Icon, highlight, isPsalm, verses, orders, onSelect }: { 
+function ReadingSection({ title, citation, heading, acclamationText, sequenceText, sequenceName, icon: Icon, highlight, isPsalm, verses, orders, onSelect }: { 
   title: string, 
   citation: string, 
   heading?: string,
   acclamationText?: string,
   sequenceText?: string,
+  sequenceName?: string,
   icon: any, 
   highlight?: boolean, 
   isPsalm?: boolean,
@@ -288,7 +290,9 @@ function ReadingSection({ title, citation, heading, acclamationText, sequenceTex
             <Icon className="h-4 w-4" />
           </div>
           <div className="flex flex-col">
-            <span className={cn("text-[9px] font-black uppercase tracking-[0.2em]", highlight ? "text-primary" : "text-zinc-400")}>{title}</span>
+            <span className={cn("text-[9px] font-black uppercase tracking-[0.2em]", highlight ? "text-primary" : "text-zinc-400")}>
+              {isSequence ? (sequenceName || "Sacred Sequence") : title}
+            </span>
             {!isSequence && (
               <span className="text-[11px] font-serif font-black italic text-zinc-900 dark:text-zinc-100 tracking-tight">{citation}</span>
             )}

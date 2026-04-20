@@ -11,6 +11,7 @@ export interface LiturgicalInfo {
     secondReading?: string;
     secondReadingHeading?: string;
     sequence?: string;
+    sequenceName?: string;
     sequenceText?: string;
     alleluia?: string;
     alleluiaText?: string;
@@ -77,7 +78,40 @@ export function getLiturgicalColorOklch(color: LiturgicalColor): {
  */
 export function parseCitation(citation: string): { bookSlug: string; chapter: number; verses: number[] } {
   // CLEAN: Remove only specific known prefixes if they exist
-  const raw = citation.replace(/^(First Reading|Second Reading|Gospel|Psalm):\s+/i, '').trim();
+  // Strip 'cf.' or 'cf' and any leading/trailing whitespace
+  let raw = citation.replace(/^(First Reading|Second Reading|Gospel|Psalm|Alleluia|Gospel Acclamation):\s+/i, '').trim();
+  raw = raw.replace(/^cf\.?\s*/i, '').trim();
+
+  // Strip liturgical markers like ℞, R. or specific response verse identifiers at the end
+  // (e.g. "Ps 118:1-2. ℞ 1b")
+  raw = raw.replace(/[. ]*([℞R]|&#x211f;)\s*[\d\w]*$/i, '').trim();
+
+  // Handle spaceless citations like Lk24:32 by inserting a space before the first digit
+  // but only if it's not already there and not part of a book name like 1 Samuel
+  if (/^[a-zA-Z]+\d/.test(raw)) {
+    raw = raw.replace(/^([a-zA-Z]+)(\d)/, '$1 $2');
+  }
+
+  // Handle dual Psalm numbering: Ps 118(119) or Ps 119(118)
+  // We want to extract the Hebrew (Modern) number for internal processing 
+  // because the router logic expects Hebrew and maps to Vulgate for DRB/VUL.
+  // In the Psalter, the Hebrew number is always >= the Vulgate number.
+  if (raw.toLowerCase().startsWith('ps')) {
+    const dualMatch = raw.match(/ps(?:alm)?\s*(\d+)\s*\(\s*(\d+)\s*\)/i);
+    if (dualMatch?.[1] && dualMatch?.[2]) {
+      const n1 = parseInt(dualMatch[1]);
+      const n2 = parseInt(dualMatch[2]);
+      const hebrewChapter = Math.max(n1, n2);
+      // Replace the dual-numbering part with a clean 'Psalms [HebrewNum]'
+      raw = raw.replace(/^ps(?:alm)?\s*\d+\s*\(\s*\d+\s*\)/i, `Psalms ${hebrewChapter}`);
+    } else {
+      // Fallback for single parentheses if only one number was matched
+      const singleMatch = raw.match(/ps(?:alm)?\s*\d+\s*\(\s*(\d+)\s*\)/i);
+      if (singleMatch?.[1]) {
+        raw = raw.replace(/^ps(?:alm)?\s*\d+\s*\(\s*\d+\s*\)/i, `Psalms ${singleMatch[1]}`);
+      }
+    }
+  }
 
   const abbrevMap: Record<string, string> = {
     "Genesis": "genesis", "Gen": "genesis", "Gn": "genesis", "Gn.": "genesis", "Gen.": "genesis",
