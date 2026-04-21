@@ -102,20 +102,37 @@ export const bibleRouter = createTRPCRouter({
       citation: z.string(),
     }))
     .query(async ({ ctx, input }) => {
-      const { bookSlug, chapter: startChapter, verses: rawVerses } = parseCitation(input.citation);
+      const { bookSlug, chapter: startChapter, verses: rawVerses, endChapter, endVerse } = parseCitation(input.citation);
       const translation = await ctx.db.translation.findUnique({ where: { slug: input.translationSlug } });
       const book = await ctx.db.book.findFirst({ where: { slug: { equals: bookSlug, mode: 'insensitive' } } });
       
       if (!translation || !book) return [];
 
-      // Liturgical citations often list verses like "17-28".
-      // If the verses array is just a list of numbers for a SINGLE chapter:
       let chapter = startChapter;
       if (book.slug.toLowerCase() === "psalms" && (input.translationSlug === "drb" || input.translationSlug === "vul")) {
         chapter = mapPsalmToVulgate(startChapter);
       }
 
-      // Handle the common case (single chapter)
+      // 1. HANDLE EXPLICIT MULTI-CHAPTER RANGE (e.g. 7:51-8:1)
+      if (endChapter && endVerse) {
+        const startVerseNum = rawVerses[0] || 1;
+        const matched = await ctx.db.verse.findMany({
+          where: {
+            translationId: translation.id,
+            bookId: book.id,
+            OR: [
+              { chapter: chapter, verse: { gte: startVerseNum } },
+              { chapter: { gt: chapter, lt: endChapter } },
+              { chapter: endChapter, verse: { lte: endVerse } }
+            ]
+          },
+          select: { globalOrder: true },
+          orderBy: [{ chapter: 'asc' }, { verse: 'asc' }]
+        });
+        return matched.map(v => v.globalOrder);
+      }
+
+      // 2. Handle the common case (single chapter)
       let matchedVerses = [];
       
       if (rawVerses.length > 0) {
@@ -199,7 +216,7 @@ export const bibleRouter = createTRPCRouter({
       const results = await Promise.all(
         input.readings.map(async (reading) => {
           try {
-            const { bookSlug, chapter: startChapter, verses: rawVerses } = parseCitation(reading.citation);
+            const { bookSlug, chapter: startChapter, verses: rawVerses, endChapter, endVerse } = parseCitation(reading.citation);
             const book = await ctx.db.book.findFirst({ where: { slug: { equals: bookSlug, mode: 'insensitive' } } });
             
             if (!book) return null;
@@ -211,7 +228,25 @@ export const bibleRouter = createTRPCRouter({
 
             let orders: number[] = [];
             
-            if (rawVerses.length > 0) {
+            // 1. HANDLE EXPLICIT MULTI-CHAPTER RANGE
+            if (endChapter && endVerse) {
+              const startVerseNum = rawVerses[0] || 1;
+              const matched = await ctx.db.verse.findMany({
+                where: {
+                  translationId: translation.id,
+                  bookId: book.id,
+                  OR: [
+                    { chapter: chapter, verse: { gte: startVerseNum } },
+                    { chapter: { gt: chapter, lt: endChapter } },
+                    { chapter: endChapter, verse: { lte: endVerse } }
+                  ]
+                },
+                select: { globalOrder: true },
+                orderBy: [{ chapter: 'asc' }, { verse: 'asc' }]
+              });
+              orders = matched.map(v => v.globalOrder);
+            } else if (rawVerses.length > 0) {
+              // 2. Handle the common case (single chapter)
               const matchedVerses = await ctx.db.verse.findMany({
                 where: { 
                   translationId: translation.id, 
@@ -226,7 +261,7 @@ export const bibleRouter = createTRPCRouter({
               if (matchedVerses.length === rawVerses.length) {
                 orders = matchedVerses.map(v => v.globalOrder);
               } else {
-                // COMPLEX FALLBACK for ranges spanning chapters
+                // COMPLEX FALLBACK for ranges spanning chapters (old logic as backup)
                 const firstVerseNum = Math.min(...rawVerses);
                 const rangeVerses = await ctx.db.verse.findMany({
                   where: {

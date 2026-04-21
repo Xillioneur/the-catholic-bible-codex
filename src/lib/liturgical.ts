@@ -72,11 +72,19 @@ export function getLiturgicalColorOklch(color: LiturgicalColor): {
   }
 }
 
+export interface ParsedCitation {
+  bookSlug: string;
+  chapter: number;
+  verses: number[];
+  endChapter?: number;
+  endVerse?: number;
+}
+
 /**
  * The most robust parser for Catholic citations.
  * Handles complex strings, multi-range verses, and varying abbreviations.
  */
-export function parseCitation(citation: string): { bookSlug: string; chapter: number; verses: number[] } {
+export function parseCitation(citation: string): ParsedCitation {
   // CLEAN: Remove only specific known prefixes if they exist
   // Strip 'cf.' or 'cf' and any leading/trailing whitespace
   let raw = citation.replace(/^(First Reading|Second Reading|Gospel|Psalm|Alleluia|Gospel Acclamation):\s+/i, '').trim();
@@ -207,6 +215,8 @@ export function parseCitation(citation: string): { bookSlug: string; chapter: nu
   // Extract both numbers. We'll decide which one to use later based on the translation.
   let chapter = 1;
   let versesPart = "";
+  let endChapter: number | undefined = undefined;
+  let endVerse: number | undefined = undefined;
 
   // Check for the "129(130)" pattern
   const complexPsalmMatch = rest.match(/^(\d+)\((\d+)\)/);
@@ -225,6 +235,17 @@ export function parseCitation(citation: string): { bookSlug: string; chapter: nu
       const chapterStr = cleanRest.slice(0, colonIndex);
       chapter = parseInt(chapterStr.replace(/\D/g, '')) || 1;
       versesPart = cleanRest.slice(colonIndex + 1);
+
+      // MULTI-CHAPTER DETECTION: e.g., "7:51-8:1a"
+      // Look for another colon in the verses part
+      const endChapterMatch = versesPart.match(/-(\d+):(\d+)/);
+      if (endChapterMatch?.[1] && endChapterMatch?.[2]) {
+        endChapter = parseInt(endChapterMatch[1]);
+        endVerse = parseInt(endChapterMatch[2]);
+        // Update versesPart to only include the first part for the 'verses' array
+        // but we'll handle the actual resolution in the router.
+        versesPart = versesPart.slice(0, endChapterMatch.index);
+      }
     } else {
       const spaceMatch = rest.match(/^(\d+)/);
       if (spaceMatch) {
@@ -264,6 +285,8 @@ export function parseCitation(citation: string): { bookSlug: string; chapter: nu
   return {
     bookSlug: slug,
     chapter,
-    verses: Array.from(new Set(verses)).sort((a, b) => a - b)
+    verses: Array.from(new Set(verses)).sort((a, b) => a - b),
+    endChapter,
+    endVerse
   };
 }
