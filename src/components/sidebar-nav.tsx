@@ -299,6 +299,13 @@ export function SidebarNav() {
     }
   });
 
+  const wipeCloudData = api.user.wipeCloudData.useMutation({
+    onSuccess: () => {
+      utils.user.getSyncData.invalidate();
+      toast.success("Sanctuary Cloud fully reset");
+    }
+  });
+
   // 6. HANDLERS
   const handleToggleDay = async (up: any, dayNumber: number, completed: boolean) => {
     if (!up || !up.planId) {
@@ -347,13 +354,6 @@ export function SidebarNav() {
   const handleUpdateNote = async (note: any, content: string) => {
     try {
       await db.notes.update(note.id as number, { content, updatedAt: Date.now() });
-      if (session) {
-        updateNoteCloud.mutate({
-          globalOrder: note.globalOrder,
-          translationSlug: note.translationSlug,
-          content: content
-        });
-      }
       setEditingNoteId(null);
       toast.success("Reflection updated");
     } catch (e) {
@@ -366,12 +366,6 @@ export function SidebarNav() {
     try {
       if (!note.id) return;
       await db.notes.delete(note.id as number);
-      if (session) {
-        deleteNoteCloud.mutate({ 
-          globalOrder: note.globalOrder, 
-          translationSlug: note.translationSlug 
-        });
-      }
       toast.success("Reflection deleted");
     } catch (e) {
       console.error("Delete error:", e);
@@ -383,12 +377,6 @@ export function SidebarNav() {
     try {
       if (!h.id) return;
       await db.highlights.delete(h.id as number);
-      if (session) {
-        deleteHighlightCloud.mutate({ 
-          globalOrder: h.globalOrder, 
-          translationSlug: h.translationSlug 
-        });
-      }
       toast.success("Highlight removed");
     } catch (e) {
       console.error("Highlight delete error:", e);
@@ -811,9 +799,6 @@ export function SidebarNav() {
                               e.stopPropagation(); 
                               if (!b.id) return; 
                               await db.bookmarks.delete(b.id); 
-                              if (session) { 
-                                deleteBookmarkCloud.mutate({ globalOrder: b.globalOrder!, translationSlug: b.translationSlug }); 
-                              } 
                               toast.success("Bookmark removed"); 
                             }} 
                             className="absolute right-3 top-1/2 -translate-y-1/2 h-8 w-8 flex items-center justify-center rounded-full text-zinc-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all md:opacity-0 md:group-hover:opacity-100"
@@ -1023,7 +1008,27 @@ export function SidebarNav() {
                     </div>
                   </div>
                 </div>
-                {session && ( <button onClick={() => void signOut()} className="w-full py-4 rounded-3xl bg-zinc-100 dark:bg-zinc-800/50 text-zinc-500 font-black text-[9px] uppercase tracking-[0.2em] hover:bg-red-50 hover:text-red-500 transition-all flex items-center justify-center gap-2"> <LogOut className="h-3.5 w-3.5" /> Sign Out </button> )}
+                {session && ( 
+                  <div className="space-y-2">
+                    <button 
+                      onClick={async () => {
+                        if (confirm("DANGER: This will permanently delete all your Highlights, Notes, and Bookmarks from the Cloud. Your local progress will also be cleared. Are you sure?")) {
+                          await wipeCloudData.mutateAsync();
+                          // Wipe local too
+                          await db.highlights.where("userId").equals(currentUserId).delete();
+                          await db.notes.where("userId").equals(currentUserId).delete();
+                          await db.bookmarks.where("userId").equals(currentUserId).delete();
+                          await db.verseStatuses.where("userId").equals(currentUserId).delete();
+                          toast.success("Divine slate cleaned locally and in the Cloud.");
+                        }
+                      }}
+                      className="w-full py-3 rounded-2xl bg-red-50 dark:bg-red-950/20 text-red-500 font-black text-[9px] uppercase tracking-[0.2em] hover:bg-red-100 transition-all flex items-center justify-center gap-2 border border-red-100 dark:border-red-900/30"
+                    >
+                      Reset Sanctuary Cloud
+                    </button>
+                    <button onClick={() => void signOut()} className="w-full py-4 rounded-3xl bg-zinc-100 dark:bg-zinc-800/50 text-zinc-500 font-black text-[9px] uppercase tracking-[0.2em] hover:bg-red-50 hover:text-red-500 transition-all flex items-center justify-center gap-2"> <LogOut className="h-3.5 w-3.5" /> Sign Out </button> 
+                  </div>
+                )}
               </div>
             )}
           </div>

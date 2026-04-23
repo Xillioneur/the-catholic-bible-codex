@@ -95,9 +95,6 @@ export function VerseOverlay({ verseId, bookId, bookName, bookSlug, chapter, ver
   const toggleBookmark = async () => {
     if (bookmark) {
       await db.bookmarks.delete(bookmark.id!);
-      if (session) {
-        deleteBookmarkCloud.mutate({ globalOrder, translationSlug });
-      }
       toast.success("Bookmark removed");
     } else {
       await db.bookmarks.add({ 
@@ -131,23 +128,12 @@ export function VerseOverlay({ verseId, bookId, bookName, bookSlug, chapter, ver
         readAt: Date.now()
       });
     }
-    
-    if (session) {
-      toggleVerseStatusCloud.mutate({
-        globalOrder,
-        translationSlug,
-        isRead: !isRead
-      });
-    }
     toast.success(!isRead ? "Marked as read" : "Marked as unread");
   };
 
   const toggleHighlight = async (color: string = "yellow") => {
     if (highlight) {
       await db.highlights.delete(highlight.id!);
-      if (session) {
-        deleteHighlightCloud.mutate({ globalOrder, translationSlug });
-      }
     } else {
       await db.highlights.add({ 
         userId: currentUserId,
@@ -163,9 +149,6 @@ export function VerseOverlay({ verseId, bookId, bookName, bookSlug, chapter, ver
   const saveNote = async () => {
     if (note) {
       await db.notes.update(note.id!, { content: noteContent, updatedAt: Date.now() });
-      if (session) {
-        updateNoteCloud.mutate({ globalOrder, translationSlug, content: noteContent });
-      }
       toast.success("Reflection updated");
     } else {
       await db.notes.add({ 
@@ -217,9 +200,6 @@ export function VerseOverlay({ verseId, bookId, bookName, bookSlug, chapter, ver
               <button 
                 onClick={async () => {
                   await db.notes.delete(note.id!);
-                  if (session) {
-                    deleteNoteCloud.mutate({ globalOrder, translationSlug });
-                  }
                   toast.success("Reflection deleted");
                   setIsEditingNote(false);
                 }} 

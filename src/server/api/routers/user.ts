@@ -36,8 +36,7 @@ export const userRouter = createTRPCRouter({
 
   syncHighlights: protectedProcedure
     .input(z.array(z.object({
-      globalOrder: z.number(),
-      translationSlug: z.string(),
+      verseId: z.string(),
       color: z.string(),
       createdAt: z.number(),
     })))
@@ -46,11 +45,8 @@ export const userRouter = createTRPCRouter({
       
       const verseIds: string[] = [];
       for (const h of input) {
-        const verse = await ctx.db.verse.findFirst({
-          where: { 
-            globalOrder: h.globalOrder,
-            translation: { slug: h.translationSlug }
-          }
+        const verse = await ctx.db.verse.findUnique({
+          where: { id: h.verseId }
         });
         
         if (!verse) continue;
@@ -76,8 +72,7 @@ export const userRouter = createTRPCRouter({
 
   syncNotes: protectedProcedure
     .input(z.array(z.object({
-      globalOrder: z.number(),
-      translationSlug: z.string(),
+      verseId: z.string(),
       content: z.string(),
       createdAt: z.number(),
       updatedAt: z.number(),
@@ -87,11 +82,8 @@ export const userRouter = createTRPCRouter({
       
       const verseIds: string[] = [];
       for (const n of input) {
-        const verse = await ctx.db.verse.findFirst({
-          where: { 
-            globalOrder: n.globalOrder,
-            translation: { slug: n.translationSlug }
-          }
+        const verse = await ctx.db.verse.findUnique({
+          where: { id: n.verseId }
         });
         
         if (!verse) continue;
@@ -123,8 +115,7 @@ export const userRouter = createTRPCRouter({
 
   syncBookmarks: protectedProcedure
     .input(z.array(z.object({
-      globalOrder: z.number(),
-      translationSlug: z.string(),
+      verseId: z.string(),
       createdAt: z.number(),
     })))
     .mutation(async ({ ctx, input }) => {
@@ -132,11 +123,8 @@ export const userRouter = createTRPCRouter({
       
       const verseIds: string[] = [];
       for (const b of input) {
-        const verse = await ctx.db.verse.findFirst({
-          where: { 
-            globalOrder: b.globalOrder,
-            translation: { slug: b.translationSlug }
-          }
+        const verse = await ctx.db.verse.findUnique({
+          where: { id: b.verseId }
         });
         
         if (!verse) continue;
@@ -209,8 +197,7 @@ export const userRouter = createTRPCRouter({
 
   syncVerseStatuses: protectedProcedure
     .input(z.array(z.object({
-      globalOrder: z.number(),
-      translationSlug: z.string(),
+      verseId: z.string(),
       isRead: z.boolean(),
       readAt: z.number(),
     })))
@@ -219,11 +206,8 @@ export const userRouter = createTRPCRouter({
       
       const verseIds: string[] = [];
       for (const s of input) {
-        const verse = await ctx.db.verse.findFirst({
-          where: { 
-            globalOrder: s.globalOrder,
-            translation: { slug: s.translationSlug }
-          }
+        const verse = await ctx.db.verse.findUnique({
+          where: { id: s.verseId }
         });
         
         if (!verse) continue;
@@ -249,17 +233,13 @@ export const userRouter = createTRPCRouter({
 
   toggleVerseStatus: protectedProcedure
     .input(z.object({
-      globalOrder: z.number(),
-      translationSlug: z.string(),
+      verseId: z.string(),
       isRead: z.boolean(),
     }))
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
-      const verse = await ctx.db.verse.findFirst({
-        where: { 
-          globalOrder: input.globalOrder,
-          translation: { slug: input.translationSlug }
-        }
+      const verse = await ctx.db.verse.findUnique({
+        where: { id: input.verseId }
       });
       
       if (!verse) return { success: false };
@@ -283,89 +263,63 @@ export const userRouter = createTRPCRouter({
 
   deleteNote: protectedProcedure
     .input(z.object({
-      globalOrder: z.number(),
-      translationSlug: z.string(),
+      verseId: z.string(),
     }))
     .mutation(async ({ ctx, input }) => {
-      const verse = await ctx.db.verse.findFirst({
-        where: { 
-          globalOrder: input.globalOrder,
-          translation: { slug: input.translationSlug }
-        }
-      });
-      if (!verse) return { success: false };
       await ctx.db.note.deleteMany({
-        where: { userId: ctx.session.user.id, verseId: verse.id }
+        where: { userId: ctx.session.user.id, verseId: input.verseId }
       });
       return { success: true };
     }),
 
   deleteHighlight: protectedProcedure
     .input(z.object({
-      globalOrder: z.number(),
-      translationSlug: z.string(),
+      verseId: z.string(),
     }))
     .mutation(async ({ ctx, input }) => {
-      const verse = await ctx.db.verse.findFirst({
-        where: { 
-          globalOrder: input.globalOrder,
-          translation: { slug: input.translationSlug }
-        }
-      });
-      if (!verse) return { success: false };
       await ctx.db.highlight.deleteMany({
-        where: { userId: ctx.session.user.id, verseId: verse.id }
+        where: { userId: ctx.session.user.id, verseId: input.verseId }
       });
       return { success: true };
     }),
 
   deleteBookmark: protectedProcedure
     .input(z.object({
-      globalOrder: z.number(),
-      translationSlug: z.string(),
+      verseId: z.string(),
     }))
     .mutation(async ({ ctx, input }) => {
-      const verse = await ctx.db.verse.findFirst({
-        where: { 
-          globalOrder: input.globalOrder,
-          translation: { slug: input.translationSlug }
-        }
-      });
-      if (!verse) return { success: false };
       await ctx.db.bookmark.deleteMany({
-        where: { userId: ctx.session.user.id, verseId: verse.id }
+        where: { userId: ctx.session.user.id, verseId: input.verseId }
       });
       return { success: true };
     }),
 
   updateNote: protectedProcedure
     .input(z.object({
-      globalOrder: z.number(),
-      translationSlug: z.string(),
+      verseId: z.string(),
       content: z.string(),
     }))
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
-      const verse = await ctx.db.verse.findFirst({
-        where: { 
-          globalOrder: input.globalOrder,
-          translation: { slug: input.translationSlug }
-        }
-      });
       
-      if (!verse) {
-        throw new TRPCError({
-          code: "NOT_FOUND",
-          message: "Verse not found",
-        });
-      }
-
       return ctx.db.note.update({
-        where: { userId_verseId: { userId, verseId: verse.id } },
+        where: { userId_verseId: { userId, verseId: input.verseId } },
         data: {
           content: input.content,
           updatedAt: new Date(),
         },
       });
+    }),
+
+  wipeCloudData: protectedProcedure
+    .mutation(async ({ ctx }) => {
+      const userId = ctx.session.user.id;
+      await Promise.all([
+        ctx.db.highlight.deleteMany({ where: { userId } }),
+        ctx.db.note.deleteMany({ where: { userId } }),
+        ctx.db.bookmark.deleteMany({ where: { userId } }),
+        ctx.db.verseStatus.deleteMany({ where: { userId } }),
+      ]);
+      return { success: true };
     }),
 });
