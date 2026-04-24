@@ -428,5 +428,51 @@ export function ProgressSyncer() {
     return () => clearTimeout(timer);
   }, [localVerseStatuses, session]);
 
+  // Visibility Change Sync: Immediate sync when leaving
+  useEffect(() => {
+    if (!session || !hasInitialSync.current) return;
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        console.log("[SYNC] Page hidden, triggering immediate sync...");
+        
+        // Highlights
+        if (localHighlights) {
+          const hPayload = localHighlights
+            .filter(h => h.verseId && h.userId === session.user.id)
+            .map(h => ({ verseId: h.verseId, color: h.color, createdAt: h.createdAt }));
+          if (hPayload.length > 0) syncHighlights.mutate(hPayload);
+        }
+
+        // Notes
+        if (localNotes) {
+          const nPayload = localNotes
+            .filter(n => n.verseId && n.userId === session.user.id)
+            .map(n => ({ verseId: n.verseId, content: n.content, createdAt: n.createdAt, updatedAt: n.updatedAt }));
+          if (nPayload.length > 0) syncNotes.mutate(nPayload);
+        }
+
+        // Bookmarks
+        if (localBookmarks) {
+          const bPayload = localBookmarks
+            .filter(b => b.verseId && b.userId === session.user.id)
+            .map(b => ({ verseId: b.verseId, createdAt: b.createdAt }));
+          if (bPayload.length > 0) syncBookmarks.mutate(bPayload);
+        }
+
+        // Verse Statuses
+        if (localVerseStatuses) {
+          const sPayload = localVerseStatuses
+            .filter(s => s.isRead && s.userId === session.user.id && s.verseId)
+            .map(s => ({ verseId: s.verseId, isRead: true, readAt: s.readAt }));
+          if (sPayload.length > 0) syncVerseStatuses.mutate(sPayload);
+        }
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, [localHighlights, localNotes, localBookmarks, localVerseStatuses, session]);
+
   return null;
 }

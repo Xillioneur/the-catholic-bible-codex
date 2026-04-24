@@ -10,6 +10,7 @@ import { ThemeProvider } from "~/components/theme-provider";
 import { Toaster } from "~/components/ui/sonner";
 import { Analytics } from "@vercel/analytics/next";
 import { ProgressSyncer } from "./_components/progress-syncer";
+import { TooltipProvider } from "~/components/ui/tooltip";
 
 export const metadata: Metadata = {
   title: "The Catholic Bible Codex – Read, Study, and Pray with the Full Catholic Bible",
@@ -66,10 +67,12 @@ export default function RootLayout({
               disableTransitionOnChange
             >
               <LiturgicalProvider>
-                {children}
-                <ProgressSyncer />
-                <Toaster position="top-center" richColors />
-                <Analytics />
+                <TooltipProvider delayDuration={300}>
+                  {children}
+                  <ProgressSyncer />
+                  <Toaster position="top-center" richColors />
+                  <Analytics />
+                </TooltipProvider>
               </LiturgicalProvider>
             </ThemeProvider>
           </TRPCReactProvider>

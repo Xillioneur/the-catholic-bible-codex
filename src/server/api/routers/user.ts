@@ -261,13 +261,27 @@ export const userRouter = createTRPCRouter({
       return { success: true };
     }),
 
-  deleteNote: protectedProcedure
+  deleteBookmark: protectedProcedure
     .input(z.object({
       verseId: z.string(),
     }))
     .mutation(async ({ ctx, input }) => {
-      await ctx.db.note.deleteMany({
+      await ctx.db.bookmark.deleteMany({
         where: { userId: ctx.session.user.id, verseId: input.verseId }
+      });
+      return { success: true };
+    }),
+
+  saveBookmark: protectedProcedure
+    .input(z.object({
+      verseId: z.string(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+      await ctx.db.bookmark.upsert({
+        where: { userId_verseId: { userId, verseId: input.verseId } },
+        update: { createdAt: new Date() },
+        create: { userId, verseId: input.verseId }
       });
       return { success: true };
     }),
@@ -283,12 +297,27 @@ export const userRouter = createTRPCRouter({
       return { success: true };
     }),
 
-  deleteBookmark: protectedProcedure
+  saveHighlight: protectedProcedure
+    .input(z.object({
+      verseId: z.string(),
+      color: z.string(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+      await ctx.db.highlight.upsert({
+        where: { userId_verseId: { userId, verseId: input.verseId } },
+        update: { color: input.color, createdAt: new Date() },
+        create: { userId, verseId: input.verseId, color: input.color }
+      });
+      return { success: true };
+    }),
+
+  deleteNote: protectedProcedure
     .input(z.object({
       verseId: z.string(),
     }))
     .mutation(async ({ ctx, input }) => {
-      await ctx.db.bookmark.deleteMany({
+      await ctx.db.note.deleteMany({
         where: { userId: ctx.session.user.id, verseId: input.verseId }
       });
       return { success: true };
@@ -307,6 +336,28 @@ export const userRouter = createTRPCRouter({
         data: {
           content: input.content,
           updatedAt: new Date(),
+        },
+      });
+    }),
+
+  saveNote: protectedProcedure
+    .input(z.object({
+      verseId: z.string(),
+      content: z.string(),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+      
+      return ctx.db.note.upsert({
+        where: { userId_verseId: { userId, verseId: input.verseId } },
+        update: {
+          content: input.content,
+          updatedAt: new Date(),
+        },
+        create: {
+          userId,
+          verseId: input.verseId,
+          content: input.content,
         },
       });
     }),

@@ -354,6 +354,12 @@ export function SidebarNav() {
   const handleUpdateNote = async (note: any, content: string) => {
     try {
       await db.notes.update(note.id as number, { content, updatedAt: Date.now() });
+      if (session) {
+        updateNoteCloud.mutate({
+          verseId: note.verseId,
+          content: content
+        });
+      }
       setEditingNoteId(null);
       toast.success("Reflection updated");
     } catch (e) {
@@ -366,6 +372,9 @@ export function SidebarNav() {
     try {
       if (!note.id) return;
       await db.notes.delete(note.id as number);
+      if (session) {
+        deleteNoteCloud.mutate({ verseId: note.verseId });
+      }
       toast.success("Reflection deleted");
     } catch (e) {
       console.error("Delete error:", e);
@@ -377,6 +386,9 @@ export function SidebarNav() {
     try {
       if (!h.id) return;
       await db.highlights.delete(h.id as number);
+      if (session) {
+        deleteHighlightCloud.mutate({ verseId: h.verseId });
+      }
       toast.success("Highlight removed");
     } catch (e) {
       console.error("Highlight delete error:", e);
@@ -799,6 +811,9 @@ export function SidebarNav() {
                               e.stopPropagation(); 
                               if (!b.id) return; 
                               await db.bookmarks.delete(b.id); 
+                              if (session) {
+                                deleteBookmarkCloud.mutate({ verseId: b.verseId });
+                              }
                               toast.success("Bookmark removed"); 
                             }} 
                             className="absolute right-3 top-1/2 -translate-y-1/2 h-8 w-8 flex items-center justify-center rounded-full text-zinc-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all md:opacity-0 md:group-hover:opacity-100"

@@ -24,6 +24,7 @@ import { api } from "~/trpc/react";
 import { useVoiceover } from "~/hooks/use-voiceover";
 import { useSession, signIn } from "next-auth/react";
 import { toast } from "sonner";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
 
 interface VerseOverlayProps {
   verseId: string;
@@ -56,6 +57,13 @@ export function VerseOverlay({ verseId, bookId, bookName, bookSlug, chapter, ver
     }
   });
 
+  const saveNoteCloud = api.user.saveNote.useMutation({
+    onSuccess: () => {
+      utils.user.getSyncData.invalidate();
+      utils.user.getJournal.invalidate();
+    }
+  });
+
   const updateNoteCloud = api.user.updateNote.useMutation({
     onSuccess: () => {
       utils.user.getSyncData.invalidate();
@@ -70,7 +78,20 @@ export function VerseOverlay({ verseId, bookId, bookName, bookSlug, chapter, ver
     }
   });
 
+  const saveHighlightCloud = api.user.saveHighlight.useMutation({
+    onSuccess: () => {
+      utils.user.getSyncData.invalidate();
+      utils.user.getJournal.invalidate();
+    }
+  });
+
   const deleteBookmarkCloud = api.user.deleteBookmark.useMutation({
+    onSuccess: () => {
+      utils.user.getSyncData.invalidate();
+    }
+  });
+
+  const saveBookmarkCloud = api.user.saveBookmark.useMutation({
     onSuccess: () => {
       utils.user.getSyncData.invalidate();
     }
@@ -93,76 +114,121 @@ export function VerseOverlay({ verseId, bookId, bookName, bookSlug, chapter, ver
   );
 
   const toggleBookmark = async () => {
-    if (bookmark) {
-      await db.bookmarks.delete(bookmark.id!);
-      toast.success("Bookmark removed");
-    } else {
-      await db.bookmarks.add({ 
-        userId: currentUserId,
-        verseId, 
-        bookId, 
-        chapter, 
-        verse, 
-        globalOrder, 
-        translationSlug, 
-        createdAt: Date.now() 
-      });
-      toast.success("Verse bookmarked");
+    try {
+      if (bookmark) {
+        await db.bookmarks.delete(bookmark.id!);
+        if (session) {
+          deleteBookmarkCloud.mutate({ verseId });
+        }
+        toast.success("Bookmark removed");
+      } else {
+        await db.bookmarks.add({ 
+          userId: currentUserId,
+          verseId, 
+          bookId, 
+          chapter, 
+          verse, 
+          globalOrder, 
+          translationSlug, 
+          createdAt: Date.now() 
+        });
+        if (session) {
+          saveBookmarkCloud.mutate({ verseId });
+        }
+        toast.success("Verse bookmarked");
+      }
+    } catch (error) {
+      console.error("Bookmark toggle error:", error);
+      toast.error("Failed to update bookmark");
     }
   };
 
   const toggleRead = async () => {
-    const isRead = !!verseStatus?.isRead;
-    if (verseStatus) {
-      await db.verseStatuses.update(verseStatus.id!, { 
-        isRead: !isRead, 
-        readAt: Date.now() 
-      });
-    } else {
-      await db.verseStatuses.add({
-        userId: currentUserId,
-        verseId,
-        globalOrder,
-        translationSlug,
-        isRead: true,
-        readAt: Date.now()
-      });
+    try {
+      const isRead = !!verseStatus?.isRead;
+      if (verseStatus) {
+        await db.verseStatuses.update(verseStatus.id!, { 
+          isRead: !isRead, 
+          readAt: Date.now() 
+        });
+      } else {
+        await db.verseStatuses.add({
+          userId: currentUserId,
+          verseId,
+          globalOrder,
+          translationSlug,
+          isRead: true,
+          readAt: Date.now()
+        });
+      }
+      
+      if (session) {
+        toggleVerseStatusCloud.mutate({
+          verseId,
+          isRead: !isRead
+        });
+      }
+      toast.success(!isRead ? "Marked as read" : "Marked as unread");
+    } catch (error) {
+      console.error("Read status toggle error:", error);
+      toast.error("Failed to update read status");
     }
-    toast.success(!isRead ? "Marked as read" : "Marked as unread");
   };
 
   const toggleHighlight = async (color: string = "yellow") => {
-    if (highlight) {
-      await db.highlights.delete(highlight.id!);
-    } else {
-      await db.highlights.add({ 
-        userId: currentUserId,
-        verseId, 
-        globalOrder, 
-        translationSlug, 
-        color, 
-        createdAt: Date.now() 
-      });
+    try {
+      if (highlight) {
+        await db.highlights.delete(highlight.id!);
+        if (session) {
+          deleteHighlightCloud.mutate({ verseId });
+        }
+      } else {
+        await db.highlights.add({ 
+          userId: currentUserId,
+          verseId, 
+          globalOrder, 
+          translationSlug, 
+          color, 
+          createdAt: Date.now() 
+        });
+        if (session) {
+          saveHighlightCloud.mutate({ verseId, color });
+        }
+      }
+    } catch (error) {
+      console.error("Highlight toggle error:", error);
+      toast.error("Failed to update highlight");
     }
   };
 
   const saveNote = async () => {
-    if (note) {
-      await db.notes.update(note.id!, { content: noteContent, updatedAt: Date.now() });
-      toast.success("Reflection updated");
-    } else {
-      await db.notes.add({ 
-        userId: currentUserId,
-        verseId, 
-        globalOrder, 
-        translationSlug, 
-        content: noteContent, 
-        createdAt: Date.now(), 
-        updatedAt: Date.now() 
-      });
-      toast.success("Reflection saved");
+    try {
+      if (note) {
+        await db.notes.update(note.id!, { content: noteContent, updatedAt: Date.now() });
+        if (session) {
+          updateNoteCloud.mutate({ verseId, content: noteContent });
+        }
+        toast.success("Reflection updated");
+      } else {
+        await db.notes.add({ 
+          userId: currentUserId,
+          verseId, 
+          globalOrder, 
+          translationSlug, 
+          content: noteContent, 
+          createdAt: Date.now(), 
+          updatedAt: Date.now() 
+        });
+        if (session) {
+          saveNoteCloud.mutate({ verseId, content: noteContent });
+        }
+        toast.success("Reflection saved");
+      }
+      setIsEditingNote(false);
+    } catch (error) {
+      console.error("Note save error:", error);
+      toast.error("Failed to save reflection");
     }
-    setIsEditingNote(false);
   };
 
   // Minimalist Markdown-to-HTML for performance (Divine Simplicity)
@@ -177,7 +243,6 @@ export function VerseOverlay({ verseId, bookId, bookName, bookSlug, chapter, ver
 
   return (
     <div className="fixed inset-x-0 bottom-8 z-[150] flex flex-col items-center px-4 pointer-events-none">
-      
       {/* 1. THE NOTE EDITOR (FLOATS ABOVE PILL) */}
       {isEditingNote && (
         <div className="mb-4 w-full max-w-sm glass rounded-3xl p-4 shadow-2xl animate-in slide-in-from-bottom-4 duration-300 pointer-events-auto">
@@ -195,11 +260,21 @@ export function VerseOverlay({ verseId, bookId, bookName, bookSlug, chapter, ver
             className="w-full h-32 bg-transparent border-none outline-none text-sm font-serif italic text-zinc-800 dark:text-zinc-200 placeholder:text-zinc-400 resize-none"
           />
           <div className="flex gap-2 mt-2">
-            <button onClick={saveNote} className="flex-1 bg-primary text-white py-2 rounded-xl text-[9px] font-black uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all">Save Reflection</button>
+            <button 
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); saveNote(); }} 
+              className="flex-1 bg-primary text-white py-2 rounded-xl text-[9px] font-black uppercase tracking-widest hover:scale-[1.02] active:scale-95 transition-all"
+            >
+              Save Reflection
+            </button>
             {note && (
               <button 
-                onClick={async () => {
+                onClick={async (e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
                   await db.notes.delete(note.id!);
+                  if (session) {
+                    deleteNoteCloud.mutate({ verseId });
+                  }
                   toast.success("Reflection deleted");
                   setIsEditingNote(false);
                 }} 
@@ -208,7 +283,12 @@ export function VerseOverlay({ verseId, bookId, bookName, bookSlug, chapter, ver
                 <Trash2 className="h-3.5 w-3.5" />
               </button>
             )}
-            <button onClick={() => setIsEditingNote(false)} className="px-4 py-2 bg-zinc-100 dark:bg-zinc-800 rounded-xl text-[9px] font-black uppercase tracking-widest text-zinc-500">Cancel</button>
+            <button 
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setIsEditingNote(false); }} 
+              className="px-4 py-2 bg-zinc-100 dark:bg-zinc-800 rounded-xl text-[9px] font-black uppercase tracking-widest text-zinc-500"
+            >
+              Cancel
+            </button>
           </div>
         </div>
       )}
@@ -273,7 +353,7 @@ export function VerseOverlay({ verseId, bookId, bookName, bookSlug, chapter, ver
       )}
 
       {/* 5. THE MAIN ACTION PILL */}
-      <div className="glass rounded-full px-2 py-1.5 shadow-2xl shadow-primary/20 flex items-center gap-1 border border-white/40 dark:border-zinc-800/40 animate-in slide-in-from-bottom-8 duration-500 pointer-events-auto">
+      <div className="glass rounded-full px-2 py-1.5 shadow-2xl shadow-primary/20 flex items-center gap-1 border border-white/40 dark:border-zinc-800/40 animate-in slide-in-from-bottom-8 duration-500 pointer-events-auto relative z-50">
         
         {/* CITATION LABEL */}
         <div className="px-4 py-1.5 mr-1 border-r border-zinc-200 dark:border-zinc-800">
@@ -283,76 +363,113 @@ export function VerseOverlay({ verseId, bookId, bookName, bookSlug, chapter, ver
         </div>
 
         {/* ACTIONS */}
-        <button 
-          onClick={toggleRead}
-          className={cn(
-            "p-2.5 rounded-full transition-all active:scale-90 relative", 
-            verseStatus?.isRead ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20" : "hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400"
-          )}
-        >
-          <CheckCircle2 className="h-4 w-4" />
-        </button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button 
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleRead(); }}
+              className={cn(
+                "p-2.5 rounded-full transition-all active:scale-90 relative", 
+                verseStatus?.isRead ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/20" : "hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400"
+              )}
+            >
+              <CheckCircle2 className="h-4 w-4" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="top" sideOffset={12}>Mark as Read</TooltipContent>
+        </Tooltip>
 
-        <button 
-          onClick={() => toggleHighlight()}
-          className={cn(
-            "p-2.5 rounded-full transition-all active:scale-90 relative", 
-            highlight ? "bg-yellow-400 text-white shadow-lg shadow-yellow-400/20" : "hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400"
-          )}
-        >
-          <Highlighter className="h-4 w-4" />
-        </button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button 
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleHighlight(); }}
+              className={cn(
+                "p-2.5 rounded-full transition-all active:scale-90 relative", 
+                highlight ? "bg-yellow-400 text-white shadow-lg shadow-yellow-400/20" : "hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400"
+              )}
+            >
+              <Highlighter className="h-4 w-4" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="top" sideOffset={12}>Illuminate</TooltipContent>
+        </Tooltip>
 
-        <button 
-          onClick={() => { 
-            setIsEditingNote(true); 
-            setNoteContent(note?.content ?? ""); 
-            setShowExtras(false); 
-            setShowCompare(false); 
-          }}
-          className={cn(
-            "p-2.5 rounded-full transition-all active:scale-90 relative", 
-            note ? "text-primary bg-primary/10" : "hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400"
-          )}
-        >
-          <MessageSquare className="h-4 w-4" />
-        </button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button 
+              onClick={(e) => { 
+                e.preventDefault(); 
+                e.stopPropagation();
+                setIsEditingNote(true); 
+                setNoteContent(note?.content ?? ""); 
+                setShowExtras(false); 
+                setShowCompare(false); 
+              }}
+              className={cn(
+                "p-2.5 rounded-full transition-all active:scale-90 relative", 
+                note ? "text-primary bg-primary/10" : "hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400"
+              )}
+            >
+              <MessageSquare className="h-4 w-4" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="top" sideOffset={12}>Reflect</TooltipContent>
+        </Tooltip>
 
-        <button 
-          onClick={() => { setShowCompare(!showCompare); setIsEditingNote(false); setShowExtras(false); }}
-          className={cn("p-2.5 rounded-full transition-all active:scale-90", showCompare ? "bg-primary text-white" : "hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400")}
-        >
-          <BookOpen className="h-4 w-4" />
-        </button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button 
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowCompare(!showCompare); setIsEditingNote(false); setShowExtras(false); }}
+              className={cn("p-2.5 rounded-full transition-all active:scale-90", showCompare ? "bg-primary text-white" : "hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400")}
+            >
+              <BookOpen className="h-4 w-4" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="top" sideOffset={12}>Compare</TooltipContent>
+        </Tooltip>
 
-        <button 
-          onClick={toggleBookmark}
-          className={cn(
-            "p-2.5 rounded-full transition-all active:scale-90 relative", 
-            bookmark ? "text-primary bg-primary/10" : "hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400"
-          )}
-        >
-          <BookmarkIcon className={cn("h-4 w-4", bookmark && "fill-primary")} />
-        </button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button 
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleBookmark(); }}
+              className={cn(
+                "p-2.5 rounded-full transition-all active:scale-90 relative", 
+                bookmark ? "text-primary bg-primary/10" : "hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400"
+              )}
+            >
+              <BookmarkIcon className={cn("h-4 w-4", bookmark && "fill-primary")} />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="top" sideOffset={12}>Bookmark</TooltipContent>
+        </Tooltip>
 
-        <button 
-          onClick={() => { jumpToOrder(globalOrder); onClose(); }}
-          className="p-2.5 rounded-full hover:bg-primary/10 text-primary transition-all active:scale-90"
-        >
-          <Volume2 className="h-4 w-4" />
-        </button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button 
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); jumpToOrder(globalOrder); onClose(); }}
+              className="p-2.5 rounded-full hover:bg-primary/10 text-primary transition-all active:scale-90"
+            >
+              <Volume2 className="h-4 w-4" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="top" sideOffset={12}>Voiceover</TooltipContent>
+        </Tooltip>
 
         <div className="w-px h-4 bg-zinc-200 dark:bg-zinc-800 mx-1" />
 
-        <button 
-          onClick={() => { setShowExtras(!showExtras); setIsEditingNote(false); setShowCompare(false); }}
-          className={cn("p-2.5 rounded-full transition-all active:scale-90", showExtras ? "bg-primary text-white" : "hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400")}
-        >
-          <MoreHorizontal className="h-4 w-4" />
-        </button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button 
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowExtras(!showExtras); setIsEditingNote(false); setShowCompare(false); }}
+              className={cn("p-2.5 rounded-full transition-all active:scale-90", showExtras ? "bg-primary text-white" : "hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400")}
+            >
+              <MoreHorizontal className="h-4 w-4" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="top" sideOffset={12}>Resources</TooltipContent>
+        </Tooltip>
 
         <button 
-          onClick={onClose}
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); onClose(); }}
           className="p-2.5 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-400 transition-all ml-1"
         >
           <X className="h-4 w-4" />
