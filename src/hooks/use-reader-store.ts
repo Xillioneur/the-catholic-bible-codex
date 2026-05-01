@@ -132,6 +132,8 @@ interface ReaderState {
   setIsVoiceoverFollowEnabled: (enabled: boolean) => void;
   isVoiceoverReadTitlesEnabled: boolean;
   setIsVoiceoverReadTitlesEnabled: (enabled: boolean) => void;
+  isVoiceoverTitleSkipActive: boolean;
+  setIsVoiceoverTitleSkipActive: (skip: boolean) => void;
   voiceoverVoiceURI: string | null;
   setVoiceoverVoiceURI: (uri: string | null) => void;
   voiceoverPlaylist: number[] | null;
@@ -276,6 +278,8 @@ export const useReaderStore = create<ReaderState>()(
       setIsVoiceoverFollowEnabled: (enabled) => set({ isVoiceoverFollowEnabled: enabled }),
       isVoiceoverReadTitlesEnabled: true,
       setIsVoiceoverReadTitlesEnabled: (enabled) => set({ isVoiceoverReadTitlesEnabled: enabled }),
+      isVoiceoverTitleSkipActive: false,
+      setIsVoiceoverTitleSkipActive: (skip) => set({ isVoiceoverTitleSkipActive: skip }),
       voiceoverVoiceURI: null,
       setVoiceoverVoiceURI: (uri) => set({ voiceoverVoiceURI: uri }),
       voiceoverPlaylist: null,

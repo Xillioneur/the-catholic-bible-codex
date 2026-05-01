@@ -27,6 +27,8 @@ export function VoiceoverManager() {
   
   const setVerseProgress = useReaderStore((state) => state.setVoiceoverProgress);
   const isReadTitlesEnabled = useReaderStore((state) => state.isVoiceoverReadTitlesEnabled);
+  const isTitleSkipActive = useReaderStore((state) => state.isVoiceoverTitleSkipActive);
+  const setIsTitleSkipActive = useReaderStore((state) => state.setIsVoiceoverTitleSkipActive);
   const liturgicalReadings = useReaderStore((state) => state.liturgicalReadings);
   const selectedVoiceURI = useReaderStore((state) => state.voiceoverVoiceURI);
 
@@ -384,7 +386,13 @@ export function VoiceoverManager() {
       let textToSpeak = "";
       let isTitle = false;
 
-      if (isReadTitlesEnabled && !forceTitle && !isSpeakingTitleRef.current) {
+      // Handle Title Skipping for Tap-to-Speak
+      const shouldSkipTitles = isTitleSkipActive;
+      if (shouldSkipTitles) {
+        setIsTitleSkipActive(false); // Reset immediately for next verse
+      }
+
+      if (isReadTitlesEnabled && !forceTitle && !isSpeakingTitleRef.current && !shouldSkipTitles) {
         const reading = liturgicalReadings.find(r => r.orders[0] === order);
         if (reading) {
           textToSpeak = cleanText(`${reading.type}. ${reading.citation}.`);

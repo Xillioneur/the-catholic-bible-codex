@@ -98,7 +98,7 @@ export function BibleReader() {
                               // If VoiceOver is already active, we enhance the experience by 
                               // allowing the user to select the "current" verse just by tapping.
                               if (isVoiceoverActive) {
-                                jumpToOrder(v.globalOrder);
+                                jumpToOrder(v.globalOrder, undefined, true);
                               } else {
                                 setActiveVerse(v);
                               }
