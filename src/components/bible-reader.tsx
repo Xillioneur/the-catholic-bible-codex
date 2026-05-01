@@ -11,6 +11,7 @@ import { LoadingScreen } from "./bible/loading-screen";
 import { TranslationSwitcher } from "./translation-switcher";
 import { cn } from "~/lib/utils";
 import { useSession } from "next-auth/react";
+import { useVoiceover } from "~/hooks/use-voiceover";
 
 export function BibleReader() {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -19,6 +20,8 @@ export function BibleReader() {
 
   const { data: session } = useSession();
   const currentUserId = session?.user?.id ?? "guest";
+
+  const { jumpToOrder, isActive: isVoiceoverActive } = useVoiceover();
 
   const bookmarks = useLiveQuery(() => db.bookmarks.where("userId").equals(currentUserId).toArray(), [currentUserId]) ?? [];
   const highlights = useLiveQuery(() => db.highlights.where("userId").equals(currentUserId).toArray(), [currentUserId]) ?? [];
@@ -90,7 +93,16 @@ export function BibleReader() {
                             isLiturgical={liturgicalOrders.has(v.globalOrder)}
                             isSearchTarget={searchHighlight?.targetOrder === v.globalOrder}
                             isVoiceoverActive={voiceoverCurrentOrder === v.globalOrder}
-                            onClick={() => setActiveVerse(v)}
+                            onClick={() => {
+                              // [THE SACRED ECHO: TAP TO SPEAK]
+                              // If VoiceOver is already active, we enhance the experience by 
+                              // allowing the user to select the "current" verse just by tapping.
+                              if (isVoiceoverActive) {
+                                jumpToOrder(v.globalOrder);
+                              } else {
+                                setActiveVerse(v);
+                              }
+                            }}
                           />
                         </div>
                       );
