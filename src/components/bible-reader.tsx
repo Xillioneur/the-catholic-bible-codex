@@ -98,6 +98,9 @@ export function BibleReader() {
                               // If VoiceOver is already active, we enhance the experience by 
                               // allowing the user to select the "current" verse just by tapping.
                               if (isVoiceoverActive) {
+                                // iOS Chrome/Safari Hack: Trigger a real audio anchor within the user gesture
+                                // to unlock background playback and MediaSession controls.
+                                window.dispatchEvent(new CustomEvent("voiceover-start-anchor"));
                                 jumpToOrder(v.globalOrder, undefined, true);
                               } else {
                                 setActiveVerse(v);
