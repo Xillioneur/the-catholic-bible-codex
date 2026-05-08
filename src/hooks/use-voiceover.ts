@@ -49,6 +49,9 @@ export function useVoiceover() {
 
     setIsPlaying(false);
     unlockAudio();
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("voiceover-start-anchor"));
+    }
     
     if (newPlaylist) setPlaylist(newPlaylist);
     setQueue(null);
@@ -71,6 +74,9 @@ export function useVoiceover() {
   const jumpToText = useCallback((text: string) => {
     setIsPlaying(false);
     unlockAudio();
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("voiceover-start-anchor"));
+    }
     
     setCurrentOrder(null);
     setQueue(null);
@@ -85,6 +91,9 @@ export function useVoiceover() {
   const jumpToQueue = useCallback((newQueue: VoiceoverQueueItem[]) => {
     setIsPlaying(false);
     unlockAudio();
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("voiceover-start-anchor"));
+    }
     
     setPlaylist(null);
     setQueue(newQueue);
@@ -108,6 +117,9 @@ export function useVoiceover() {
     if (isPlaying) {
       setIsPlaying(false);
     } else {
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("voiceover-start-anchor"));
+      }
       setIsActive(true);
       setIsMinimized(false);
       setIsPlaying(true);
