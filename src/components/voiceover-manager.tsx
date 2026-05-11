@@ -104,58 +104,57 @@ export function VoiceoverManager() {
 
   const generateSacredAudio = useCallback((type: "ambience" | "chime" | "anchor") => {
     const sampleRate = 44100;
-    const duration = type === "ambience" ? 10.0 : type === "chime" ? 2.5 : 0.1;
+    const duration = type === "ambience" ? 10.0 : type === "chime" ? 0.8 : 0.1;
     const numSamples = Math.floor(sampleRate * duration);
     const buffer = new Int16Array(numSamples);
 
     if (type === "ambience") {
-      // [THE SACRED DRONE: 10-Fold Improvement]
-      // Layering multiple modulated oscillators to create a "Living Sanctuary"
+      // [THE ORGANIC SANCTUARY: Soft, non-fatiguing warmth]
+      let lastOut = 0;
       for (let i = 0; i < numSamples; i++) {
         const t = i / sampleRate;
-        let sample = 0;
-
-        // Base Drones (Rich Low End)
-        sample += Math.sin(2 * Math.PI * 40 * t + Math.sin(2 * Math.PI * 0.1 * t) * 0.5) * 0.25;
-        sample += Math.sin(2 * Math.PI * 61 * t + Math.cos(2 * Math.PI * 0.07 * t) * 0.4) * 0.2;
-        sample += Math.sin(2 * Math.PI * 82 * t + Math.sin(2 * Math.PI * 0.13 * t) * 0.3) * 0.15;
-
-        // Harmonic Layers (The "Wind" Feel)
-        sample += Math.sin(2 * Math.PI * 150 * t) * (0.05 + Math.sin(2 * Math.PI * 0.2 * t) * 0.04);
-        sample += Math.sin(2 * Math.PI * 250 * t) * (0.03 + Math.cos(2 * Math.PI * 0.15 * t) * 0.02);
-
-        // Brown Noise Approximation (Filtered Randomness)
-        let lastOut = 0;
+        
+        // Use Brownian noise (filtered white noise) for a soft "warm" floor
         const white = Math.random() * 2 - 1;
-        lastOut = (lastOut + (0.05 * white)) / 1.05;
-        sample += lastOut * 0.6;
+        lastOut = (lastOut + (0.02 * white)) / 1.02;
+        let sample = lastOut * 0.4;
 
-        // Soft Loop Crossfade (Ensures seamless transition)
-        const fadeZone = sampleRate * 0.5;
+        // Add a very subtle, deep sub-drone (non-rhythmic)
+        sample += Math.sin(2 * Math.PI * 30 * t + Math.sin(2 * Math.PI * 0.05 * t)) * 0.05;
+        
+        // Remove high-frequency "wind" to prevent ear fatigue
+        
+        // Soft Loop Crossfade
+        const fadeZone = sampleRate * 1.0;
         if (i < fadeZone) sample *= (i / fadeZone);
         if (i > numSamples - fadeZone) sample *= ((numSamples - i) / fadeZone);
 
         buffer[i] = Math.max(-1, Math.min(1, sample)) * 32767;
       }
     } else if (type === "chime") {
-      // [THE SACRED BELL: 10-Fold Improvement]
-      // Additive synthesis with non-harmonic overtones for a realistic bell strike
-      const frequencies = [880, 1108, 1318, 1760, 2637, 3520]; // A5 and its harmonics/partials
-      const amplitudes = [0.6, 0.3, 0.2, 0.15, 0.1, 0.05];
+      // [THE CRYSTAL CHIME: Audibility Refinement]
+      // Using FM synthesis with a 'Silver Strike' harmonic for better 'cut'
+      const carrierFreq = 932.33; // Bb5 (Mellow, liturgical)
+      const modFreq = carrierFreq * 1.414;
+      const index = 2.5; // Slightly higher modulation for more "ping"
       
       for (let i = 0; i < numSamples; i++) {
         const t = i / sampleRate;
-        let sample = 0;
-        const envelope = Math.exp(-t * 2.5); // Smoother, longer decay
-
-        for (let f = 0; f < frequencies.length; f++) {
-          const freq = frequencies[f]!;
-          const amp = amplitudes[f]!;
-          // Slight detune for "shimmer"
-          sample += Math.sin(2 * Math.PI * freq * (1 + 0.001 * f) * t) * amp;
-        }
-
-        buffer[i] = sample * envelope * 32767;
+        // Slightly slower decay (5.0 vs 8.0) to let the ring linger just enough
+        const envelope = Math.exp(-t * 5.0); 
+        
+        const modulator = Math.sin(2 * Math.PI * modFreq * t) * index * envelope;
+        let sample = Math.sin(2 * Math.PI * carrierFreq * t + modulator);
+        
+        // [SILVER STRIKE]
+        // Adding a high-frequency harmonic strike to help it cut through the low-end ambience
+        sample += Math.sin(2 * Math.PI * carrierFreq * 4.0 * t) * 0.3 * Math.exp(-t * 15.0);
+        
+        // Add a soft secondary "tine"
+        sample += Math.sin(2 * Math.PI * carrierFreq * 2.51 * t) * 0.2 * envelope;
+        
+        // Adjusted volume for "Gentle Audibility"
+        buffer[i] = sample * envelope * 0.5 * 32767;
       }
     } else {
       // Silent Anchor
