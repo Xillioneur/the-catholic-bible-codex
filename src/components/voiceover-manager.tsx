@@ -31,6 +31,10 @@ export function VoiceoverManager() {
   
   const setVerseProgress = useReaderStore((state) => state.setVoiceoverProgress);
   const isReadTitlesEnabled = useReaderStore((state) => state.isVoiceoverReadTitlesEnabled);
+  const isAmbienceEnabled = useReaderStore((state) => state.isVoiceoverAmbienceEnabled);
+  const isChimesEnabled = useReaderStore((state) => state.isVoiceoverChimesEnabled);
+  const ambienceVolume = useReaderStore((state) => state.voiceoverAmbienceVolume);
+  
   const isTitleSkipActive = useReaderStore((state) => state.isVoiceoverTitleSkipActive);
   const setIsTitleSkipActive = useReaderStore((state) => state.setIsVoiceoverTitleSkipActive);
   const liturgicalReadings = useReaderStore((state) => state.liturgicalReadings);
@@ -41,6 +45,9 @@ export function VoiceoverManager() {
   
   // THE SACRED ANCHOR: The persistent audio session that keeps iOS from sleeping
   const anchorAudioRef = useRef<HTMLAudioElement | null>(null);
+  const ambienceAudioRef = useRef<HTMLAudioElement | null>(null);
+  const chimeAudioRef = useRef<HTMLAudioElement | null>(null);
+  
   const audioPlayingPromiseRef = useRef<Promise<void> | null>(null);
   
   const sessionRef = useRef<number>(0);
@@ -53,22 +60,107 @@ export function VoiceoverManager() {
   const lastOrderRef = useRef<number | null>(null);
   const lastTextRef = useRef<string | null>(null);
 
+  const playChime = useCallback(() => {
+    if (!isChimesEnabled || !chimeAudioRef.current) return;
+    chimeAudioRef.current.currentTime = 0;
+    chimeAudioRef.current.play().catch(() => {});
+  }, [isChimesEnabled]);
+
   const playAnchor = useCallback(() => {
-    const audio = anchorAudioRef.current;
-    if (!audio || !audio.paused || audioPlayingPromiseRef.current) return;
+    const anchor = anchorAudioRef.current;
+    const ambience = ambienceAudioRef.current;
+    if (!anchor) return;
     
-    audioPlayingPromiseRef.current = audio.play();
-    audioPlayingPromiseRef.current
-      .then(() => {
-        audioPlayingPromiseRef.current = null;
-      })
-      .catch(e => {
-        audioPlayingPromiseRef.current = null;
-        // Silently handle AbortError and NotSupportedError to prevent console noise
-        if (e.name !== "AbortError" && e.name !== "NotSupportedError") {
-          console.warn("[SACRED-ANCHOR] Playback failed:", e);
+    // Play silent anchor
+    if (anchor.paused && !audioPlayingPromiseRef.current) {
+      audioPlayingPromiseRef.current = anchor.play();
+      audioPlayingPromiseRef.current
+        .then(() => {
+          audioPlayingPromiseRef.current = null;
+          if ("mediaSession" in navigator) {
+             navigator.mediaSession.playbackState = "playing";
+          }
+        })
+        .catch(e => {
+          audioPlayingPromiseRef.current = null;
+          if (e.name !== "AbortError" && e.name !== "NotSupportedError") {
+            console.warn("[SACRED-ANCHOR] Playback failed:", e);
+          }
+        });
+    }
+
+    // Play/Stop Ambience
+    if (ambience) {
+      if (isAmbienceEnabled && useReaderStore.getState().isVoiceoverPlaying) {
+        if (ambience.paused) {
+          ambience.play().catch(() => {});
         }
-      });
+        ambience.volume = ambienceVolume;
+      } else {
+        ambience.pause();
+      }
+    }
+  }, [isAmbienceEnabled, ambienceVolume]);
+
+  const generateSacredAudio = useCallback((type: "ambience" | "chime" | "anchor") => {
+    const sampleRate = 44100;
+    const duration = type === "ambience" ? 2.0 : type === "chime" ? 0.5 : 0.1;
+    const numSamples = sampleRate * duration;
+    const buffer = new Int16Array(numSamples);
+
+    for (let i = 0; i < numSamples; i++) {
+      const t = i / sampleRate;
+      if (type === "ambience") {
+        // Low frequency "Sanctuary Wind" (brown noise approximation)
+        let sample = 0;
+        let lastOut = 0;
+        const white = Math.random() * 2 - 1;
+        lastOut = (lastOut + (0.02 * white)) / 1.02;
+        sample = lastOut * 3.5;
+        // Add a low drone
+        sample += Math.sin(2 * Math.PI * 40 * t) * 0.1; 
+        buffer[i] = sample * 32767;
+      } else if (type === "chime") {
+        // "Sanctuary Bell" (decaying sine wave with harmonics)
+        const envelope = Math.exp(-t * 4);
+        const freq = 880; // A5
+        let sample = Math.sin(2 * Math.PI * freq * t) * 0.5;
+        sample += Math.sin(2 * Math.PI * freq * 2.01 * t) * 0.2;
+        sample += Math.sin(2 * Math.PI * freq * 3.02 * t) * 0.1;
+        buffer[i] = sample * envelope * 32767;
+      } else {
+        // Silent Anchor
+        buffer[i] = 0;
+      }
+    }
+
+    // Create WAV header
+    const wavBuffer = new ArrayBuffer(44 + buffer.length * 2);
+    const view = new DataView(wavBuffer);
+    const writeString = (offset: number, string: string) => {
+      for (let i = 0; i < string.length; i++) view.setUint8(offset + i, string.charCodeAt(i));
+    };
+
+    writeString(0, "RIFF");
+    view.setUint32(4, 36 + buffer.length * 2, true);
+    writeString(8, "WAVE");
+    writeString(12, "fmt ");
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true);
+    view.setUint16(22, 1, true);
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, sampleRate * 2, true);
+    view.setUint16(32, 2, true);
+    view.setUint16(34, 16, true);
+    writeString(36, "data");
+    view.setUint32(40, buffer.length * 2, true);
+
+    for (let i = 0; i < buffer.length; i++) {
+      view.setInt16(44 + i * 2, buffer[i]!, true);
+    }
+
+    const blob = new Blob([wavBuffer], { type: "audio/wav" });
+    return URL.createObjectURL(blob);
   }, []);
 
   // Initialize Speech Synthesis and the Audio Anchor
@@ -76,21 +168,51 @@ export function VoiceoverManager() {
     if (typeof window !== "undefined") {
       synthRef.current = window.speechSynthesis;
       
-      const audio = new Audio();
-      // [THE SACRED ANCHOR]
-      // Using a robust, minimal silent WAV that is universally supported without codec issues.
-      audio.src = "data:audio/wav;base64,UklGRjIAAABXQVZFRm10IBAAAAABAAEAIlYAAESsAAACABAAZGF0YRAAAAAAAAAAAAAAAAAAAAAA";
-      audio.loop = true;
-      audio.volume = 0.01;
-      audio.preload = "auto";
-      anchorAudioRef.current = audio;
+      // 1. Silent Anchor
+      const anchor = new Audio();
+      anchor.id = "voiceover-anchor";
+      anchor.src = generateSacredAudio("anchor");
+      anchor.loop = true;
+      anchor.volume = 0.001;
+      anchor.preload = "auto";
+      anchor.style.display = "none";
+      document.body.appendChild(anchor);
+      anchorAudioRef.current = anchor;
+
+      // 2. Sacred Ambience (Wind/Drone)
+      const ambience = new Audio();
+      ambience.id = "voiceover-ambience";
+      ambience.src = generateSacredAudio("ambience");
+      ambience.loop = true;
+      ambience.preload = "auto";
+      ambience.style.display = "none";
+      document.body.appendChild(ambience);
+      ambienceAudioRef.current = ambience;
+
+      // 3. Verse Chime
+      const chime = new Audio();
+      chime.id = "voiceover-chime";
+      chime.src = generateSacredAudio("chime");
+      chime.preload = "auto";
+      chime.style.display = "none";
+      document.body.appendChild(chime);
+      chimeAudioRef.current = chime;
 
       // Ensure audio starts on user interaction
       const handleStartAnchor = () => {
-        console.log("[SACRED-ANCHOR] Activating background session...");
+        console.log("[SACRED-AUDIO] Activating background session...");
         playAnchor();
+        if (isChimesEnabled) playChime();
       };
       window.addEventListener("voiceover-start-anchor", handleStartAnchor);
+
+      // Handle visibility changes to resume anchor if needed
+      const handleVisibilityChange = () => {
+        if (document.visibilityState === "visible" && useReaderStore.getState().isVoiceoverPlaying) {
+          playAnchor();
+        }
+      };
+      document.addEventListener("visibilitychange", handleVisibilityChange);
 
       /**
        * [THE SACRED WATCHDOG]
@@ -99,17 +221,22 @@ export function VoiceoverManager() {
        */
       const watchdog = setInterval(() => {
         const state = useReaderStore.getState();
-        if (state.isVoiceoverPlaying && synthRef.current && !synthRef.current.speaking && !synthRef.current.pending) {
-           console.log("[WATCHDOG] Engine stalled in background. Pulsing...");
-           // Force a re-trigger of the current item
-           const order = state.voiceoverCurrentOrder ?? state.currentOrder;
-           if (state.voiceoverNonBibleText) {
-             void speakText(state.voiceoverNonBibleText, "Liturgical Sequence", lastCharIndexRef.current);
-           } else {
-             void speak(order, false, lastCharIndexRef.current);
-           }
+        if (state.isVoiceoverPlaying) {
+          // Keep anchor alive
+          playAnchor();
+
+          if (synthRef.current && !synthRef.current.speaking && !synthRef.current.pending) {
+            console.log("[WATCHDOG] Engine stalled in background. Pulsing...");
+            // Force a re-trigger of the current item
+            const order = state.voiceoverCurrentOrder ?? state.currentOrder;
+            if (state.voiceoverNonBibleText) {
+              void speakText(state.voiceoverNonBibleText, "Liturgical Sequence", lastCharIndexRef.current);
+            } else {
+              void speak(order, false, lastCharIndexRef.current);
+            }
+          }
         }
-      }, 5000);
+      }, 3000); // More frequent watchdog for iPhone
 
       const handleVoicesChanged = () => {
         setVoicesLoaded(true);
@@ -124,7 +251,20 @@ export function VoiceoverManager() {
 
       return () => {
         window.removeEventListener("voiceover-start-anchor", handleStartAnchor);
+        document.removeEventListener("visibilitychange", handleVisibilityChange);
         clearInterval(watchdog);
+        if (anchorAudioRef.current) {
+          anchorAudioRef.current.pause();
+          document.body.removeChild(anchorAudioRef.current);
+        }
+        if (ambienceAudioRef.current) {
+          ambienceAudioRef.current.pause();
+          document.body.removeChild(ambienceAudioRef.current);
+        }
+        if (chimeAudioRef.current) {
+          chimeAudioRef.current.pause();
+          document.body.removeChild(chimeAudioRef.current);
+        }
       };
     }
   }, [playAnchor]);
@@ -157,6 +297,9 @@ export function VoiceoverManager() {
     }
     if (anchorAudioRef.current) {
       anchorAudioRef.current.pause();
+    }
+    if (ambienceAudioRef.current) {
+      ambienceAudioRef.current.pause();
     }
     
     sessionRef.current++;
@@ -261,7 +404,7 @@ export function VoiceoverManager() {
 
   const cleanText = useCallback((text: string) => text.replace(/[*†‡§_]/g, " "), []);
 
-  const updateMediaSession = useCallback((title: string, artist = "Catholic Bible Codex") => {
+  const updateMediaSession = useCallback((title: string, artist = "Catholic Bible Codex", duration = 0, position = 0) => {
     if ("mediaSession" in navigator) {
       navigator.mediaSession.metadata = new MediaMetadata({
         title,
@@ -272,9 +415,24 @@ export function VoiceoverManager() {
           { src: "/favicon.svg", sizes: "192x192", type: "image/svg+xml" }
         ]
       });
-      navigator.mediaSession.playbackState = useReaderStore.getState().isVoiceoverPlaying ? "playing" : "paused";
+      const isPlaying = useReaderStore.getState().isVoiceoverPlaying;
+      navigator.mediaSession.playbackState = isPlaying ? "playing" : "paused";
+      
+      // [THE SACRED POSITION]
+      // Providing even an estimated position state helps iOS lock screen stay active
+      if ("setPositionState" in navigator.mediaSession && duration > 0) {
+        try {
+          navigator.mediaSession.setPositionState({
+            duration: Math.max(duration, 0.001),
+            playbackRate: speed,
+            position: Math.min(position, duration)
+          });
+        } catch (e) {
+          console.warn("[MEDIA-SESSION] Failed to set position state:", e);
+        }
+      }
     }
-  }, []);
+  }, [speed]);
 
   const speakText = useCallback(async (text: string, title?: string, charOffset = 0) => {
     if (!synthRef.current || !useReaderStore.getState().isVoiceoverPlaying) return;
@@ -293,6 +451,7 @@ export function VoiceoverManager() {
     if (currentSession !== sessionRef.current || !useReaderStore.getState().isVoiceoverPlaying) return;
 
     let textToSpeak = cleanText(text);
+    const fullLength = textToSpeak.length;
     if (charOffset > 0 && charOffset < textToSpeak.length) textToSpeak = textToSpeak.slice(charOffset);
 
     const utterance = new SpeechSynthesisUtterance(textToSpeak);
@@ -301,10 +460,19 @@ export function VoiceoverManager() {
     utterance.rate = speed;
     utterance.volume = 1;
 
+    // Estimate duration for MediaSession (roughly 15 chars per second at 1x)
+    const estimatedDuration = fullLength / (15 * speed);
+
     utterance.onboundary = (event) => {
       if (currentSession === sessionRef.current) {
         lastCharIndexRef.current = charOffset + event.charIndex;
-        setVerseProgress((lastCharIndexRef.current / text.length) * 100);
+        const progress = (lastCharIndexRef.current / fullLength) * 100;
+        setVerseProgress(progress);
+        
+        // Pulse position state updates
+        if (event.charIndex % 20 === 0) {
+           updateMediaSession(title ?? "Sacred Text", "Catholic Bible Codex", estimatedDuration, lastCharIndexRef.current / (15 * speed));
+        }
       }
     };
 
@@ -343,9 +511,10 @@ export function VoiceoverManager() {
     synthRef.current.speak(utterance);
     updateMediaSession(title ?? "Sacred Text");
     
-    // Ensure anchor is playing
+    // Ensure anchor and chimes are handled
     playAnchor();
-  }, [speed, getBestVoice, cleanText, setVerseProgress, setNonBibleText, setCurrentOrder, stop, getNextQueueItem, updateMediaSession, playAnchor]);
+    if (charOffset === 0) playChime();
+  }, [speed, getBestVoice, cleanText, setVerseProgress, setNonBibleText, setCurrentOrder, stop, getNextQueueItem, updateMediaSession, playAnchor, playChime]);
 
   const speak = useCallback(async (order: number, forceTitle = false, charOffset = 0) => {
     if (!synthRef.current || !useReaderStore.getState().isVoiceoverPlaying) return;
@@ -415,7 +584,14 @@ export function VoiceoverManager() {
       utterance.onboundary = (event) => {
         if (currentSession === sessionRef.current && !isTitle) {
           lastCharIndexRef.current = charOffset + event.charIndex;
-          setVerseProgress((lastCharIndexRef.current / verse!.text.length) * 100);
+          const progress = (lastCharIndexRef.current / verse!.text.length) * 100;
+          setVerseProgress(progress);
+
+          // Pulse position state updates
+          if (event.charIndex % 20 === 0) {
+            const estimatedDuration = verse!.text.length / (15 * speed);
+            updateMediaSession(`${verse!.book.name} ${verse!.chapter}:${verse!.verse}`, "Catholic Bible Codex", estimatedDuration, lastCharIndexRef.current / (15 * speed));
+          }
         }
       };
 
@@ -458,12 +634,16 @@ export function VoiceoverManager() {
 
       isInternalCancelRef.current = false;
       synthRef.current.speak(utterance);
-      updateMediaSession(isTitle ? textToSpeak : `${verse.book.name} ${verse.chapter}:${verse.verse}`);
+      
+      const sessionTitle = isTitle ? textToSpeak : `${verse.book.name} ${verse.chapter}:${verse.verse}`;
+      const estimatedDur = textToSpeak.length / (15 * speed);
+      updateMediaSession(sessionTitle, "Catholic Bible Codex", estimatedDur, charOffset / (15 * speed));
 
-      // Ensure anchor is playing
+      // Ensure anchor and chimes are handled
       playAnchor();
+      if (!isTitle && charOffset === 0) playChime();
     } catch (err) { console.error("Voiceover engine error:", err); }
-  }, [translationSlug, speed, getBestVoice, isReadTitlesEnabled, liturgicalReadings, setCurrentOrder, setScrollToOrder, setVerse, stop, getNextOrder, getNextQueueItem, setIsActive, setVerseProgress, cleanText, setNonBibleText, isTitleSkipActive, setIsTitleSkipActive, updateMediaSession, playAnchor]);
+  }, [translationSlug, speed, getBestVoice, isReadTitlesEnabled, liturgicalReadings, setCurrentOrder, setScrollToOrder, setVerse, stop, getNextOrder, getNextQueueItem, setIsActive, setVerseProgress, cleanText, setNonBibleText, isTitleSkipActive, setIsTitleSkipActive, updateMediaSession, playAnchor, playChime]);
 
   useEffect(() => {
     if (!synthRef.current) return;
@@ -489,6 +669,7 @@ export function VoiceoverManager() {
         isInternalCancelRef.current = true;
         synthRef.current.cancel();
         if (anchorAudioRef.current) anchorAudioRef.current.pause();
+        if (ambienceAudioRef.current) ambienceAudioRef.current.pause();
         if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "paused";
       } else {
         speakingOrderRef.current = null;
@@ -498,10 +679,11 @@ export function VoiceoverManager() {
         if (synthRef.current.paused) synthRef.current.resume();
         synthRef.current.cancel();
         if (anchorAudioRef.current) anchorAudioRef.current.pause();
+        if (ambienceAudioRef.current) ambienceAudioRef.current.pause();
         if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "none";
       }
     }
-  }, [isPlaying, isActive, currentOrder, globalCurrentOrder, nonBibleText, speak, speakText, playAnchor]);
+  }, [isPlaying, isActive, currentOrder, globalCurrentOrder, nonBibleText, speak, speakText, playAnchor, isAmbienceEnabled, ambienceVolume]);
 
   return null;
 }

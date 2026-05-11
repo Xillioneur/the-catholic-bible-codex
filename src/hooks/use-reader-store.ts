@@ -132,6 +132,12 @@ interface ReaderState {
   setIsVoiceoverFollowEnabled: (enabled: boolean) => void;
   isVoiceoverReadTitlesEnabled: boolean;
   setIsVoiceoverReadTitlesEnabled: (enabled: boolean) => void;
+  isVoiceoverAmbienceEnabled: boolean;
+  setIsVoiceoverAmbienceEnabled: (enabled: boolean) => void;
+  isVoiceoverChimesEnabled: boolean;
+  setIsVoiceoverChimesEnabled: (enabled: boolean) => void;
+  voiceoverAmbienceVolume: number;
+  setVoiceoverAmbienceVolume: (volume: number) => void;
   isVoiceoverTitleSkipActive: boolean;
   setIsVoiceoverTitleSkipActive: (skip: boolean) => void;
   voiceoverVoiceURI: string | null;
@@ -278,6 +284,12 @@ export const useReaderStore = create<ReaderState>()(
       setIsVoiceoverFollowEnabled: (enabled) => set({ isVoiceoverFollowEnabled: enabled }),
       isVoiceoverReadTitlesEnabled: true,
       setIsVoiceoverReadTitlesEnabled: (enabled) => set({ isVoiceoverReadTitlesEnabled: enabled }),
+      isVoiceoverAmbienceEnabled: true,
+      setIsVoiceoverAmbienceEnabled: (enabled) => set({ isVoiceoverAmbienceEnabled: enabled }),
+      isVoiceoverChimesEnabled: true,
+      setIsVoiceoverChimesEnabled: (enabled) => set({ isVoiceoverChimesEnabled: enabled }),
+      voiceoverAmbienceVolume: 0.1,
+      setVoiceoverAmbienceVolume: (volume) => set({ voiceoverAmbienceVolume: volume }),
       isVoiceoverTitleSkipActive: false,
       setIsVoiceoverTitleSkipActive: (skip) => set({ isVoiceoverTitleSkipActive: skip }),
       voiceoverVoiceURI: null,
@@ -315,6 +327,9 @@ export const useReaderStore = create<ReaderState>()(
         isSidebarCollapsed: state.isSidebarCollapsed,
         lastSync: state.lastSync,
         isSyncStatusMinimized: state.isSyncStatusMinimized,
+        isVoiceoverAmbienceEnabled: state.isVoiceoverAmbienceEnabled,
+        isVoiceoverChimesEnabled: state.isVoiceoverChimesEnabled,
+        voiceoverAmbienceVolume: state.voiceoverAmbienceVolume,
       }),
     }
   )

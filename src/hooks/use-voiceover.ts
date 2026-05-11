@@ -26,11 +26,30 @@ export function useVoiceover() {
   const resetVoiceover = useReaderStore((state) => state.resetVoiceover);
 
   const unlockAudio = useCallback(() => {
-    if (typeof window !== "undefined" && window.speechSynthesis) {
-      const utterance = new SpeechSynthesisUtterance(" ");
-      utterance.volume = 0;
-      utterance.rate = 1;
-      window.speechSynthesis.speak(utterance);
+    if (typeof window !== "undefined") {
+      // Unlock Speech Synthesis
+      if (window.speechSynthesis) {
+        const utterance = new SpeechSynthesisUtterance(" ");
+        utterance.volume = 0;
+        utterance.rate = 1;
+        window.speechSynthesis.speak(utterance);
+      }
+
+      // Unlock the Anchor, Ambience, and Chimes
+      const anchor = document.getElementById("voiceover-anchor") as HTMLAudioElement;
+      if (anchor && anchor.paused) {
+        anchor.play().catch(() => {});
+      }
+
+      const ambience = document.getElementById("voiceover-ambience") as HTMLAudioElement;
+      if (ambience && ambience.paused && useReaderStore.getState().isVoiceoverAmbienceEnabled) {
+        ambience.play().catch(() => {});
+      }
+
+      const chime = document.getElementById("voiceover-chime") as HTMLAudioElement;
+      if (chime && chime.paused && useReaderStore.getState().isVoiceoverChimesEnabled) {
+        chime.play().catch(() => {});
+      }
     }
   }, []);
 

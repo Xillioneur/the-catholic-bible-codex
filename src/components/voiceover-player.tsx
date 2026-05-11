@@ -48,6 +48,14 @@ export function VoiceoverPlayer() {
   const setIsFollowEnabled = useReaderStore((state) => state.setIsVoiceoverFollowEnabled);
   const isReadTitlesEnabled = useReaderStore((state) => state.isVoiceoverReadTitlesEnabled);
   const setIsReadTitlesEnabled = useReaderStore((state) => state.setIsVoiceoverReadTitlesEnabled);
+  
+  const isAmbienceEnabled = useReaderStore((state) => state.isVoiceoverAmbienceEnabled);
+  const setIsAmbienceEnabled = useReaderStore((state) => state.setIsVoiceoverAmbienceEnabled);
+  const isChimesEnabled = useReaderStore((state) => state.isVoiceoverChimesEnabled);
+  const setIsChimesEnabled = useReaderStore((state) => state.setIsChimesEnabled);
+  const ambienceVolume = useReaderStore((state) => state.voiceoverAmbienceVolume);
+  const setAmbienceVolume = useReaderStore((state) => state.setVoiceoverAmbienceVolume);
+
   const voiceURI = useReaderStore((state) => state.voiceoverVoiceURI);
   const setVoiceURI = useReaderStore((state) => state.setVoiceoverVoiceURI);
   
@@ -324,6 +332,28 @@ export function VoiceoverPlayer() {
                         </DropdownMenuCheckboxItem>
 
                         <DropdownMenuCheckboxItem
+                          checked={isAmbienceEnabled}
+                          onCheckedChange={setIsAmbienceEnabled}
+                          className="rounded-xl py-3 text-[11px] font-black uppercase tracking-widest focus:bg-primary/10 focus:text-primary"
+                        >
+                          <div className="flex items-center gap-3">
+                            <Music className="h-4 w-4" />
+                            Sacred Ambience
+                          </div>
+                        </DropdownMenuCheckboxItem>
+
+                        <DropdownMenuCheckboxItem
+                          checked={isChimesEnabled}
+                          onCheckedChange={setIsChimesEnabled}
+                          className="rounded-xl py-3 text-[11px] font-black uppercase tracking-widest focus:bg-primary/10 focus:text-primary"
+                        >
+                          <div className="flex items-center gap-3">
+                            <Church className="h-4 w-4" />
+                            Verse Chimes
+                          </div>
+                        </DropdownMenuCheckboxItem>
+
+                        <DropdownMenuCheckboxItem
                           checked={isFollowEnabled}
                           onCheckedChange={setIsFollowEnabled}
                           className="rounded-xl py-3 text-[11px] font-black uppercase tracking-widest focus:bg-primary/10 focus:text-primary"
@@ -335,6 +365,19 @@ export function VoiceoverPlayer() {
                         </DropdownMenuCheckboxItem>
 
                         <DropdownMenuSeparator className="bg-zinc-100 dark:bg-zinc-800" />
+
+                        <div className="px-3 py-4">
+                          <p className="text-[9px] font-black uppercase tracking-widest text-zinc-400 mb-3 ml-1">Ambience Volume</p>
+                          <input 
+                            type="range"
+                            min="0"
+                            max="0.5"
+                            step="0.01"
+                            value={ambienceVolume}
+                            onChange={(e) => setAmbienceVolume(parseFloat(e.target.value))}
+                            className="w-full h-1 bg-zinc-100 dark:bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-primary"
+                          />
+                        </div>
 
                         <div className="px-2 py-4">
                           <p className="text-[9px] font-black uppercase tracking-widest text-zinc-400 mb-3 ml-1">Speed</p>
