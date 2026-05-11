@@ -52,7 +52,7 @@ export function VoiceoverPlayer() {
   const isAmbienceEnabled = useReaderStore((state) => state.isVoiceoverAmbienceEnabled);
   const setIsAmbienceEnabled = useReaderStore((state) => state.setIsVoiceoverAmbienceEnabled);
   const isChimesEnabled = useReaderStore((state) => state.isVoiceoverChimesEnabled);
-  const setIsChimesEnabled = useReaderStore((state) => state.setIsChimesEnabled);
+  const setIsChimesEnabled = useReaderStore((state) => state.setIsVoiceoverChimesEnabled);
   const ambienceVolume = useReaderStore((state) => state.voiceoverAmbienceVolume);
   const setAmbienceVolume = useReaderStore((state) => state.setVoiceoverAmbienceVolume);
 

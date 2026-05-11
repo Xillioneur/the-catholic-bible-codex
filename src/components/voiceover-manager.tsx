@@ -104,34 +104,62 @@ export function VoiceoverManager() {
 
   const generateSacredAudio = useCallback((type: "ambience" | "chime" | "anchor") => {
     const sampleRate = 44100;
-    const duration = type === "ambience" ? 2.0 : type === "chime" ? 0.5 : 0.1;
-    const numSamples = sampleRate * duration;
+    const duration = type === "ambience" ? 10.0 : type === "chime" ? 2.5 : 0.1;
+    const numSamples = Math.floor(sampleRate * duration);
     const buffer = new Int16Array(numSamples);
 
-    for (let i = 0; i < numSamples; i++) {
-      const t = i / sampleRate;
-      if (type === "ambience") {
-        // Low frequency "Sanctuary Wind" (brown noise approximation)
+    if (type === "ambience") {
+      // [THE SACRED DRONE: 10-Fold Improvement]
+      // Layering multiple modulated oscillators to create a "Living Sanctuary"
+      for (let i = 0; i < numSamples; i++) {
+        const t = i / sampleRate;
         let sample = 0;
+
+        // Base Drones (Rich Low End)
+        sample += Math.sin(2 * Math.PI * 40 * t + Math.sin(2 * Math.PI * 0.1 * t) * 0.5) * 0.25;
+        sample += Math.sin(2 * Math.PI * 61 * t + Math.cos(2 * Math.PI * 0.07 * t) * 0.4) * 0.2;
+        sample += Math.sin(2 * Math.PI * 82 * t + Math.sin(2 * Math.PI * 0.13 * t) * 0.3) * 0.15;
+
+        // Harmonic Layers (The "Wind" Feel)
+        sample += Math.sin(2 * Math.PI * 150 * t) * (0.05 + Math.sin(2 * Math.PI * 0.2 * t) * 0.04);
+        sample += Math.sin(2 * Math.PI * 250 * t) * (0.03 + Math.cos(2 * Math.PI * 0.15 * t) * 0.02);
+
+        // Brown Noise Approximation (Filtered Randomness)
         let lastOut = 0;
         const white = Math.random() * 2 - 1;
-        lastOut = (lastOut + (0.02 * white)) / 1.02;
-        sample = lastOut * 3.5;
-        // Add a low drone
-        sample += Math.sin(2 * Math.PI * 40 * t) * 0.1; 
-        buffer[i] = sample * 32767;
-      } else if (type === "chime") {
-        // "Sanctuary Bell" (decaying sine wave with harmonics)
-        const envelope = Math.exp(-t * 4);
-        const freq = 880; // A5
-        let sample = Math.sin(2 * Math.PI * freq * t) * 0.5;
-        sample += Math.sin(2 * Math.PI * freq * 2.01 * t) * 0.2;
-        sample += Math.sin(2 * Math.PI * freq * 3.02 * t) * 0.1;
-        buffer[i] = sample * envelope * 32767;
-      } else {
-        // Silent Anchor
-        buffer[i] = 0;
+        lastOut = (lastOut + (0.05 * white)) / 1.05;
+        sample += lastOut * 0.6;
+
+        // Soft Loop Crossfade (Ensures seamless transition)
+        const fadeZone = sampleRate * 0.5;
+        if (i < fadeZone) sample *= (i / fadeZone);
+        if (i > numSamples - fadeZone) sample *= ((numSamples - i) / fadeZone);
+
+        buffer[i] = Math.max(-1, Math.min(1, sample)) * 32767;
       }
+    } else if (type === "chime") {
+      // [THE SACRED BELL: 10-Fold Improvement]
+      // Additive synthesis with non-harmonic overtones for a realistic bell strike
+      const frequencies = [880, 1108, 1318, 1760, 2637, 3520]; // A5 and its harmonics/partials
+      const amplitudes = [0.6, 0.3, 0.2, 0.15, 0.1, 0.05];
+      
+      for (let i = 0; i < numSamples; i++) {
+        const t = i / sampleRate;
+        let sample = 0;
+        const envelope = Math.exp(-t * 2.5); // Smoother, longer decay
+
+        for (let f = 0; f < frequencies.length; f++) {
+          const freq = frequencies[f]!;
+          const amp = amplitudes[f]!;
+          // Slight detune for "shimmer"
+          sample += Math.sin(2 * Math.PI * freq * (1 + 0.001 * f) * t) * amp;
+        }
+
+        buffer[i] = sample * envelope * 32767;
+      }
+    } else {
+      // Silent Anchor
+      for (let i = 0; i < numSamples; i++) buffer[i] = 0;
     }
 
     // Create WAV header
@@ -146,12 +174,12 @@ export function VoiceoverManager() {
     writeString(8, "WAVE");
     writeString(12, "fmt ");
     view.setUint32(16, 16, true);
-    view.setUint16(20, 1, true);
-    view.setUint16(22, 1, true);
+    view.setUint16(20, 1, true); // PCM
+    view.setUint16(22, 1, true); // Mono
     view.setUint32(24, sampleRate, true);
-    view.setUint32(28, sampleRate * 2, true);
-    view.setUint16(32, 2, true);
-    view.setUint16(34, 16, true);
+    view.setUint32(28, sampleRate * 2, true); // Byte rate
+    view.setUint16(32, 2, true); // Block align
+    view.setUint16(34, 16, true); // Bits per sample
     writeString(36, "data");
     view.setUint32(40, buffer.length * 2, true);
 
