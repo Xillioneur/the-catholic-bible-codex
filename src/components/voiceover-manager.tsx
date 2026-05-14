@@ -45,7 +45,7 @@ export function VoiceoverManager() {
   
   // THE SACRED ANCHOR: The persistent audio session that keeps iOS from sleeping
   const anchorAudioRef = useRef<HTMLAudioElement | null>(null);
-  const ambienceAudioRef = useRef<HTMLAudioElement | null>(null);
+  const ambienceRefs = useRef<HTMLAudioElement[]>([]);
   const chimeAudioRef = useRef<HTMLAudioElement | null>(null);
   
   const audioPlayingPromiseRef = useRef<Promise<void> | null>(null);
@@ -68,7 +68,6 @@ export function VoiceoverManager() {
 
   const playAnchor = useCallback(() => {
     const anchor = anchorAudioRef.current;
-    const ambience = ambienceAudioRef.current;
     if (!anchor) return;
     
     // Play silent anchor
@@ -89,47 +88,78 @@ export function VoiceoverManager() {
         });
     }
 
-    // Play/Stop Ambience
-    if (ambience) {
-      if (isAmbienceEnabled && useReaderStore.getState().isVoiceoverPlaying) {
-        if (ambience.paused) {
-          ambience.play().catch(() => {});
-        }
-        ambience.volume = ambienceVolume;
+    // Play/Stop Poly-Rhythmic Ambience
+    const isPlaying = useReaderStore.getState().isVoiceoverPlaying;
+    ambienceRefs.current.forEach((amb, idx) => {
+      if (isAmbienceEnabled && isPlaying) {
+        if (amb.paused) amb.play().catch(() => {});
+        // Slightly vary volume per layer for depth
+        amb.volume = ambienceVolume * (1 - idx * 0.2);
       } else {
-        ambience.pause();
+        amb.pause();
       }
-    }
+    });
   }, [isAmbienceEnabled, ambienceVolume]);
 
-  const generateSacredAudio = useCallback((type: "ambience" | "chime" | "anchor") => {
+  const generateSacredAudio = useCallback((type: "foundation" | "echo" | "events" | "chime" | "anchor") => {
     const sampleRate = 44100;
-    const duration = type === "ambience" ? 10.0 : type === "chime" ? 0.8 : 0.1;
+    // Prime numbers for poly-rhythmic looping (11, 13, 17 seconds)
+    const duration = type === "foundation" ? 11.0 : type === "echo" ? 13.0 : type === "events" ? 17.0 : type === "chime" ? 0.8 : 0.1;
     const numSamples = Math.floor(sampleRate * duration);
     const buffer = new Int16Array(numSamples);
 
-    if (type === "ambience") {
-      // [THE ORGANIC SANCTUARY: Soft, non-fatiguing warmth]
-      let lastOut = 0;
+    if (type === "foundation") {
+      // THE STONE FLOOR: Deep Brownian warmth
+      let brownLastOut = 0;
       for (let i = 0; i < numSamples; i++) {
-        const t = i / sampleRate;
-        
-        // Use Brownian noise (filtered white noise) for a soft "warm" floor
         const white = Math.random() * 2 - 1;
-        lastOut = (lastOut + (0.02 * white)) / 1.02;
-        let sample = lastOut * 0.4;
-
-        // Add a very subtle, deep sub-drone (non-rhythmic)
-        sample += Math.sin(2 * Math.PI * 30 * t + Math.sin(2 * Math.PI * 0.05 * t)) * 0.05;
+        brownLastOut = (brownLastOut + (0.02 * white)) / 1.02;
+        let sample = brownLastOut * 0.4;
+        sample += Math.sin(2 * Math.PI * 35 * (i / sampleRate)) * 0.05;
         
-        // Remove high-frequency "wind" to prevent ear fatigue
-        
-        // Soft Loop Crossfade
         const fadeZone = sampleRate * 1.0;
         if (i < fadeZone) sample *= (i / fadeZone);
         if (i > numSamples - fadeZone) sample *= ((numSamples - i) / fadeZone);
-
         buffer[i] = Math.max(-1, Math.min(1, sample)) * 32767;
+      }
+    } else if (type === "echo") {
+      // THE LITURGICAL ECHO: Distant vowel-like resonances (A-O-U)
+      // Mimics the sound of distant chanting bouncing off stone
+      for (let i = 0; i < numSamples; i++) {
+        const t = i / sampleRate;
+        const drift = Math.sin(2 * Math.PI * 0.05 * t) * 0.5 + 0.5;
+        let sample = 0;
+        // Vowel-like formants (centered around 400Hz, 800Hz, 1200Hz)
+        sample += Math.sin(2 * Math.PI * 400 * t) * 0.02;
+        sample += Math.sin(2 * Math.PI * 800 * t) * 0.015;
+        sample += Math.sin(2 * Math.PI * 1200 * t) * 0.01;
+        sample *= (0.5 + drift * 0.5); // Drifting presence
+        
+        const fadeZone = sampleRate * 1.5;
+        if (i < fadeZone) sample *= (i / fadeZone);
+        if (i > numSamples - fadeZone) sample *= ((numSamples - i) / fadeZone);
+        buffer[i] = sample * 32767;
+      }
+    } else if (type === "events") {
+      // STOCHASTIC SANCTUARY: Rare settling sounds (clicks, taps)
+      for (let i = 0; i < numSamples; i++) {
+        let sample = 0;
+        // Randomly trigger a soft settling sound every few seconds
+        if (Math.random() < 0.00005) {
+          const strikeLen = Math.floor(sampleRate * 0.1);
+          for (let s = 0; s < strikeLen && (i + s) < numSamples; s++) {
+            const st = s / sampleRate;
+            buffer[i + s] += (Math.random() * 0.1 * Math.exp(-st * 50)) * 32767;
+          }
+        }
+        // Very low shelf noise
+        const white = Math.random() * 2 - 1;
+        sample = white * 0.01;
+        
+        const fadeZone = sampleRate * 1.0;
+        if (i < fadeZone) sample *= (i / fadeZone);
+        if (i > numSamples - fadeZone) sample *= ((numSamples - i) / fadeZone);
+        buffer[i] += sample * 32767;
       }
     } else if (type === "chime") {
       // [THE CRYSTAL CHIME: Audibility Refinement]
@@ -206,15 +236,19 @@ export function VoiceoverManager() {
       document.body.appendChild(anchor);
       anchorAudioRef.current = anchor;
 
-      // 2. Sacred Ambience (Wind/Drone)
-      const ambience = new Audio();
-      ambience.id = "voiceover-ambience";
-      ambience.src = generateSacredAudio("ambience");
-      ambience.loop = true;
-      ambience.preload = "auto";
-      ambience.style.display = "none";
-      document.body.appendChild(ambience);
-      ambienceAudioRef.current = ambience;
+      // 2. Poly-Rhythmic Ambience Layers
+      const types: ("foundation" | "echo" | "events")[] = ["foundation", "echo", "events"];
+      const layers = types.map((type, idx) => {
+        const aud = new Audio();
+        aud.id = `voiceover-ambience-${idx}`;
+        aud.src = generateSacredAudio(type);
+        aud.loop = true;
+        aud.preload = "auto";
+        aud.style.display = "none";
+        document.body.appendChild(aud);
+        return aud;
+      });
+      ambienceRefs.current = layers;
 
       // 3. Verse Chime
       const chime = new Audio();
@@ -284,17 +318,17 @@ export function VoiceoverManager() {
           anchorAudioRef.current.pause();
           document.body.removeChild(anchorAudioRef.current);
         }
-        if (ambienceAudioRef.current) {
-          ambienceAudioRef.current.pause();
-          document.body.removeChild(ambienceAudioRef.current);
-        }
+        ambienceRefs.current.forEach(amb => {
+          amb.pause();
+          document.body.removeChild(amb);
+        });
         if (chimeAudioRef.current) {
           chimeAudioRef.current.pause();
           document.body.removeChild(chimeAudioRef.current);
         }
       };
     }
-  }, [playAnchor]);
+  }, [playAnchor, generateSacredAudio, isChimesEnabled]);
 
   const getBestVoice = useCallback(() => {
     if (!synthRef.current) return null;
@@ -325,9 +359,7 @@ export function VoiceoverManager() {
     if (anchorAudioRef.current) {
       anchorAudioRef.current.pause();
     }
-    if (ambienceAudioRef.current) {
-      ambienceAudioRef.current.pause();
-    }
+    ambienceRefs.current.forEach(amb => amb.pause());
     
     sessionRef.current++;
     speakingOrderRef.current = null;
@@ -696,7 +728,7 @@ export function VoiceoverManager() {
         isInternalCancelRef.current = true;
         synthRef.current.cancel();
         if (anchorAudioRef.current) anchorAudioRef.current.pause();
-        if (ambienceAudioRef.current) ambienceAudioRef.current.pause();
+        ambienceRefs.current.forEach(amb => amb.pause());
         if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "paused";
       } else {
         speakingOrderRef.current = null;
@@ -706,7 +738,7 @@ export function VoiceoverManager() {
         if (synthRef.current.paused) synthRef.current.resume();
         synthRef.current.cancel();
         if (anchorAudioRef.current) anchorAudioRef.current.pause();
-        if (ambienceAudioRef.current) ambienceAudioRef.current.pause();
+        ambienceRefs.current.forEach(amb => amb.pause());
         if ("mediaSession" in navigator) navigator.mediaSession.playbackState = "none";
       }
     }
