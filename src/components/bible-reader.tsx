@@ -7,7 +7,6 @@ import { db } from "~/lib/db";
 import { useLiveQuery } from "dexie-react-hooks";
 import { useBibleReader } from "~/hooks/use-bible-reader";
 import { BookHeader, ChapterHeader, LiturgicalReadingHeader } from "./bible/section-header";
-import { LoadingScreen } from "./bible/loading-screen";
 import { TranslationSwitcher } from "./translation-switcher";
 import { cn } from "~/lib/utils";
 import { useSession } from "next-auth/react";
@@ -46,8 +45,6 @@ export function BibleReader() {
     }
     return set;
   }, [liturgicalReadings]);
-
-  if (isLoading) return <LoadingScreen />;
 
   return (
     <div className="h-full relative bg-white dark:bg-zinc-950">

@@ -64,15 +64,22 @@ export function LiturgicalProvider({ children }: { children: ReactNode }) {
           readings: readingPairs
         });
 
-        // 2. OPTIMIZED DEXIE FETCH
-        // Collect all unique globalOrders across all readings to fetch from IndexedDB in one go
+        // 2. FETCH VERSES FROM SERVER (HYDRATION REMOVAL)
         const allOrders = resolvedOrders.filter(Boolean).flatMap(r => r!.orders);
-        
-        // Use Dexie's 'anyOf' for efficient multi-key lookup
-        const allVerses = await db.verses
-          .where("translationId").equals(translationSlug)
-          .and(v => allOrders.includes(v.globalOrder))
-          .toArray();
+        if (allOrders.length === 0) {
+          setLiturgicalReadings([]);
+          return;
+        }
+
+        const startOrder = Math.min(...allOrders);
+        const endOrder = Math.max(...allOrders);
+
+        // Fetch the entire range that covers all liturgical readings for the day
+        const allVerses = await utils.bible.getVersesByOrderRange.fetch({
+          translationSlug,
+          startOrder,
+          endOrder
+        });
 
         // 3. MAP BACK TO READINGS (and maintain original liturgical order)
         const finalReadings = readingPairs.map(p => {
@@ -84,12 +91,11 @@ export function LiturgicalProvider({ children }: { children: ReactNode }) {
             .sort((a, b) => a.globalOrder - b.globalOrder);
             
           // Find original reading info to get heading
-          const original = readingPairs.find(rp => rp.type === p.type);
-          const heading = original?.type === "First Reading" ? info.readings.firstReadingHeading :
-                        original?.type === "Second Reading" ? info.readings.secondReadingHeading :
-                        original?.type === "The Holy Gospel" ? info.readings.gospelHeading : undefined;
+          const heading = p.type === "First Reading" ? info.readings.firstReadingHeading :
+                         p.type === "Second Reading" ? info.readings.secondReadingHeading :
+                         p.type === "The Holy Gospel" ? info.readings.gospelHeading : undefined;
 
-          const sequenceText = original?.type === "Sequence" ? info.readings.sequenceText : undefined;
+          const sequenceText = p.type === "Sequence" ? info.readings.sequenceText : undefined;
 
           return {
             ...resolved,

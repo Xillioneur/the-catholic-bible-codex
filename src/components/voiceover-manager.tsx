@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useReaderStore, type VoiceoverQueueItem } from "~/hooks/use-reader-store";
+import { api } from "~/trpc/react";
 import { db } from "~/lib/db";
 
 /**
@@ -14,6 +15,7 @@ export function VoiceoverManager() {
   const isActive = useReaderStore((state) => state.isVoiceoverActive);
   const setIsActive = useReaderStore((state) => state.setIsVoiceoverActive);
   const setIsMinimized = useReaderStore((state) => state.setIsVoiceoverMinimized);
+  const utils = api.useUtils();
 
   const speed = useReaderStore((state) => state.voiceoverSpeed);
   const currentOrder = useReaderStore((state) => state.voiceoverCurrentOrder);
@@ -591,16 +593,13 @@ export function VoiceoverManager() {
     if (currentSession !== sessionRef.current || !useReaderStore.getState().isVoiceoverPlaying) return;
 
     try {
-      let verse = await db.verses.where("[translationId+globalOrder]").equals([translationSlug, order]).first();
-      if (!verse) {
-        const metadata = await db.verses.where("globalOrder").equals(order).first();
-        if (metadata) {
-          verse = await db.verses.where({ translationId: translationSlug, bookId: metadata.bookId, chapter: metadata.chapter, verse: metadata.verse }).first();
-          if (!verse && translationSlug !== "drb") {
-            verse = await db.verses.where({ translationId: "drb", bookId: metadata.bookId, chapter: metadata.chapter, verse: metadata.verse }).first();
-          }
-        }
-      }
+      // [HYDRATION REMOVAL]: Fetch directly from server instead of Dexie
+      const verses = await utils.bible.getVersesByOrderRange.fetch({
+        translationSlug,
+        startOrder: order,
+        endOrder: order
+      });
+      const verse = verses[0];
 
       if (!verse || !useReaderStore.getState().isVoiceoverPlaying || currentSession !== sessionRef.current) {
         if (!verse && useReaderStore.getState().isVoiceoverPlaying) {

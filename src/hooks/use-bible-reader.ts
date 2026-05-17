@@ -4,8 +4,6 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { api } from "~/trpc/react";
 import { useReaderStore } from "~/hooks/use-reader-store";
 import { useVirtualizer } from "@tanstack/react-virtual";
-import { bibleService } from "~/lib/bible-service";
-import { db } from "~/lib/db";
 
 export type BibleRow = 
   | { type: "book-header"; book: any; firstOrder: number; lastOrder?: number }
@@ -32,7 +30,6 @@ export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>
   const [rows, setRows] = useState<BibleRow[]>([]);
   const [rowCount, setRowCount] = useState(0);
   const [isWorkerReady, setIsWorkerReady] = useState(false);
-  const [isHydrated, setIsHydrated] = useState(false);
 
   const workerRef = useRef<Worker | null>(null);
   const lastSyncTime = useRef(0);
@@ -66,9 +63,15 @@ export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>
             rowVirtualizer.scrollToIndex(index, { align: "start", behavior: "auto" });
           });
         }
-      } else if (type === "NOT_HYDRATED") {
-        setIsHydrated(false);
+      } else if (type === "ERROR") {
+        console.error("[BibleWorker] Internal Error:", payload);
+        setIsWorkerReady(false);
       }
+    };
+
+    worker.onerror = (e) => {
+      console.error("[BibleWorker] Critical Worker Error:", e);
+      setIsWorkerReady(false);
     };
 
     return () => {
@@ -95,11 +98,6 @@ export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>
   });
 
   // 2. UNIFIED INITIALIZATION & CONTEXT SWITCHING
-  const { data: serverVerseCount } = api.bible.getVerseCount.useQuery(
-    { translationSlug },
-    { staleTime: Infinity }
-  );
-
   useEffect(() => {
     let isMounted = true;
 
@@ -114,28 +112,12 @@ export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>
       }
       if (!workerRef.current || !isMounted) return;
 
-      const localCount = await db.verses.where("translationId").equals(translationSlug).count();
-      const totalCount = serverVerseCount || 35809;
-
       // 2. Enter clean state for the new translation
       setIsWorkerReady(false);
       setRows([]);
       setRowCount(0);
-
-      // 3. Hydrate if missing
-      if (localCount < totalCount) {
-        setIsHydrated(false);
-        await bibleService.syncBible(
-          translationSlug, 
-          totalCount, 
-          (input) => utils.bible.getVersesByOrderRange.fetch(input)
-        );
-      }
-
-      if (!isMounted) return;
-      setIsHydrated(true);
       
-      // 4. Command the worker to switch to the new translation
+      // 3. Command the worker to switch to the new translation (No Hydration Required)
       workerRef.current.postMessage({ 
         type: "INITIALIZE", 
         payload: { slug: translationSlug, liturgicalReadings } 
@@ -145,7 +127,7 @@ export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>
     void initializeContext();
 
     return () => { isMounted = false; };
-  }, [translationSlug, serverVerseCount, utils, liturgicalReadings]);
+  }, [translationSlug, liturgicalReadings]);
 
   const virtualItems = rowVirtualizer.getVirtualItems();
 
@@ -278,7 +260,7 @@ export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>
 
   return {
     rows,
-    isLoading: !isWorkerReady && !isHydrated,
+    isLoading: !isWorkerReady,
     rowVirtualizer
   };
 }

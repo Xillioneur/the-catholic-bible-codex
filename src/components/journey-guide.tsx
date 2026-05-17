@@ -127,14 +127,41 @@ export function JourneyGuide({ currentOrder }: JourneyGuideProps) {
     };
   }, [journeyGuide, seenOrdersForDay, audioOrdersForDay]);
 
-  const currentVerseContext = useLiveQuery(async () => {
+  const [currentVerseInfo, setCurrentVerseInfo] = useState<{ bookName: string, chapter: number } | null>(null);
+
+  useEffect(() => {
+    if (!journeyGuide || !journeyGuide.orders.includes(currentOrder)) {
+      setCurrentVerseInfo(null);
+      return;
+    }
+
+    const fetchInfo = async () => {
+      try {
+        const verses = await utils.bible.getVersesByOrderRange.fetch({
+          translationSlug,
+          startOrder: currentOrder,
+          endOrder: currentOrder
+        });
+        if (verses[0]) {
+          setCurrentVerseInfo({
+            bookName: verses[0].book.name,
+            chapter: verses[0].chapter
+          });
+        }
+      } catch (e) {
+        console.error("Failed to fetch verse info", e);
+      }
+    };
+    void fetchInfo();
+  }, [currentOrder, journeyGuide, translationSlug, utils]);
+
+  const currentVerseContext = useMemo(() => {
     if (!journeyGuide) return null;
-    if (journeyGuide.orders.includes(currentOrder)) {
-      const v = await db.verses.where("globalOrder").equals(currentOrder).first();
-      if (v) return { bookName: v.book.name, chapter: v.chapter, isRequired: true };
+    if (journeyGuide.orders.includes(currentOrder) && currentVerseInfo) {
+      return { bookName: currentVerseInfo.bookName, chapter: currentVerseInfo.chapter, isRequired: true };
     }
     return { isRequired: false, target: journeyGuide.references[0] };
-  }, [currentOrder, journeyGuide]);
+  }, [currentOrder, journeyGuide, currentVerseInfo]);
 
   const minutesLeft = useMemo(() => {
     if (isFullyRead) return 0;

@@ -5,9 +5,6 @@ import { useReaderStore } from "~/hooks/use-reader-store";
 import { api } from "~/trpc/react";
 import { Search, X, ArrowRight, Loader2, ChevronDown, Filter, Hash, BookOpen } from "lucide-react";
 import { cn } from "~/lib/utils";
-import { useSearchWorker } from "~/hooks/use-search-worker";
-import { db } from "~/lib/db";
-import { useLiveQuery } from "dexie-react-hooks";
 import { useVirtualizer } from "@tanstack/react-virtual";
 
 type SearchMode = "global" | "ot" | "nt" | "book" | "chapter";
@@ -75,36 +72,24 @@ function SearchContent() {
   const [selectedBookId, setSelectedBookId] = useState<number>(initialBookId ?? 1);
   const [selectedChapter, setSelectedChapter] = useState<number>(initialChapter ?? 1);
 
-  const { search, results: workerResults, isSearching: isWorkerSearching } = useSearchWorker();
-  const hydratedCount = useLiveQuery(() => db.verses.where("translationId").equals(translationSlug).count(), [translationSlug]) ?? 0;
-
   const parentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => {
       if (input.length >= 2) {
         setDebouncedQuery(input);
-        if (hydratedCount > 30000) {
-          search({ 
-            query: input, 
-            translationSlug, 
-            bookId: selectedBookId, 
-            chapter: selectedChapter, 
-            mode: (mode === "ot" || mode === "nt") ? "global" : mode, 
-            limit: 5000 
-          });
-        }
+        // [BYPASSING LOCAL SEARCH HYDRATION]
+        // We always use the server search now to avoid the "Hydration" bottleneck.
       } else {
         setDebouncedQuery("");
       }
     }, 350);
     return () => clearTimeout(timer);
-  }, [input, translationSlug, selectedBookId, selectedChapter, mode, hydratedCount, search]);
+  }, [input]);
 
   const { data: books } = api.bible.getBooks.useQuery();
   const selectedBook = useMemo(() => books?.find(b => b.id === selectedBookId), [books, selectedBookId]);
 
-  const useTrpc = hydratedCount < 30000;
   const { data: trpcData, isFetching: isTrpcFetching } = api.bible.searchVerses.useQuery(
     {
       translationSlug,
@@ -115,22 +100,20 @@ function SearchContent() {
       limit: 500,
     },
     {
-      enabled: debouncedQuery.length >= 2 && useTrpc,
+      enabled: debouncedQuery.length >= 2,
       staleTime: 1000 * 60,
     }
   );
 
-  const rawResults = useTrpc ? trpcData?.items : (workerResults || []);
-  
   const results = useMemo(() => {
-    if (!rawResults) return [];
+    const rawResults = trpcData?.items || [];
     if (mode === "ot") return rawResults.filter((v: any) => v.book.testament === "OT");
     if (mode === "nt") return rawResults.filter((v: any) => v.book.testament === "NT");
     return rawResults;
-  }, [rawResults, mode]);
+  }, [trpcData, mode]);
 
   const totalResults = results.length;
-  const isFetching = useTrpc ? isTrpcFetching : isWorkerSearching;
+  const isFetching = isTrpcFetching;
 
   const rowVirtualizer = useVirtualizer({
     count: results.length,

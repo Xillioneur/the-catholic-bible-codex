@@ -1,22 +1,5 @@
 import Dexie, { type Table } from "dexie";
 
-export interface LocalVerse {
-  id: string;
-  translationId: string;
-  bookId: number;
-  chapter: number;
-  verse: number;
-  text: string;
-  globalOrder: number;
-  book: {
-    name: string;
-    abbreviation: string;
-    slug: string;
-    category: string;
-    testament: string;
-  };
-}
-
 export interface LocalBookmark {
   id?: number;
   userId: string; // "guest" or real userId
@@ -89,7 +72,6 @@ export interface LocalUserReadingPlan {
 }
 
 export class VerbumDominiDB extends Dexie {
-  verses!: Table<LocalVerse>;
   bookmarks!: Table<LocalBookmark>;
   highlights!: Table<LocalHighlight>;
   notes!: Table<LocalNote>;
@@ -100,9 +82,8 @@ export class VerbumDominiDB extends Dexie {
 
   constructor() {
     super("VerbumDominiDB");
-    // Version 7: Explicit day completion tracking
-    this.version(7).stores({
-      verses: "id, globalOrder, translationId, [translationId+globalOrder]",
+    // Version 8: Removed verses table (Bypassing Hydration)
+    this.version(8).stores({
       bookmarks: "++id, userId, verseId, translationSlug, [userId+verseId], [userId+translationSlug+globalOrder]",
       highlights: "++id, userId, verseId, [userId+verseId], [userId+translationSlug+globalOrder]",
       notes: "++id, userId, verseId, [userId+verseId], [userId+translationSlug+globalOrder]",

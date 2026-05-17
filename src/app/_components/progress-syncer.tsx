@@ -139,17 +139,9 @@ export function ProgressSyncer() {
         const repair = async (table: any, items: any[]) => {
           const toRepair = items.filter(item => !item.globalOrder || !item.translationSlug);
           for (const item of toRepair) {
-            const verse = await db.verses.get(item.verseId);
-            if (verse) {
-              await table.update(item.id!, {
-                globalOrder: verse.globalOrder,
-                translationSlug: verse.translationId
-              });
-            } else {
-              // Note: We don't delete here anymore because the translation might not be hydrated.
-              // Just ensure it has the userId and move on.
-              if (userId && item.userId !== userId) await table.update(item.id!, { userId });
-            }
+            // [HYDRATION REMOVAL]: We can't rely on db.verses anymore.
+            // If it's missing metadata, we just ensure the userId is correct.
+            if (userId && item.userId !== userId) await table.update(item.id!, { userId });
           }
         };
 
@@ -202,30 +194,23 @@ export function ProgressSyncer() {
             // If we've never synced, restore everything
             if (syncTime === 0) return true;
             // Only restore if the item was created on another device AFTER our last sync
-            // This prevents restoring items we deleted locally in a previous session
             return cloudCreatedAt.getTime() > syncTime;
           };
 
           // RESTORE NOTES
           for (const n of cloudData.notes) {
             if (!n.verse?.translation?.slug) continue;
-            const localVerse = await db.verses
-              .where("[translationId+globalOrder]")
-              .equals([n.verse.translation.slug, n.verse.globalOrder])
-              .first();
             
-            if (!localVerse) continue;
-
             const exists = await db.notes.where("[userId+verseId]")
-              .equals([userId, localVerse.id])
+              .equals([userId, n.verseId])
               .first();
             
             if (shouldRestore(n.createdAt, !!exists)) {
               await db.notes.add({
                 userId,
-                verseId: localVerse.id,
-                globalOrder: localVerse.globalOrder,
-                translationSlug: localVerse.translationId,
+                verseId: n.verseId,
+                globalOrder: n.verse.globalOrder,
+                translationSlug: n.verse.translation.slug,
                 content: n.content,
                 createdAt: n.createdAt.getTime(),
                 updatedAt: n.updatedAt.getTime(),
@@ -236,23 +221,17 @@ export function ProgressSyncer() {
           // RESTORE HIGHLIGHTS
           for (const h of cloudData.highlights) {
             if (!h.verse?.translation?.slug) continue;
-            const localVerse = await db.verses
-              .where("[translationId+globalOrder]")
-              .equals([h.verse.translation.slug, h.verse.globalOrder])
-              .first();
             
-            if (!localVerse) continue;
-
             const exists = await db.highlights.where("[userId+verseId]")
-              .equals([userId, localVerse.id])
+              .equals([userId, h.verseId])
               .first();
             
             if (shouldRestore(h.createdAt, !!exists)) {
               await db.highlights.add({
                 userId,
-                verseId: localVerse.id,
-                globalOrder: localVerse.globalOrder,
-                translationSlug: localVerse.translationId,
+                verseId: h.verseId,
+                globalOrder: h.verse.globalOrder,
+                translationSlug: h.verse.translation.slug,
                 color: h.color,
                 createdAt: h.createdAt.getTime(),
               });
@@ -262,26 +241,20 @@ export function ProgressSyncer() {
           // RESTORE BOOKMARKS
           for (const b of cloudData.bookmarks) {
             if (!b.verse?.translation?.slug) continue;
-            const localVerse = await db.verses
-              .where("[translationId+globalOrder]")
-              .equals([b.verse.translation.slug, b.verse.globalOrder])
-              .first();
-            
-            if (!localVerse) continue;
 
             const exists = await db.bookmarks.where("[userId+verseId]")
-              .equals([userId, localVerse.id])
+              .equals([userId, b.verseId])
               .first();
             
             if (shouldRestore(b.createdAt, !!exists)) {
               await db.bookmarks.add({
                 userId,
-                verseId: localVerse.id,
+                verseId: b.verseId,
                 bookId: b.verse.bookId,
                 chapter: b.verse.chapter,
                 verse: b.verse.verse,
                 globalOrder: b.verse.globalOrder,
-                translationSlug: localVerse.translationId,
+                translationSlug: b.verse.translation.slug,
                 createdAt: b.createdAt.getTime(),
               });
             }
@@ -290,23 +263,17 @@ export function ProgressSyncer() {
           // RESTORE VERSE STATUSES (READ Progress)
           for (const s of cloudData.verseStatuses) {
             if (!s.verse?.translation?.slug) continue;
-            const localVerse = await db.verses
-              .where("[translationId+globalOrder]")
-              .equals([s.verse.translation.slug, s.verse.globalOrder])
-              .first();
-            
-            if (!localVerse) continue;
 
             const exists = await db.verseStatuses.where("[userId+verseId]")
-              .equals([userId, localVerse.id])
+              .equals([userId, s.verseId])
               .first();
             
             if (shouldRestore(s.readAt, !!exists)) {
               await db.verseStatuses.add({
                 userId,
-                verseId: localVerse.id,
-                globalOrder: localVerse.globalOrder,
-                translationSlug: localVerse.translationId,
+                verseId: s.verseId,
+                globalOrder: s.verse.globalOrder,
+                translationSlug: s.verse.translation.slug,
                 isRead: true,
                 readAt: s.readAt.getTime(),
               });

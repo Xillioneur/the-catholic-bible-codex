@@ -76,7 +76,6 @@ export function SidebarNav() {
 
   const [isOnline, setIsOnline] = useState(true);
   const [isCached, setIsCached] = useState(false);
-  const [isBibleLoaded, setIsBibleLoaded] = useState(false);
 
   // 2. STORE
   const isCollapsed = useReaderStore((state) => state.isSidebarCollapsed);
@@ -119,17 +118,6 @@ export function SidebarNav() {
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);
 
-    const checkBible = async () => {
-      try {
-        // Only count if not already loaded to save CPU
-        if (isBibleLoaded) return;
-        const count = await db.verses.count();
-        if (count > 30000) setIsBibleLoaded(true);
-      } catch (e) {
-        console.error("Bible check failed", e);
-      }
-    };
-
     const checkSW = async () => {
       if (!("serviceWorker" in navigator)) return;
       const registration = await navigator.serviceWorker.getRegistration();
@@ -142,7 +130,6 @@ export function SidebarNav() {
     
     // Initial check
     void checkSW();
-    void checkBible();
 
     // Only poll when the sanctuary tab is actually open to save CPU
     let interval: NodeJS.Timeout | null = null;
@@ -170,7 +157,7 @@ export function SidebarNav() {
       window.removeEventListener("offline", handleOffline);
       if (interval) clearInterval(interval);
     };
-  }, [activeTab, isBibleLoaded]);
+  }, [activeTab]);
 
   const handleClearCache = async () => {
     if ("serviceWorker" in navigator) {
@@ -399,22 +386,40 @@ export function SidebarNav() {
   const localNotes = useLiveQuery(async () => {
     const notesWithVerses = await Promise.all(
       localNotesRaw.map(async (n) => {
-        const verse = await db.verses.get(n.verseId);
+        let verse = await db.verses.get(n.verseId);
+        if (!verse) {
+          // [HYDRATION REMOVAL]: Fetch missing metadata from server
+          const verses = await utils.bible.getVersesByOrderRange.fetch({
+            translationSlug: n.translationSlug,
+            startOrder: n.globalOrder,
+            endOrder: n.globalOrder
+          });
+          verse = verses[0] as any;
+        }
         return { ...n, verse };
       })
     );
     return notesWithVerses.filter(n => !!n.verse);
-  }, [localNotesRaw]) ?? [];
+  }, [localNotesRaw, utils]) ?? [];
 
   const localHighlights = useLiveQuery(async () => {
     const highlightsWithVerses = await Promise.all(
       localHighlightsRaw.map(async (h) => {
-        const verse = await db.verses.get(h.verseId);
+        let verse = await db.verses.get(h.verseId);
+        if (!verse) {
+          // [HYDRATION REMOVAL]: Fetch missing metadata from server
+          const verses = await utils.bible.getVersesByOrderRange.fetch({
+            translationSlug: h.translationSlug,
+            startOrder: h.globalOrder,
+            endOrder: h.globalOrder
+          });
+          verse = verses[0] as any;
+        }
         return { ...h, verse };
       })
     );
     return highlightsWithVerses.filter(h => !!h.verse);
-  }, [localHighlightsRaw]) ?? [];
+  }, [localHighlightsRaw, utils]) ?? [];
 
   const handleBookSelect = useCallback(async (bookSlug: string, chapter: number = 1) => {
     setActiveTab(null);
@@ -940,7 +945,7 @@ export function SidebarNav() {
                             <Database className={cn("h-3 w-3", isCached ? "text-emerald-500" : "text-zinc-500")} />
                             <span className="text-[9px] font-bold uppercase text-zinc-500">Storage</span>
                           </div>
-                          <span className="text-[10px] font-medium">{isBibleLoaded ? "Fully Loaded" : isCached ? "Encrypted" : "Syncing..."}</span>
+                          <span className="text-[10px] font-medium">{isCached ? "Encrypted" : "Active"}</span>
                         </div>
                       </div>
 
