@@ -383,43 +383,62 @@ export function SidebarNav() {
     }
   };
 
-  const localNotes = useLiveQuery(async () => {
-    const notesWithVerses = await Promise.all(
-      localNotesRaw.map(async (n) => {
-        let verse = await db.verses.get(n.verseId);
-        if (!verse) {
-          // [HYDRATION REMOVAL]: Fetch missing metadata from server
-          const verses = await utils.bible.getVersesByOrderRange.fetch({
-            translationSlug: n.translationSlug,
-            startOrder: n.globalOrder,
-            endOrder: n.globalOrder
-          });
-          verse = verses[0] as any;
-        }
-        return { ...n, verse };
-      })
-    );
-    return notesWithVerses.filter(n => !!n.verse);
-  }, [localNotesRaw, utils]) ?? [];
+  const [resolvedNotes, setResolvedNotes] = useState<any[]>([]);
+  const [resolvedHighlights, setResolvedHighlights] = useState<any[]>([]);
 
-  const localHighlights = useLiveQuery(async () => {
-    const highlightsWithVerses = await Promise.all(
-      localHighlightsRaw.map(async (h) => {
-        let verse = await db.verses.get(h.verseId);
-        if (!verse) {
-          // [HYDRATION REMOVAL]: Fetch missing metadata from server
-          const verses = await utils.bible.getVersesByOrderRange.fetch({
-            translationSlug: h.translationSlug,
-            startOrder: h.globalOrder,
-            endOrder: h.globalOrder
-          });
-          verse = verses[0] as any;
-        }
-        return { ...h, verse };
-      })
-    );
-    return highlightsWithVerses.filter(h => !!h.verse);
-  }, [localHighlightsRaw, utils]) ?? [];
+  useEffect(() => {
+    if (!localNotesRaw?.length || !utils?.bible?.getVersesByOrderRange) {
+      setResolvedNotes([]);
+      return;
+    }
+
+    const resolve = async () => {
+      try {
+        const results = await Promise.all(
+          localNotesRaw.map(async (n) => {
+            if (!n.translationSlug || !n.globalOrder) return { ...n, verse: null };
+            const verses = await utils.bible.getVersesByOrderRange.fetch({
+              translationSlug: n.translationSlug,
+              startOrder: n.globalOrder,
+              endOrder: n.globalOrder
+            });
+            return { ...n, verse: verses?.[0] ?? null };
+          })
+        );
+        setResolvedNotes(results.filter(r => !!r?.verse));
+      } catch (e) {
+        console.error("Notes resolution failed", e);
+      }
+    };
+    void resolve();
+  }, [localNotesRaw, utils]);
+
+  useEffect(() => {
+    if (!localHighlightsRaw?.length || !utils?.bible?.getVersesByOrderRange) {
+      setResolvedHighlights([]);
+      return;
+    }
+
+    const resolve = async () => {
+      try {
+        const results = await Promise.all(
+          localHighlightsRaw.map(async (h) => {
+            if (!h.translationSlug || !h.globalOrder) return { ...h, verse: null };
+            const verses = await utils.bible.getVersesByOrderRange.fetch({
+              translationSlug: h.translationSlug,
+              startOrder: h.globalOrder,
+              endOrder: h.globalOrder
+            });
+            return { ...h, verse: verses?.[0] ?? null };
+          })
+        );
+        setResolvedHighlights(results.filter(r => !!r?.verse));
+      } catch (e) {
+        console.error("Highlights resolution failed", e);
+      }
+    };
+    void resolve();
+  }, [localHighlightsRaw, utils]);
 
   const handleBookSelect = useCallback(async (bookSlug: string, chapter: number = 1) => {
     setActiveTab(null);
@@ -757,8 +776,8 @@ export function SidebarNav() {
                 </div>
                 {studyFilter === "notes" && (
                   <div className="space-y-3 animate-in fade-in duration-500">
-                    {localNotes.length === 0 ? ( <div className="py-20 text-center text-[10px] font-black uppercase tracking-widest text-zinc-300">The page is blank</div> ) : (
-                      localNotes.map((note: any) => (
+                    {resolvedNotes.length === 0 ? ( <div className="py-20 text-center text-[10px] font-black uppercase tracking-widest text-zinc-300">The page is blank</div> ) : (
+                      resolvedNotes.map((note: any) => (
                         <div key={note.id} className="group relative w-full text-left p-4 rounded-[2rem] bg-zinc-50/50 dark:bg-zinc-800/20 border border-zinc-100 dark:border-zinc-800/50 hover:border-primary/20 transition-all overflow-hidden">
                           <div className="flex items-center justify-between mb-2">
                             <button onClick={() => setScrollToOrder(note.verse.globalOrder)} className="text-[9px] font-black uppercase tracking-widest text-primary hover:underline">{note.verse.book.abbreviation} {note.verse.chapter}:{note.verse.verse}</button>
@@ -786,8 +805,8 @@ export function SidebarNav() {
                 )}
                 {studyFilter === "highlights" && (
                   <div className="space-y-2 animate-in fade-in duration-500">
-                    {localHighlights.length === 0 ? ( <div className="py-20 text-center text-[10px] font-black uppercase tracking-widest text-zinc-300">No illuminations</div> ) : (
-                      localHighlights.map((h: any) => (
+                    {resolvedHighlights.length === 0 ? ( <div className="py-20 text-center text-[10px] font-black uppercase tracking-widest text-zinc-300">No illuminations</div> ) : (
+                      resolvedHighlights.map((h: any) => (
                         <div key={h.id} className="group w-full text-left p-3 rounded-2xl bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 flex items-center justify-between transition-all hover:border-primary/20">
                           <button onClick={() => setScrollToOrder(h.verse.globalOrder)} className="flex items-center gap-3 flex-1">
                             <div className={cn("h-3 w-3 rounded-full shadow-sm", { "bg-yellow-300": h.color === "yellow", "bg-blue-300": h.color === "blue", "bg-green-300": h.color === "green", "bg-red-300": h.color === "red", })} />

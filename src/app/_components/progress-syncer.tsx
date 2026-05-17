@@ -137,7 +137,8 @@ export function ProgressSyncer() {
 
         // 2. Repair Missing Metadata (globalOrder / translationSlug)
         const repair = async (table: any, items: any[]) => {
-          const toRepair = items.filter(item => !item.globalOrder || !item.translationSlug);
+          if (!table || !items?.length) return;
+          const toRepair = items.filter(item => item && (!item.globalOrder || !item.translationSlug));
           for (const item of toRepair) {
             // [HYDRATION REMOVAL]: We can't rely on db.verses anymore.
             // If it's missing metadata, we just ensure the userId is correct.

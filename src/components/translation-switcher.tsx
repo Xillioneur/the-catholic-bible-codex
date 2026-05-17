@@ -44,7 +44,7 @@ export function TranslationSwitcher() {
     setTranslationSlug(slug);
     const name = translations.find(t => t.slug === slug)?.name;
     toast.success(`${name}`, {
-      description: "Hydrating Sacred Text",
+      description: "Entering Sacred Text",
       duration: 1500,
     });
   };

@@ -49,7 +49,7 @@ self.onmessage = async (e: MessageEvent) => {
 
       for (const v of allVerses) {
         // INJECT LITURGICAL HEADERS
-        const reading = liturgicalReadings.find((r: any) => r.orders[0] === v.globalOrder);
+        const reading = liturgicalReadings.find((r: any) => r?.orders?.[0] === v.globalOrder);
         if (reading) {
           flushProse();
           processedRows.push({ 

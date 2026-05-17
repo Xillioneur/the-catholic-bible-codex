@@ -405,7 +405,7 @@ function ReadingSection({ title, citation, heading, acclamationText, sequenceTex
         ) : (
           <div className="py-8 flex flex-col items-center gap-3 text-zinc-300">
             <div className="h-1 w-6 rounded-full bg-zinc-100 dark:bg-zinc-800 animate-pulse" />
-            <span className="text-[8px] font-black uppercase tracking-widest">Hydrating</span>
+            <span className="text-[8px] font-black uppercase tracking-widest text-zinc-400">Opening the Word</span>
           </div>
         )}
       </div>

@@ -4,7 +4,6 @@ import { createContext, useContext, useEffect, type ReactNode } from "react";
 import { api } from "~/trpc/react";
 import { type LiturgicalInfo, getLiturgicalColorOklch } from "~/lib/liturgical";
 import { useReaderStore } from "~/hooks/use-reader-store";
-import { db } from "~/lib/db";
 
 interface LiturgicalContextType {
   info: LiturgicalInfo | null;
@@ -49,6 +48,8 @@ export function LiturgicalProvider({ children }: { children: ReactNode }) {
 
     const resolveAll = async () => {
       try {
+        if (!utils?.bible?.resolveBatchReadings || !utils?.bible?.getVersesByOrderRange) return;
+
         const readingPairs = [
           { type: "First Reading", citation: info.readings.firstReading },
           { type: "Responsorial Psalm", citation: info.readings.psalm },
@@ -64,8 +65,10 @@ export function LiturgicalProvider({ children }: { children: ReactNode }) {
           readings: readingPairs
         });
 
+        if (!resolvedOrders) return;
+
         // 2. FETCH VERSES FROM SERVER (HYDRATION REMOVAL)
-        const allOrders = resolvedOrders.filter(Boolean).flatMap(r => r!.orders);
+        const allOrders = resolvedOrders.filter(Boolean).flatMap(r => r?.orders ?? []);
         if (allOrders.length === 0) {
           setLiturgicalReadings([]);
           return;
@@ -81,10 +84,12 @@ export function LiturgicalProvider({ children }: { children: ReactNode }) {
           endOrder
         });
 
+        if (!allVerses) return;
+
         // 3. MAP BACK TO READINGS (and maintain original liturgical order)
         const finalReadings = readingPairs.map(p => {
           const resolved = resolvedOrders.find(ro => ro?.type === p.type);
-          if (!resolved) return null;
+          if (!resolved || !resolved.orders) return null;
 
           const readingVerses = allVerses
             .filter(v => resolved.orders.includes(v.globalOrder))
