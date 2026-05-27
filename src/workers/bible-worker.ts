@@ -1,15 +1,87 @@
-// The worker's internal state: a pre-processed map of the Bible structure
+// The worker's internal state
 let translationSlug = "";
+let allVerses: any[] = [];
+let liturgicalReadings: any[] = [];
 let rows: any[] = [];
 let isReady = false;
+
+function processRows() {
+  if (allVerses.length === 0) return;
+
+  const processedRows: any[] = [];
+  let lastBookId: number | null = null;
+  let lastChapter: number | null = null;
+  let currentProseVerses: any[] = [];
+
+  const flushProse = () => {
+    if (currentProseVerses.length > 0) {
+      const first = currentProseVerses[0];
+      processedRows.push({ 
+        type: "prose-block", 
+        book: first.book, 
+        chapter: first.chapter, 
+        verses: [...currentProseVerses],
+        firstOrder: first.globalOrder,
+        lastOrder: currentProseVerses[currentProseVerses.length - 1].globalOrder
+      });
+      currentProseVerses = [];
+    }
+  };
+
+  for (const v of allVerses) {
+    // INJECT LITURGICAL HEADERS
+    const reading = liturgicalReadings.find((r: any) => r?.orders?.[0] === v.globalOrder);
+    if (reading) {
+      flushProse();
+      processedRows.push({ 
+        type: "liturgical-header", 
+        readingType: reading.type, 
+        citation: reading.citation,
+        heading: reading.heading,
+        firstOrder: v.globalOrder 
+      });
+    }
+
+    if (v.bookId !== lastBookId) {
+      flushProse();
+      processedRows.push({ type: "book-header", book: v.book, firstOrder: v.globalOrder });
+      processedRows.push({ type: "chapter-header", book: v.book, chapter: v.chapter, firstOrder: v.globalOrder });
+      lastBookId = v.bookId;
+      lastChapter = v.chapter;
+    } else if (v.chapter !== lastChapter) {
+      flushProse();
+      processedRows.push({ type: "chapter-header", book: v.book, chapter: v.chapter, firstOrder: v.globalOrder });
+      lastChapter = v.chapter;
+    }
+
+    currentProseVerses.push(v);
+    if (currentProseVerses.length >= 5) flushProse();
+  }
+  flushProse();
+
+  rows = processedRows;
+}
 
 self.onmessage = async (e: MessageEvent) => {
   const { type, payload } = e.data;
 
   if (type === "INITIALIZE") {
-    const { slug, liturgicalReadings = [] } = payload;
+    const { slug, liturgicalReadings: initialReadings = [] } = payload;
     
+    if (translationSlug === slug && isReady) {
+      // If same translation and already ready, just update readings if they differ
+      if (JSON.stringify(liturgicalReadings) !== JSON.stringify(initialReadings)) {
+        liturgicalReadings = initialReadings;
+        processRows();
+        self.postMessage({ type: "READY", payload: { count: rows.length } });
+      } else {
+        self.postMessage({ type: "READY", payload: { count: rows.length } });
+      }
+      return;
+    }
+
     translationSlug = slug;
+    liturgicalReadings = initialReadings;
     isReady = false;
     
     try {
@@ -19,70 +91,27 @@ self.onmessage = async (e: MessageEvent) => {
       const response = await fetch(jsonUrl);
       if (!response.ok) throw new Error(`Failed to load translation: ${slug} (Status: ${response.status})`);
       
-      const allVerses = await response.json();
+      allVerses = await response.json();
 
       if (allVerses.length === 0) {
         self.postMessage({ type: "ERROR", payload: "Empty translation data" });
         return;
       }
 
-      // 2. Pre-process into Prose Blocks (The "Minecraft Chunk" Generation)
-      const processedRows: any[] = [];
-      let lastBookId: number | null = null;
-      let lastChapter: number | null = null;
-      let currentProseVerses: any[] = [];
-
-      const flushProse = () => {
-        if (currentProseVerses.length > 0) {
-          const first = currentProseVerses[0];
-          processedRows.push({ 
-            type: "prose-block", 
-            book: first.book, 
-            chapter: first.chapter, 
-            verses: [...currentProseVerses],
-            firstOrder: first.globalOrder,
-            lastOrder: currentProseVerses[currentProseVerses.length - 1].globalOrder
-          });
-          currentProseVerses = [];
-        }
-      };
-
-      for (const v of allVerses) {
-        // INJECT LITURGICAL HEADERS
-        const reading = liturgicalReadings.find((r: any) => r?.orders?.[0] === v.globalOrder);
-        if (reading) {
-          flushProse();
-          processedRows.push({ 
-            type: "liturgical-header", 
-            readingType: reading.type, 
-            citation: reading.citation,
-            heading: reading.heading,
-            firstOrder: v.globalOrder 
-          });
-        }
-
-        if (v.bookId !== lastBookId) {
-          flushProse();
-          processedRows.push({ type: "book-header", book: v.book, firstOrder: v.globalOrder });
-          processedRows.push({ type: "chapter-header", book: v.book, chapter: v.chapter, firstOrder: v.globalOrder });
-          lastBookId = v.bookId;
-          lastChapter = v.chapter;
-        } else if (v.chapter !== lastChapter) {
-          flushProse();
-          processedRows.push({ type: "chapter-header", book: v.book, chapter: v.chapter, firstOrder: v.globalOrder });
-          lastChapter = v.chapter;
-        }
-
-        currentProseVerses.push(v);
-        if (currentProseVerses.length >= 5) flushProse();
-      }
-      flushProse();
-
-      rows = processedRows;
+      processRows();
       isReady = true;
       self.postMessage({ type: "READY", payload: { count: rows.length } });
     } catch (err) {
       self.postMessage({ type: "ERROR", payload: err });
+    }
+  }
+
+  if (type === "UPDATE_LITURGICAL") {
+    const { readings } = payload;
+    liturgicalReadings = readings;
+    if (isReady) {
+      processRows();
+      self.postMessage({ type: "READY", payload: { count: rows.length } });
     }
   }
 

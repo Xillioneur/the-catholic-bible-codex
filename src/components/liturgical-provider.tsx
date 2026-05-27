@@ -22,6 +22,7 @@ export function LiturgicalProvider({ children }: { children: ReactNode }) {
   const translationSlug = useReaderStore((state) => state.translationSlug);
   const theme = useReaderStore((state) => state.theme);
   const setLiturgicalReadings = useReaderStore((state) => state.setLiturgicalReadings);
+  const hasHydrated = useReaderStore((state) => state.hasHydrated);
   const utils = api.useUtils();
 
   useEffect(() => {
@@ -44,7 +45,7 @@ export function LiturgicalProvider({ children }: { children: ReactNode }) {
   }, [info]);
 
   useEffect(() => {
-    if (!info) return;
+    if (!info || !hasHydrated) return;
 
     const resolveAll = async () => {
       try {

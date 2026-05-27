@@ -70,12 +70,9 @@ export function ProgressSyncer() {
     onError: (e) => console.error("[SYNC] Verse progress save failed", e),
   });
   
-  const { data: profile } = api.user.getProfile.useQuery(undefined, {
+  const { data: syncData } = api.user.getUnifiedSyncData.useQuery(undefined, {
     enabled: !!session,
-  });
-
-  const { data: cloudData } = api.user.getSyncData.useQuery(undefined, {
-    enabled: !!session,
+    staleTime: Infinity,
   });
 
   const localHighlights = useLiveQuery(() => db.highlights.where("userId").equals(currentUserId).toArray(), [currentUserId]);
@@ -84,9 +81,12 @@ export function ProgressSyncer() {
   const localVerseStatuses = useLiveQuery(() => db.verseStatuses.where("userId").equals(currentUserId).toArray(), [currentUserId]);
 
   const autoProgress = useReaderStore((state) => state.autoProgress);
+  const hasHydrated = useReaderStore((state) => state.hasHydrated);
   const hasInitialSync = useRef(false);
   const hasPulledCloudData = useRef(false);
   const hasMigrated = useRef(false);
+  const isMigrating = useRef(false);
+  const isRestoring = useRef(false);
 
   // Reset sync flags when user changes
   useEffect(() => {
@@ -97,9 +97,10 @@ export function ProgressSyncer() {
 
   // Data Migration: Ensure old records have globalOrder and translationSlug, and migrate guest data
   useEffect(() => {
-    if (!localVerseStatuses || !localHighlights || !localNotes || !localBookmarks || hasMigrated.current) return;
+    if (!localVerseStatuses || !localHighlights || !localNotes || !localBookmarks || hasMigrated.current || !hasHydrated || isMigrating.current) return;
     
     const migrate = async () => {
+      isMigrating.current = true;
       try {
         const userId = session?.user?.id;
         
@@ -155,246 +156,178 @@ export function ProgressSyncer() {
         console.log("[SYNC] Data migration and repair complete");
       } catch (e) {
         console.error("[SYNC] Migration failed", e);
+      } finally {
+        isMigrating.current = false;
       }
     };
     void migrate();
-  }, [localVerseStatuses, localHighlights, localNotes, localBookmarks, session]);
+  }, [localVerseStatuses, localHighlights, localNotes, localBookmarks, session, hasHydrated]);
 
-  // Initial Sync from DB to LocalStore (Progress only)
+  // UNIFIED RESTORATION EFFECT
   useEffect(() => {
-    if (!session) {
-      hasInitialSync.current = true;
-      return;
-    }
+    if (!session || !syncData || !hasHydrated || hasPulledCloudData.current || isRestoring.current) return;
 
-    if (profile && !hasInitialSync.current) {
-      console.log("[SYNC] Initial profile loaded", profile);
-      // Only restore if the cloud progress is significantly different or local is 1
-      if (profile.lastReadOrder > 1) {
-        setTranslationSlug(profile.lastReadTranslation);
-        setCurrentOrder(profile.lastReadOrder);
-        setScrollToOrder(profile.lastReadOrder);
-        console.log("[SYNC] Restored progress from cloud:", profile.lastReadTranslation, profile.lastReadOrder);
+    const performRestoration = async () => {
+      isRestoring.current = true;
+      try {
+        const userId = session.user.id;
+        const { profile, notes, highlights, bookmarks, verseStatuses } = syncData;
+
+        // 1. RESTORE PROGRESS (Atomic with study data)
+        if (profile && !hasInitialSync.current) {
+          if (profile.lastReadOrder > 1) {
+            setTranslationSlug(profile.lastReadTranslation);
+            setCurrentOrder(profile.lastReadOrder);
+            setScrollToOrder(profile.lastReadOrder);
+            console.log("[SYNC] Restored progress from cloud:", profile.lastReadTranslation, profile.lastReadOrder);
+          }
+          hasInitialSync.current = true;
+        }
+
+        // 2. RESTORE STUDY DATA
+        const syncTime = useReaderStore.getState().lastSync ?? 0;
+        const shouldRestore = (cloudCreatedAt: Date, localExists: boolean) => {
+          if (localExists) return false;
+          if (syncTime === 0) return true;
+          return cloudCreatedAt.getTime() > syncTime;
+        };
+
+        const notesToRestore = [];
+        const highlightsToRestore = [];
+        const bookmarksToRestore = [];
+        const statusesToRestore = [];
+
+        for (const n of notes) {
+          if (!n.verse?.translation?.slug) continue;
+          const exists = await db.notes.where("[userId+verseId]").equals([userId, n.verseId]).first();
+          if (shouldRestore(n.createdAt, !!exists)) {
+            notesToRestore.push({
+              userId,
+              verseId: n.verseId,
+              globalOrder: n.verse.globalOrder,
+              translationSlug: n.verse.translation.slug,
+              content: n.content,
+              createdAt: n.createdAt.getTime(),
+              updatedAt: n.updatedAt.getTime(),
+            });
+          }
+        }
+
+        for (const h of highlights) {
+          if (!h.verse?.translation?.slug) continue;
+          const exists = await db.highlights.where("[userId+verseId]").equals([userId, h.verseId]).first();
+          if (shouldRestore(h.createdAt, !!exists)) {
+            highlightsToRestore.push({
+              userId,
+              verseId: h.verseId,
+              globalOrder: h.verse.globalOrder,
+              translationSlug: h.verse.translation.slug,
+              color: h.color,
+              createdAt: h.createdAt.getTime(),
+            });
+          }
+        }
+
+        for (const b of bookmarks) {
+          if (!b.verse?.translation?.slug) continue;
+          const exists = await db.bookmarks.where("[userId+verseId]").equals([userId, b.verseId]).first();
+          if (shouldRestore(b.createdAt, !!exists)) {
+            bookmarksToRestore.push({
+              userId,
+              verseId: b.verseId,
+              bookId: b.verse.bookId,
+              chapter: b.verse.chapter,
+              verse: b.verse.verse,
+              globalOrder: b.verse.globalOrder,
+              translationSlug: b.verse.translation.slug,
+              createdAt: b.createdAt.getTime(),
+            });
+          }
+        }
+
+        for (const s of verseStatuses) {
+          if (!s.verse?.translation?.slug) continue;
+          const exists = await db.verseStatuses.where("[userId+verseId]").equals([userId, s.verseId]).first();
+          if (shouldRestore(s.readAt, !!exists)) {
+            statusesToRestore.push({
+              userId,
+              verseId: s.verseId,
+              globalOrder: s.verse.globalOrder,
+              translationSlug: s.verse.translation.slug,
+              isRead: true,
+              readAt: s.readAt.getTime(),
+            });
+          }
+        }
+
+        if (notesToRestore.length > 0) await db.notes.bulkAdd(notesToRestore);
+        if (highlightsToRestore.length > 0) await db.highlights.bulkAdd(highlightsToRestore);
+        if (bookmarksToRestore.length > 0) await db.bookmarks.bulkAdd(bookmarksToRestore);
+        if (statusesToRestore.length > 0) await db.verseStatuses.bulkAdd(statusesToRestore);
+
+        console.log(`[SYNC] Restoration complete: ${notesToRestore.length} notes, ${highlightsToRestore.length} highlights, ${bookmarksToRestore.length} bookmarks, ${statusesToRestore.length} statuses`);
+        setLastSync(Date.now());
+        hasPulledCloudData.current = true;
+      } catch (e) {
+        console.error("[SYNC] Restoration failed", e);
+      } finally {
+        isRestoring.current = false;
       }
-      hasInitialSync.current = true;
-    }
-  }, [profile, session, setTranslationSlug, setCurrentOrder, setScrollToOrder]);
+    };
 
-  // Initial Pull from Cloud to Dexie (The Great Restoration)
+    void performRestoration();
+  }, [syncData, session, hasHydrated]);
+
+  // UNIFIED PERIODIC SYNC TO CLOUD
   useEffect(() => {
-    if (cloudData && session && !hasPulledCloudData.current) {
-      console.log("[SYNC] Cloud data loaded, starting restoration for user:", session.user.id);
-      const restoreData = async () => {
-        try {
-          const userId = session.user.id;
-          const syncTime = useReaderStore.getState().lastSync ?? 0;
-
-          // Helper to check if we should restore an item
-          const shouldRestore = (cloudCreatedAt: Date, localExists: boolean) => {
-            if (localExists) return false;
-            // If we've never synced, restore everything
-            if (syncTime === 0) return true;
-            // Only restore if the item was created on another device AFTER our last sync
-            return cloudCreatedAt.getTime() > syncTime;
-          };
-
-          // RESTORE NOTES
-          for (const n of cloudData.notes) {
-            if (!n.verse?.translation?.slug) continue;
-            
-            const exists = await db.notes.where("[userId+verseId]")
-              .equals([userId, n.verseId])
-              .first();
-            
-            if (shouldRestore(n.createdAt, !!exists)) {
-              await db.notes.add({
-                userId,
-                verseId: n.verseId,
-                globalOrder: n.verse.globalOrder,
-                translationSlug: n.verse.translation.slug,
-                content: n.content,
-                createdAt: n.createdAt.getTime(),
-                updatedAt: n.updatedAt.getTime(),
-              });
-            }
-          }
-
-          // RESTORE HIGHLIGHTS
-          for (const h of cloudData.highlights) {
-            if (!h.verse?.translation?.slug) continue;
-            
-            const exists = await db.highlights.where("[userId+verseId]")
-              .equals([userId, h.verseId])
-              .first();
-            
-            if (shouldRestore(h.createdAt, !!exists)) {
-              await db.highlights.add({
-                userId,
-                verseId: h.verseId,
-                globalOrder: h.verse.globalOrder,
-                translationSlug: h.verse.translation.slug,
-                color: h.color,
-                createdAt: h.createdAt.getTime(),
-              });
-            }
-          }
-
-          // RESTORE BOOKMARKS
-          for (const b of cloudData.bookmarks) {
-            if (!b.verse?.translation?.slug) continue;
-
-            const exists = await db.bookmarks.where("[userId+verseId]")
-              .equals([userId, b.verseId])
-              .first();
-            
-            if (shouldRestore(b.createdAt, !!exists)) {
-              await db.bookmarks.add({
-                userId,
-                verseId: b.verseId,
-                bookId: b.verse.bookId,
-                chapter: b.verse.chapter,
-                verse: b.verse.verse,
-                globalOrder: b.verse.globalOrder,
-                translationSlug: b.verse.translation.slug,
-                createdAt: b.createdAt.getTime(),
-              });
-            }
-          }
-
-          // RESTORE VERSE STATUSES (READ Progress)
-          for (const s of cloudData.verseStatuses) {
-            if (!s.verse?.translation?.slug) continue;
-
-            const exists = await db.verseStatuses.where("[userId+verseId]")
-              .equals([userId, s.verseId])
-              .first();
-            
-            if (shouldRestore(s.readAt, !!exists)) {
-              await db.verseStatuses.add({
-                userId,
-                verseId: s.verseId,
-                globalOrder: s.verse.globalOrder,
-                translationSlug: s.verse.translation.slug,
-                isRead: true,
-                readAt: s.readAt.getTime(),
-              });
-            }
-          }
-          console.log("[SYNC] Restoration complete");
-          setLastSync(Date.now());
-        } catch (e) {
-          console.error("[SYNC] Restoration failed", e);
-        }
-      };
-      void restoreData();
-      hasPulledCloudData.current = true;
-    }
-  }, [cloudData, session]);
-
-  // Periodic Progress Sync (Auto-Sync last position)
-  useEffect(() => {
-    if (!session || !hasInitialSync.current || !autoProgress) return;
+    if (!session || !hasInitialSync.current || !hasPulledCloudData.current) return;
 
     const timer = setTimeout(() => {
       if (document.visibilityState !== "visible") return;
-      console.log("[SYNC] Saving progress...", currentOrder);
-      updateProgress.mutate({
-        lastReadOrder: currentOrder,
-        lastReadTranslation: translationSlug,
-      });
-    }, 10000); // 10s
 
-    return () => clearTimeout(timer);
-  }, [currentOrder, translationSlug, session, autoProgress]);
+      const userId = session.user.id;
 
-  // Sync Highlights to Server (Stable Ref)
-  useEffect(() => {
-    if (!session || !localHighlights || !hasInitialSync.current) return;
-
-    const timer = setTimeout(() => {
-      if (document.visibilityState !== "visible") return;
-      const payload = localHighlights
-        .filter(h => h.verseId && h.userId === session.user.id)
-        .map(h => ({
-          verseId: h.verseId,
-          color: h.color,
-          createdAt: h.createdAt,
-        }));
-      
-      console.log("[SYNC] Syncing highlights...", payload.length);
-      syncHighlights.mutate(payload);
-    }, 15000);
-
-    return () => clearTimeout(timer);
-  }, [localHighlights, session]);
-
-  // Sync Notes to Server (Stable Ref)
-  useEffect(() => {
-    if (!session || !localNotes || !hasInitialSync.current) return;
-
-    const timer = setTimeout(() => {
-      if (document.visibilityState !== "visible") return;
-      const payload = localNotes
-        .filter(n => n.verseId && n.userId === session.user.id)
-        .map(n => ({
-          verseId: n.verseId,
-          content: n.content,
-          createdAt: n.createdAt,
-          updatedAt: n.updatedAt,
-        }));
-
-      console.log("[SYNC] Syncing notes...", payload.length);
-      syncNotes.mutate(payload);
-    }, 15000);
-
-    return () => clearTimeout(timer);
-  }, [localNotes, session]);
-
-  // Sync Bookmarks to Server (Stable Ref)
-  useEffect(() => {
-    if (!session || !localBookmarks || !hasInitialSync.current) return;
-
-    const timer = setTimeout(() => {
-      if (document.visibilityState !== "visible") return;
-      const payload = localBookmarks
-        .filter(b => b.verseId && b.userId === session.user.id)
-        .map(b => ({
-          verseId: b.verseId,
-          createdAt: b.createdAt,
-        }));
-
-      console.log("[SYNC] Syncing bookmarks...", payload.length);
-      syncBookmarks.mutate(payload);
-    }, 15000);
-
-    return () => clearTimeout(timer);
-  }, [localBookmarks, session]);
-
-  // Sync Verse Statuses to Server (Manual Progress)
-  useEffect(() => {
-    if (!session || !localVerseStatuses || !hasInitialSync.current) return;
-
-    const timer = setTimeout(async () => {
-      if (document.visibilityState !== "visible") return;
-
-      const payload = [];
-      for (const s of localVerseStatuses) {
-        if (!s.isRead || s.userId !== session.user.id) continue;
-        if (s.verseId) {
-          payload.push({
-            verseId: s.verseId,
-            isRead: true,
-            readAt: s.readAt,
-          });
-        }
+      // 1. Sync Progress
+      if (autoProgress) {
+        updateProgress.mutate({
+          lastReadOrder: currentOrder,
+          lastReadTranslation: translationSlug,
+        });
       }
 
-      console.log("[SYNC] Syncing verse progress...", payload.length);
-      syncVerseStatuses.mutate(payload);
-    }, 15000);
+      // 2. Sync Study Data
+      if (localHighlights) {
+        const hPayload = localHighlights
+          .filter(h => h.verseId && h.userId === userId)
+          .map(h => ({ verseId: h.verseId, color: h.color, createdAt: h.createdAt }));
+        if (hPayload.length > 0) syncHighlights.mutate(hPayload);
+      }
+
+      if (localNotes) {
+        const nPayload = localNotes
+          .filter(n => n.verseId && n.userId === userId)
+          .map(n => ({ verseId: n.verseId, content: n.content, createdAt: n.createdAt, updatedAt: n.updatedAt }));
+        if (nPayload.length > 0) syncNotes.mutate(nPayload);
+      }
+
+      if (localBookmarks) {
+        const bPayload = localBookmarks
+          .filter(b => b.verseId && b.userId === userId)
+          .map(b => ({ verseId: b.verseId, createdAt: b.createdAt }));
+        if (bPayload.length > 0) syncBookmarks.mutate(bPayload);
+      }
+
+      if (localVerseStatuses) {
+        const sPayload = localVerseStatuses
+          .filter(s => s.isRead && s.userId === userId && s.verseId)
+          .map(s => ({ verseId: s.verseId, isRead: true, readAt: s.readAt }));
+        if (sPayload.length > 0) syncVerseStatuses.mutate(sPayload);
+      }
+
+    }, 20000); // 20s Debounce for unified sync
 
     return () => clearTimeout(timer);
-  }, [localVerseStatuses, session]);
+  }, [currentOrder, translationSlug, localHighlights, localNotes, localBookmarks, localVerseStatuses, session, autoProgress]);
 
   // Visibility Change Sync: Immediate sync when leaving
   useEffect(() => {

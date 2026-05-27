@@ -110,6 +110,8 @@ interface ReaderState {
   setIsSyncing: (syncing: boolean) => void;
   isSyncStatusMinimized: boolean;
   setIsSyncStatusMinimized: (minimized: boolean) => void;
+  hasHydrated: boolean;
+  setHasHydrated: (val: boolean) => void;
 
   // VOICEOVER
   isVoiceoverPlaying: boolean;
@@ -262,6 +264,8 @@ export const useReaderStore = create<ReaderState>()(
       setIsSyncing: (syncing) => set({ isSyncing: syncing }),
       isSyncStatusMinimized: false,
       setIsSyncStatusMinimized: (minimized) => set({ isSyncStatusMinimized: minimized }),
+      hasHydrated: false,
+      setHasHydrated: (val) => set({ hasHydrated: val }),
 
       // VOICEOVER
       isVoiceoverPlaying: false,
@@ -313,6 +317,17 @@ export const useReaderStore = create<ReaderState>()(
     {
       name: "bible-reader-storage",
       storage: createJSONStorage(() => localStorage),
+      onRehydrateStorage: (state) => {
+        return (rehydratedState, error) => {
+          if (!error && rehydratedState) {
+            // Fix: Ensure liturgicalDate is a Date object after JSON hydration
+            if (typeof rehydratedState.liturgicalDate === "string") {
+              rehydratedState.liturgicalDate = new Date(rehydratedState.liturgicalDate);
+            }
+            rehydratedState.setHasHydrated(true);
+          }
+        };
+      },
       partialize: (state) => ({
         translationSlug: state.translationSlug,
         currentOrder: state.currentOrder,

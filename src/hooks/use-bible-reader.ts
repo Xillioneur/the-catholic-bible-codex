@@ -26,6 +26,7 @@ export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>
   const setTotalVerseCount = useReaderStore((state) => state.setTotalVerseCount);
 
   const utils = api.useUtils();
+  const hasHydrated = useReaderStore((state) => state.hasHydrated);
 
   const [rows, setRows] = useState<BibleRow[]>([]);
   const [rowCount, setRowCount] = useState(0);
@@ -97,9 +98,10 @@ export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>
     paddingEnd: 100,
   });
 
-  // 2. UNIFIED INITIALIZATION & CONTEXT SWITCHING
+  // 2. UNIFIED INITIALIZATION & CONTEXT SWITCHING (Translation Focus)
   useEffect(() => {
     let isMounted = true;
+    if (!hasHydrated) return;
 
     async function initializeContext() {
       // 1. Wait for worker to exist (future-proof against race conditions)
@@ -112,12 +114,7 @@ export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>
       }
       if (!workerRef.current || !isMounted) return;
 
-      // 2. Enter clean state for the new translation
-      setIsWorkerReady(false);
-      setRows([]);
-      setRowCount(0);
-      
-      // 3. Command the worker to switch to the new translation (No Hydration Required)
+      // 2. Command the worker to switch to the new translation (No Hydration Required)
       workerRef.current.postMessage({ 
         type: "INITIALIZE", 
         payload: { slug: translationSlug, liturgicalReadings } 
@@ -127,13 +124,23 @@ export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>
     void initializeContext();
 
     return () => { isMounted = false; };
-  }, [translationSlug, liturgicalReadings]);
+  }, [translationSlug, hasHydrated]); // REMOVED liturgicalReadings from here
+
+  // 2b. LITURGICAL HEADER UPDATES (In-place)
+  useEffect(() => {
+    if (!isWorkerReady || !workerRef.current || !hasHydrated) return;
+    
+    workerRef.current.postMessage({ 
+      type: "UPDATE_LITURGICAL", 
+      payload: { readings: liturgicalReadings } 
+    });
+  }, [liturgicalReadings, isWorkerReady, hasHydrated]);
 
   const virtualItems = rowVirtualizer.getVirtualItems();
 
   // 3. CHUNK LOADING
   useEffect(() => {
-    if (virtualItems.length > 0 && isWorkerReady && workerRef.current) {
+    if (virtualItems.length > 0 && isWorkerReady && workerRef.current && hasHydrated) {
       const firstIndex = virtualItems[0].index;
       const lastIndex = virtualItems[virtualItems.length - 1].index;
       
@@ -151,11 +158,11 @@ export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>
         });
       }
     }
-  }, [virtualItems, rows, isWorkerReady]);
+  }, [virtualItems, rows, isWorkerReady, hasHydrated]);
 
   // 4. INITIAL SCROLL & PERSISTENCE
   useEffect(() => {
-    if (!initialScrollDone.current && isWorkerReady && rowCount > 0 && workerRef.current) {
+    if (!initialScrollDone.current && isWorkerReady && rowCount > 0 && workerRef.current && hasHydrated) {
       if (currentOrderStore > 1) {
         workerRef.current.postMessage({ type: "FIND_ORDER", payload: { order: currentOrderStore } });
         initialScrollDone.current = true;
@@ -170,7 +177,7 @@ export function useBibleReader(parentRef: React.RefObject<HTMLDivElement | null>
         }
       }
     }
-  }, [liturgicalReadings, isWorkerReady, rowCount, currentOrderStore]);
+  }, [liturgicalReadings, isWorkerReady, rowCount, currentOrderStore, hasHydrated]);
 
   // 5. NAVIGATION
   useEffect(() => {

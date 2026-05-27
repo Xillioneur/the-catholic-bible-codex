@@ -195,6 +195,48 @@ export const userRouter = createTRPCRouter({
     return { notes, highlights, bookmarks, verseStatuses };
   }),
 
+  getUnifiedSyncData: protectedProcedure.query(async ({ ctx }) => {
+    const userId = ctx.session.user.id;
+    const [profile, notes, highlights, bookmarks, verseStatuses] = await Promise.all([
+      ctx.db.user.findUnique({
+        where: { id: userId },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          image: true,
+          lastReadOrder: true,
+          lastReadTranslation: true,
+          lastReadAt: true,
+        },
+      }),
+      ctx.db.note.findMany({ 
+        where: { userId },
+        include: { verse: { include: { translation: true } } }
+      }),
+      ctx.db.highlight.findMany({ 
+        where: { userId },
+        include: { verse: { include: { translation: true } } }
+      }),
+      ctx.db.bookmark.findMany({ 
+        where: { userId },
+        include: { 
+          verse: { 
+            include: { 
+              book: true,
+              translation: true
+            } 
+          } 
+        } 
+      }),
+      ctx.db.verseStatus.findMany({
+        where: { userId, isRead: true },
+        include: { verse: { include: { translation: true } } }
+      })
+    ]);
+    return { profile, notes, highlights, bookmarks, verseStatuses };
+  }),
+
   syncVerseStatuses: protectedProcedure
     .input(z.array(z.object({
       verseId: z.string(),
